@@ -1,0 +1,66 @@
+name: Android Release
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-release:
+    name: Build and Release Android App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_SIGNING_KEY_B64 }}" | base64 -d > android/key.jks
+
+      - name: Configure Key Properties
+        run: |
+          echo "storeFile=../key.jks" > android/key.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+
+      - name: Extract Version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | cut -d '+' -f1)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Set Build Number
+        run: |
+          echo "flutter.versionCode=${{ github.run_number }}" >> android/local.properties
+          echo "flutter.versionName=${{ env.VERSION }}+${{ github.run_number }}" >> android/local.properties
+
+      - name: Build Android App
+        run: flutter build apk --release
+
+      - name: Build Android App
+        run: flutter build appbundle --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LRQM-app-Android
+          path: |
+            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/apk/release/app-release.apk
