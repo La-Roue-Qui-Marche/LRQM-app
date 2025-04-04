@@ -4,6 +4,7 @@ import 'Components/InfoCard.dart';
 import 'Components/ActionButton.dart';
 import '../Utils/config.dart';
 import 'WorkingScreen.dart';
+import '../Utils/config.dart';
 
 class SummaryScreen extends StatefulWidget {
   final int distanceAdded;
@@ -23,8 +24,7 @@ class SummaryScreen extends StatefulWidget {
   _SummaryScreenState createState() => _SummaryScreenState();
 }
 
-class _SummaryScreenState extends State<SummaryScreen>
-    with TickerProviderStateMixin {
+class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateMixin {
   late AnimationController _distanceController;
   late Animation<int> _distanceAnimation;
 
@@ -39,6 +39,8 @@ class _SummaryScreenState extends State<SummaryScreen>
 
   late AnimationController _timeController;
   late Animation<int> _timeAnimation;
+
+  final ScrollController _scrollController = ScrollController(); // Define the scroll controller
 
   int _currentCardIndex = 0;
 
@@ -122,6 +124,23 @@ class _SummaryScreenState extends State<SummaryScreen>
 
     // Start the first animation
     _distanceController.forward();
+
+    // Add auto-scroll to animations
+    _distanceAnimation.addListener(() {
+      if (_distanceController.isAnimating) _scrollToBottom();
+    });
+    _contributorsAnimation.addListener(() {
+      if (_contributorsController.isAnimating) _scrollToBottom();
+    });
+    _timeAnimation.addListener(() {
+      if (_timeController.isAnimating) _scrollToBottom();
+    });
+    _totalDistanceAnimation.addListener(() {
+      if (_totalDistanceController.isAnimating) _scrollToBottom();
+    });
+    _eventPercentageAnimation.addListener(() {
+      if (_eventPercentageController.isAnimating) _scrollToBottom();
+    });
   }
 
   @override
@@ -131,6 +150,7 @@ class _SummaryScreenState extends State<SummaryScreen>
     _totalDistanceController.dispose();
     _eventPercentageController.dispose();
     _timeController.dispose();
+    _scrollController.dispose(); // Dispose the scroll controller
     super.dispose();
   }
 
@@ -138,13 +158,26 @@ class _SummaryScreenState extends State<SummaryScreen>
     return '${(timeInSeconds ~/ 3600).toString().padLeft(2, '0')}h ${(timeInSeconds % 3600 ~/ 60).toString().padLeft(2, '0')}m ${(timeInSeconds % 60).toString().padLeft(2, '0')}s';
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(Config.COLOR_BACKGROUND), // Set background color
       body: Stack(
         children: [
           SingleChildScrollView(
+            controller: _scrollController, // Use the scroll controller
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 48.0, 16.0, 0.0),
               child: Column(
@@ -156,71 +189,109 @@ class _SummaryScreenState extends State<SummaryScreen>
                     subtitle: 'Résumé de votre contribution',
                   ),
                   const SizedBox(height: 16),
-                  AnimatedBuilder(
-                    animation: _distanceController,
-                    builder: (context, child) {
-                      return InfoCard(
-                        logo: const Icon(Icons.directions_walk, size: 32),
-                        title: 'Distance parcourue',
-                        data: '${_distanceAnimation.value} mètres',
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  if (_currentCardIndex >= 1)
-                    AnimatedBuilder(
-                      animation: _contributorsController,
-                      builder: (context, child) {
-                        return InfoCard(
-                          logo: const Icon(Icons.groups, size: 32),
-                          title: 'Nombre de participants',
-                          data: '${_contributorsAnimation.value}',
-                        );
-                      },
-                    ),
-                  const SizedBox(height: 8),
-                  if (_currentCardIndex >= 2)
-                    AnimatedBuilder(
-                      animation: _timeController,
-                      builder: (context, child) {
-                        return InfoCard(
-                          logo: const Icon(Icons.timer, size: 32),
-                          title: 'Durée de la mesure',
-                          data: '${_formatTime(_timeAnimation.value)}',
-                        );
-                      },
+                  if (_currentCardIndex >= 0) // Ensure "Distance parcourue" appears first
+                    Card(
+                      elevation: 0.0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          children: [
+                            AnimatedBuilder(
+                              animation: _distanceController,
+                              builder: (context, child) {
+                                return InfoCard(
+                                  logo: const Icon(Icons.directions_walk, size: 32),
+                                  title: 'Distance parcourue',
+                                  data: '${_distanceAnimation.value} mètres',
+                                );
+                              },
+                            ),
+                            const Divider(
+                              thickness: 2,
+                              color: Color(Config.COLOR_BACKGROUND), // Replace grey with Config.COLOR_BACKGROUND
+                            ),
+                            if (_currentCardIndex >= 1)
+                              AnimatedBuilder(
+                                animation: _contributorsController,
+                                builder: (context, child) {
+                                  return InfoCard(
+                                    logo: const Icon(Icons.groups, size: 32),
+                                    title: 'Nombre de participants',
+                                    data: '${_contributorsAnimation.value}',
+                                  );
+                                },
+                              ),
+                            const Divider(
+                              thickness: 2,
+                              color: Color(Config.COLOR_BACKGROUND), // Replace grey with Config.COLOR_BACKGROUND
+                            ),
+                            if (_currentCardIndex >= 2)
+                              AnimatedBuilder(
+                                animation: _timeController,
+                                builder: (context, child) {
+                                  return InfoCard(
+                                    logo: const Icon(Icons.timer, size: 32),
+                                    title: 'Durée de la mesure',
+                                    data: '${_formatTime(_timeAnimation.value)}',
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   const SizedBox(height: 16),
-                  if (_currentCardIndex >= 3)
+                  if (_currentCardIndex >= 3) ...[
                     const TitleCard(
                       icon: Icons.insights,
                       title: 'Impact collectif',
                       subtitle: 'Votre contribution à l\'évènement',
                     ),
-                  const SizedBox(height: 16),
-                  if (_currentCardIndex >= 3)
-                    AnimatedBuilder(
-                      animation: _totalDistanceController,
-                      builder: (context, child) {
-                        return InfoCard(
-                          logo: const Icon(Icons.add_chart, size: 32),
-                          title: 'Distance totale ajoutée',
-                          data: '+ ${_totalDistanceAnimation.value} mètres',
-                        );
-                      },
+                    const SizedBox(height: 16),
+                    Card(
+                      elevation: 0.0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          children: [
+                            AnimatedBuilder(
+                              animation: _totalDistanceController,
+                              builder: (context, child) {
+                                return InfoCard(
+                                  logo: const Icon(Icons.add_chart, size: 32),
+                                  title: 'Distance totale ajoutée',
+                                  data: '+ ${_totalDistanceAnimation.value} mètres',
+                                );
+                              },
+                            ),
+                            const Divider(
+                              thickness: 2,
+                              color: Color(Config.COLOR_BACKGROUND), // Replace grey with Config.COLOR_BACKGROUND
+                            ),
+                            if (_currentCardIndex >= 4)
+                              AnimatedBuilder(
+                                animation: _eventPercentageController,
+                                builder: (context, child) {
+                                  return InfoCard(
+                                    logo: const Icon(Icons.pie_chart, size: 32),
+                                    title: 'Pourcentage de l\'évènement',
+                                    data: '+ ${_eventPercentageAnimation.value.toStringAsFixed(2)}%',
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                  const SizedBox(height: 8),
-                  if (_currentCardIndex >= 4)
-                    AnimatedBuilder(
-                      animation: _eventPercentageController,
-                      builder: (context, child) {
-                        return InfoCard(
-                          logo: const Icon(Icons.pie_chart, size: 32),
-                          title: 'Pourcentage de l\'évènement',
-                          data: '+ ${_eventPercentageAnimation.value.toStringAsFixed(2)}%',
-                        );
-                      },
-                    ),
+                  ],
                   const SizedBox(height: 100), // Add space for the fixed button
                 ],
               ),

@@ -11,6 +11,7 @@ import 'Components/TopAppBar.dart';
 import 'Components/TitleCard.dart';
 import 'Components/DiscardButton.dart';
 import 'Components/InfoDialog.dart';
+import 'Components/TextModal.dart';
 
 import 'SetupPosScreen.dart';
 import 'LoadingScreen.dart';
@@ -43,8 +44,7 @@ class WorkingScreen extends StatefulWidget {
 }
 
 /// State of the WorkingScreen class.
-class _WorkingScreenState extends State<WorkingScreen>
-    with SingleTickerProviderStateMixin {
+class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProviderStateMixin {
   /// Timer to update the remaining time every second
   Timer? _timer;
 
@@ -93,6 +93,8 @@ class _WorkingScreenState extends State<WorkingScreen>
 
   /// Event meters goal
   int? _metersGoal;
+
+  Timer? _eventRefreshTimer; // Timer for event refresh
 
   void _showIconMenu(BuildContext context) {
     final List<IconData> icons = [
@@ -160,8 +162,7 @@ class _WorkingScreenState extends State<WorkingScreen>
   /// and if it fails, get the value from the shared preferences [getVal]
   /// Returns the value
   /// If the value is not found, returns -1
-  Future<int> _getValue(
-      Future<Result<int>> Function() fetchVal, Future<int?> Function() getVal) {
+  Future<int> _getValue(Future<Result<int>> Function() fetchVal, Future<int?> Function() getVal) {
     return fetchVal().then((value) {
       if (value.hasError) {
         throw Exception("Could not fetch value because : ${value.error}");
@@ -203,8 +204,7 @@ class _WorkingScreenState extends State<WorkingScreen>
   }
 
   String _formatDistance(int distance) {
-    return distance.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}\'');
+    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}\'');
   }
 
   String _getDistanceMessage(int distance) {
@@ -248,8 +248,7 @@ class _WorkingScreenState extends State<WorkingScreen>
         });
 
         // Get the personal distance
-        _getValue(() => NewUserController.getUserTotalMeters(int.parse(bibId)),
-            () async => null).then((value) {
+        _getValue(() => NewUserController.getUserTotalMeters(int.parse(bibId)), () async => null).then((value) {
           if (mounted) {
             setState(() {
               _distancePerso = value;
@@ -258,8 +257,7 @@ class _WorkingScreenState extends State<WorkingScreen>
         });
 
         // Get the total time
-        _getValue(() => NewUserController.getUserTotalTime(int.parse(bibId)),
-            () async => null).then((value) {
+        _getValue(() => NewUserController.getUserTotalTime(int.parse(bibId)), () async => null).then((value) {
           if (mounted) {
             setState(() {
               _totalTimePerso = value;
@@ -336,8 +334,7 @@ class _WorkingScreenState extends State<WorkingScreen>
     EventData.getEventId().then((eventId) {
       if (eventId != null && mounted) {
         // Get the total distance
-        _getValue(() => NewEventController.getTotalMeters(eventId),
-            () async => null).then((value) {
+        _getValue(() => NewEventController.getTotalMeters(eventId), () async => null).then((value) {
           if (mounted) {
             setState(() {
               _distanceTotale = value;
@@ -375,14 +372,95 @@ class _WorkingScreenState extends State<WorkingScreen>
         });
       }
     });
+
+    // Timer to refresh "Informations sur l'évènement" values every second
+    _startEventRefreshTimer();
+  }
+
+  void _startEventRefreshTimer() {
+    _eventRefreshTimer?.cancel(); // Cancel any existing timer
+    _eventRefreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
+      if (mounted) {
+        _refreshEventValues(); // Always refresh values when on the screen
+      }
+    });
+  }
+
+  void _stopEventRefreshTimer() {
+    _eventRefreshTimer?.cancel(); // Stop the timer
+    _eventRefreshTimer = null;
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _stopEventRefreshTimer(); // Stop refreshing when leaving the screen
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _startEventRefreshTimer(); // Restart refreshing when returning to the screen
+  }
+
+  void _navigateToScreen(Widget screen) {
+    _stopEventRefreshTimer(); // Stop the timer before navigating
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    ).then((_) {
+      _startEventRefreshTimer(); // Restart the timer when returning
+    });
   }
 
   @override
   void dispose() {
     log("Dispose");
     _timer?.cancel();
-    _geolocation.stopListening();
+    _stopEventRefreshTimer(); // Ensure the event refresh timer is stopped
+    _geolocation.stopListening(); // Stop geolocation stream
     super.dispose();
+  }
+
+  void _refreshEventValues() {
+    // Get the event ID
+    EventData.getEventId().then((eventId) {
+      if (eventId != null) {
+        // Get the total distance
+        _getValue(() => NewEventController.getTotalMeters(eventId), () async => null).then((value) => setState(() {
+              _distanceTotale = value;
+            }));
+
+        // Get the number of participants
+        NewEventController.getActiveUsers(eventId).then((result) {
+          if (!result.hasError) {
+            setState(() {
+              _numberOfParticipants = result.value;
+            });
+          }
+        });
+      } else {
+        log("Failed to fetch event ID from EventData.");
+      }
+    });
+
+    // Retrieve the number of contributors
+    ContributorsData.getContributors().then((contributors) {
+      if (contributors != null && mounted) {
+        setState(() {
+          _contributors = contributors;
+        });
+      }
+    });
+
+    // Retrieve the event meters goal
+    EventData.getMetersGoal().then((metersGoal) {
+      if (metersGoal != null && mounted) {
+        setState(() {
+          _metersGoal = metersGoal;
+        });
+      }
+    });
   }
 
   /// Function to refresh all values
@@ -395,8 +473,7 @@ class _WorkingScreenState extends State<WorkingScreen>
         });
 
         // Get the personal distance
-        _getValue(
-                () => NewUserController.getUserTotalMeters(int.parse(bibId)), () async => null)
+        _getValue(() => NewUserController.getUserTotalMeters(int.parse(bibId)), () async => null)
             .then((value) => setState(() {
                   _distancePerso = value;
                 }));
@@ -420,11 +497,9 @@ class _WorkingScreenState extends State<WorkingScreen>
     EventData.getEventId().then((eventId) {
       if (eventId != null) {
         // Get the total distance
-        _getValue(
-                () => NewEventController.getTotalMeters(eventId), () async => null)
-            .then((value) => setState(() {
-                  _distanceTotale = value;
-                }));
+        _getValue(() => NewEventController.getTotalMeters(eventId), () async => null).then((value) => setState(() {
+              _distanceTotale = value;
+            }));
 
         // Get the number of participants
         NewEventController.getActiveUsers(eventId).then((result) {
@@ -454,57 +529,52 @@ class _WorkingScreenState extends State<WorkingScreen>
   }
 
   void _confirmStopMeasure(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return InfoDialog(
-          title: 'Confirmation',
-          content: 'Tu es sûr de vouloir arrêter la mesure en cours ?\n\n'
-              'Cela mettra fin à l\'enregistrement de ta distance et de ton temps. '
-              'Si tu veux continuer plus tard, tu devras redémarrer une nouvelle mesure.\n\n'
-              'Prends une pause si nécessaire, mais n\'oublie pas de revenir pour continuer '
-              'à contribuer à l\'événement !',
-          onYes: () async {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) =>
-                    const LoadingScreen(text: 'On se repose un peu...'),
-              ),
-            );
-            try {
-              _geolocation.stopListening();
-              await NewMeasureController.stopMeasure();
-            } catch (e) {
-              log("Failed to stop measure: $e");
-            }
-            setState(() {
-              _isMeasureActive = false;
-            });
-            _refreshValues();
-            Navigator.of(context).pop(); // Close the loading screen
-            Navigator.of(context).pop(); // Close the confirmation dialog
-
-            // Calculate percentage of total event progress
-            int totalDistanceAdded = _distance * (_contributors ?? 1);
-            double eventPercentageAdded =
-                (totalDistanceAdded / (_metersGoal ?? 1)) * 100;
-
-            // Navigate to the SummaryScreen
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => SummaryScreen(
-                  distanceAdded: _distance,
-                  timeAdded: _sessionTimePerso ?? 0,
-                  percentageAdded: eventPercentageAdded,
-                  contributors: _contributors ?? 1, // Pass contributors count
-                ),
-              ),
-            );
-          },
-          onNo: () {
-            Navigator.of(context).pop();
-          },
+    showTextModal(
+      context,
+      'Confirmation',
+      'Tu es sûr de vouloir arrêter la mesure en cours ?\n\n'
+          'Cela mettra fin à l\'enregistrement de ta distance et de ton temps. '
+          'Si tu veux continuer plus tard, tu devras redémarrer une nouvelle mesure.\n\n'
+          'Prends une pause si nécessaire, mais n\'oublie pas de revenir pour continuer '
+          'à contribuer à l\'événement !',
+      showConfirmButton: true,
+      onConfirm: () async {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const LoadingScreen(text: 'On se repose un peu...'),
+          ),
         );
+        try {
+          _geolocation.stopListening();
+          await NewMeasureController.stopMeasure();
+        } catch (e) {
+          log("Failed to stop measure: $e");
+        }
+        setState(() {
+          _isMeasureActive = false;
+        });
+        _refreshValues();
+        Navigator.of(context).pop(); // Close the loading screen
+
+        // Calculate percentage of total event progress
+        int totalDistanceAdded = _distance * (_contributors ?? 1);
+        double eventPercentageAdded = (totalDistanceAdded / (_metersGoal ?? 1)) * 100;
+
+        // Navigate to the SummaryScreen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => SummaryScreen(
+              distanceAdded: _distance,
+              timeAdded: _sessionTimePerso ?? 0,
+              percentageAdded: eventPercentageAdded,
+              contributors: _contributors ?? 1, // Pass contributors count
+            ),
+          ),
+        );
+      },
+      showDiscardButton: true,
+      onDiscard: () {
+        Navigator.of(context).pop(); // Close the modal and continue the session
       },
     );
   }
@@ -519,8 +589,7 @@ class _WorkingScreenState extends State<WorkingScreen>
 
   @override
   Widget build(BuildContext context) {
-    int displayedTime =
-        _isMeasureActive ? (_sessionTimePerso ?? 0) : (_totalTimePerso ?? 0);
+    int displayedTime = _isMeasureActive ? (_sessionTimePerso ?? 0) : (_totalTimePerso ?? 0);
 
     return PopScope(
       canPop: false,
@@ -528,7 +597,7 @@ class _WorkingScreenState extends State<WorkingScreen>
         log("Trying to pop");
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(Config.COLOR_BACKGROUND), // Set background color
         appBar: TopAppBar(
           title: 'Informations',
           showInfoButton: true,
@@ -564,11 +633,10 @@ class _WorkingScreenState extends State<WorkingScreen>
                     // Make the full page scrollable
                     controller: _parentScrollController,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Align text to the left
+                        crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                         children: <Widget>[
                           const SizedBox(height: 16), // Add margin at the top
                           const TitleCard(
@@ -577,70 +645,87 @@ class _WorkingScreenState extends State<WorkingScreen>
                             subtitle: 'personnelles',
                           ),
                           const SizedBox(height: 16),
-                          Column(
-                            children: [
-                              InfoCard(
-                                logo: GestureDetector(
-                                  onTap: () => _showIconMenu(context),
-                                  child: Icon(_selectedIcon),
-                                ),
-                                title: '№ de dossard: $_dossard',
-                                data: _name,
+                          Card(
+                            elevation: 0.0, // Add elevation for shadow effect
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.0), // Rounded corners
+                            ),
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0), // Add padding inside the card
+                              child: Column(
+                                children: [
+                                  InfoCard(
+                                    logo: GestureDetector(
+                                      onTap: () => _showIconMenu(context),
+                                      child: Icon(_selectedIcon),
+                                    ),
+                                    title: '№ de dossard: $_dossard',
+                                    data: _name,
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  InfoCard(
+                                    logo: Image.asset(
+                                      _isMeasureActive
+                                          ? 'assets/pictures/LogoSimpleAnimated.gif'
+                                          : 'assets/pictures/LogoSimple.png',
+                                      width: _isMeasureActive ? 32 : 26,
+                                      height: _isMeasureActive ? 32 : 26,
+                                    ),
+                                    title: _isMeasureActive ? 'Distance parcourue' : 'Contribution à l\'évènement',
+                                    data:
+                                        '${_formatDistance(_isMeasureActive ? _distance : (_distancePerso ?? 0))} mètres',
+                                    additionalDetails:
+                                        _getDistanceMessage(_isMeasureActive ? _distance : (_distancePerso ?? 0)),
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  InfoCard(
+                                    logo: const Icon(Icons.timer_outlined),
+                                    title: _isMeasureActive
+                                        ? 'Temps passé sur le parcours'
+                                        : 'Temps total passé sur le parcours',
+                                    data:
+                                        '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s',
+                                  ),
+                                  if (_isMeasureActive) ...[
+                                    const Divider(
+                                      thickness: 2,
+                                      color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                    ),
+                                    InfoCard(
+                                      logo: const Icon(Icons.groups_2),
+                                      title: 'L\'équipe',
+                                      data:
+                                          '${_contributors ?? 0} ${(_contributors ?? 0) == 1 ? "participant" : "participants"}', // Handle singular/plural
+                                    ),
+                                  ],
+                                ],
                               ),
-                              const SizedBox(height: 6),
-                              InfoCard(
-                                logo: Image.asset(
-                                  _isMeasureActive
-                                      ? 'assets/pictures/LogoSimpleAnimated.gif'
-                                      : 'assets/pictures/LogoSimple.png',
-                                  width: _isMeasureActive ? 32 : 26,
-                                  height: _isMeasureActive ? 32 : 26,
-                                ),
-                                title: _isMeasureActive
-                                    ? 'Distance parcourue'
-                                    : 'Contribution à l\'évènement',
-                                data:
-                                    '${_formatDistance(_isMeasureActive ? _distance : (_distancePerso ?? 0))} mètres',
-                                additionalDetails: _getDistanceMessage(
-                                    _isMeasureActive
-                                        ? _distance
-                                        : (_distancePerso ?? 0)),
-                              ),
-                              const SizedBox(height: 6),
-                              InfoCard(
-                                logo: const Icon(Icons.timer_outlined),
-                                title: _isMeasureActive
-                                    ? 'Temps passé sur le parcours'
-                                    : 'Temps total passé sur le parcours',
-                                data:
-                                    '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s',
-                              ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 6),
-                          if (_isMeasureActive)
-                            InfoCard(
-                              logo: const Icon(Icons.groups_2),
-                              title: 'L\'équipe',
-                              data:
-                                  '${_contributors ?? 0} ${(_contributors ?? 0) == 1 ? "participant" : "participants"}', // Handle singular/plural
-                            )
-                          else if (!_isMeasureActive)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 5.0),
-                              child: Text(
-                                'Appuie sur START pour démarrer une mesure',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(Config.COLOR_APP_BAR),
+                          const SizedBox(height: 12),
+                          if (!_isMeasureActive) // Show message only when no session is active
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16.0),
+                              child: Center(
+                                child: Text(
+                                  'Appuie sur START pour démarrer une session',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                               ),
                             ),
-                          const SizedBox(
-                              height: 16), // AdAd margin before the text
-                          const SizedBox(
-                              height:
-                                  100), // Add more margin at the bottom to allow more scrolling
+                          const SizedBox(height: 16), // Add margin before the text
+                          const SizedBox(height: 100), // Add more margin at the bottom to allow more scrolling
                         ],
                       ),
                     ),
@@ -649,11 +734,10 @@ class _WorkingScreenState extends State<WorkingScreen>
                     // Make the full page scrollable
                     controller: _parentScrollController,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Align text to the left
+                        crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                         children: <Widget>[
                           const SizedBox(height: 16), // Add margin at the top
                           const TitleCard(
@@ -662,40 +746,54 @@ class _WorkingScreenState extends State<WorkingScreen>
                             subtitle: 'l\'évènement',
                           ),
                           const SizedBox(height: 16),
-                          ProgressCard(
-                            title: 'Objectif',
-                            value:
-                                '${_formatDistance(_distanceTotale ?? 0)} m (${_formatDistance(_metersGoal ?? 0)} m)',
-                            percentage: _calculateRealProgress(),
-                            logo: Image.asset(
-                              'assets/pictures/LogoSimple.png',
-                              width: 28, // Adjust the width as needed
-                              height: 28, // Adjust the height as needed
+                          Card(
+                            elevation: 0.0, // No shadow
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.0), // Rounded corners
+                            ),
+                            color: Colors.white, // Set white background color
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0), // Add padding inside the card
+                              child: Column(
+                                children: [
+                                  ProgressCard(
+                                    title: 'Objectif',
+                                    value:
+                                        '${_formatDistance(_distanceTotale ?? 0)} m (${_formatDistance(_metersGoal ?? 0)} m)',
+                                    percentage: _calculateRealProgress(),
+                                    logo: Image.asset(
+                                      'assets/pictures/LogoSimple.png',
+                                      width: 28, // Adjust the width as needed
+                                      height: 28, // Adjust the height as needed
+                                    ),
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  ProgressCard(
+                                    title: 'Temps restant',
+                                    value: _remainingTime,
+                                    percentage: _calculateRemainingTimePercentage(),
+                                    logo: const Icon(Icons.timer_outlined),
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  ProgressCard(
+                                    title: 'Participants ou groupe actuellement sur le parcours',
+                                    value: '${_numberOfParticipants ?? 0}',
+                                    percentage: ((_numberOfParticipants ?? 0) / 250 * 100)
+                                        .clamp(0, 100), // Calculate percentage with max 250
+                                    logo: const Icon(Icons.groups_2),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(height: 6),
-                          ProgressCard(
-                            title: 'Temps restant',
-                            value: _remainingTime,
-                            percentage: _calculateRemainingTimePercentage(),
-                            logo: const Icon(Icons.timer_outlined),
-                          ),
-                          const SizedBox(height: 6),
-                          ProgressCard(
-                            title:
-                                'Participants ou groupe actuellement sur le parcours',
-                            value: '${_numberOfParticipants ?? 0}',
-                            percentage: ((_numberOfParticipants ?? 0) /
-                                    250 *
-                                    100)
-                                .clamp(0,
-                                    100), // Calculate percentage with max 250
-                            logo: const Icon(Icons.groups_2),
-                          ),
-                          const SizedBox(height: 6),
-                          const SizedBox(
-                              height:
-                                  100), // Add more margin at the bottom to allow more scrolling
+                          const SizedBox(height: 100), // Add more margin at the bottom to allow more scrolling
                         ],
                       ),
                     ),
@@ -717,19 +815,16 @@ class _WorkingScreenState extends State<WorkingScreen>
                           width: 8.0, // Width for oval shape
                           height: 8.0, // Height for oval shape
                           decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(4.0), // Oval shape
+                            borderRadius: BorderRadius.circular(4.0), // Oval shape
                             color: _currentPage == i
                                 ? const Color(Config.COLOR_APP_BAR)
-                                : const Color(Config.COLOR_APP_BAR)
-                                    .withOpacity(0.1),
+                                : const Color(Config.COLOR_APP_BAR).withOpacity(0.1),
                           ),
                         ),
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                            horizontal: 10.0, vertical: 12.0)
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0)
                         .copyWith(bottom: 20.0), // Add padding
                     child: _isMeasureActive
                         ? DiscardButton(
@@ -743,12 +838,7 @@ class _WorkingScreenState extends State<WorkingScreen>
                             icon: Icons.flag_outlined,
                             text: 'START',
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SetupPosScreen()),
-                              );
+                              _navigateToScreen(const SetupPosScreen()); // Use navigation helper
                             },
                           ),
                   ),

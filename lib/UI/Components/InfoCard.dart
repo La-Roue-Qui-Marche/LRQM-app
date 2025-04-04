@@ -26,12 +26,10 @@ class ActionItem {
   final String label;
   final VoidCallback onPressed;
 
-  ActionItem(
-      {required this.icon, required this.label, required this.onPressed});
+  ActionItem({required this.icon, required this.label, required this.onPressed});
 }
 
-class _InfoCardState extends State<InfoCard>
-    with SingleTickerProviderStateMixin {
+class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -77,29 +75,10 @@ class _InfoCardState extends State<InfoCard>
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(2.0),
-          border: Border(
-            left: BorderSide(
-              color: Color(Config.COLOR_BUTTON), // Add right border
-              width: 2.0, // Set the width of the right border
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Subtle shadow color
-              blurRadius: 4.0, // Reduced blur radius for subtle shadow
-              offset: Offset(0, 2), // Vertical shadow offset
-            ),
-            BoxShadow(
-              color:
-                  Colors.black.withOpacity(0.05), // Even lighter shadow color
-              blurRadius: 2.0, // Smaller blur radius
-              offset: Offset(2, 0), // Horizontal shadow offset
-            ),
-          ],
+          color: Colors.transparent, // Ensure white background
+          borderRadius: BorderRadius.circular(16.0), // Rounded corners
         ),
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(10.0), // Consistent padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -111,19 +90,19 @@ class _InfoCardState extends State<InfoCard>
                     height: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(Config.COLOR_BACKGROUND).withOpacity(1),
+                      color: Colors.grey.withOpacity(0.1), // Subtle background for logo
                     ),
                     child: Center(
                       child: IconTheme(
                         data: const IconThemeData(
                           size: 28,
-                          color: Color(Config.COLOR_APP_BAR),
+                          color: Color(Config.COLOR_APP_BAR), // Icon color
                         ),
                         child: widget.logo!,
                       ),
                     ),
                   ),
-                if (widget.logo != null) const SizedBox(width: 12),
+                if (widget.logo != null) const SizedBox(width: 16), // Adjust spacing
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +111,7 @@ class _InfoCardState extends State<InfoCard>
                       Text(
                         widget.title,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 18, // Slightly larger font
                           color: Color(Config.COLOR_APP_BAR),
                         ),
                       ),
@@ -140,7 +119,7 @@ class _InfoCardState extends State<InfoCard>
                       Text(
                         widget.data,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 22, // Larger font for data
                           fontWeight: FontWeight.bold,
                           color: Color(Config.COLOR_APP_BAR),
                         ),
@@ -161,8 +140,7 @@ class _InfoCardState extends State<InfoCard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (widget.additionalDetails != null)
-                    const SizedBox(height: 16),
+                  if (widget.additionalDetails != null) const SizedBox(height: 16),
                   if (widget.additionalDetails != null)
                     Text(
                       widget.additionalDetails!,
@@ -171,19 +149,17 @@ class _InfoCardState extends State<InfoCard>
                         color: Color(Config.COLOR_APP_BAR),
                       ),
                     ),
-                  if (widget.additionalDetails != null)
-                    const SizedBox(height: 16),
+                  if (widget.additionalDetails != null) const SizedBox(height: 16),
                 ],
               ),
             ),
-            if (widget.actionItems != null &&
-                widget.actionItems!.isNotEmpty) ...[
+            if (widget.actionItems != null && widget.actionItems!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: widget.actionItems!.map((actionItem) {
                   return Padding(
-                    padding: const EdgeInsets.only(left: 20.0),
+                    padding: const EdgeInsets.only(left: 16.0),
                     child: Column(
                       children: [
                         IconButton(
@@ -193,7 +169,9 @@ class _InfoCardState extends State<InfoCard>
                         Text(
                           actionItem.label,
                           style: const TextStyle(
-                              color: Color(Config.COLOR_APP_BAR)),
+                            fontSize: 14,
+                            color: Color(Config.COLOR_APP_BAR),
+                          ),
                         ),
                       ],
                     ),

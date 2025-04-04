@@ -49,13 +49,11 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
       ),
     );
     Future.delayed(const Duration(seconds: 3), () async {
-      await ContributorsData.saveContributors(
-          widget.contributors); // Save the number of contributors
+      await ContributorsData.saveContributors(widget.contributors); // Save the number of contributors
       int? userId = await UserData.getUserId(); // Retrieve user ID
       if (userId != null) {
         await NewMeasureController.startMeasure(userId,
-            contributorsNumber:
-                widget.contributors); // Use NewMeasureController
+            contributorsNumber: widget.contributors); // Use NewMeasureController
       } else {
         log("User ID is null. Cannot start measure.");
       }
@@ -72,9 +70,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   /// and shows a dialog to confirm the start of the measure.
   /// [barcodes] : List of detected barcodes
   void _handleBarcode(BarcodeCapture barcodes) {
-    if (mounted &&
-        barcodes.barcodes.isNotEmpty &&
-        barcodes.barcodes.first.displayValue == Config.QR_CODE_S_VALUE) {
+    if (mounted && barcodes.barcodes.isNotEmpty && barcodes.barcodes.first.displayValue == Config.QR_CODE_S_VALUE) {
       _navigateToLoadingScreen();
     }
   }
@@ -130,55 +126,52 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            // Make the full page scrollable
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const SizedBox(height: 90),
-                  Center(
-                    child: GestureDetector(
-                      onDoubleTap: _startSessionDirectly,
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.55,
-                        child: const Image(
-                            image: AssetImage(
-                                'assets/pictures/DrawScan-removebg.png')),
+          Padding(
+            padding: const EdgeInsets.only(top: 80.0, left: 8.0, right: 8.0), // Add margin for the card
+            child: SingleChildScrollView(
+              child: Card(
+                elevation: 10,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: GestureDetector(
+                          onDoubleTap: _startSessionDirectly,
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.55,
+                            child: const Image(
+                              image: AssetImage('assets/pictures/DrawScan-removebg.png'),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 40),
+                      const InfoCard(
+                        title: "Le petit oiseau va sortir !",
+                        data: "Prend en photo le QR code pour démarrer ta session",
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 40),
-                  Container(
-                    margin: const EdgeInsets.only(top: 8.0),
-                    padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                    child: const InfoCard(
-                      title: "Le petit oiseau va sortir !",
-                      data:
-                          "Prend en photo le QR code pour démarrer ta session",
-                      actionItems: [],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const SizedBox(
-                      height:
-                          100), // Add more margin at the bottom to allow more scrolling
-                ],
+                ),
               ),
             ),
           ),
           Align(
-            alignment: Alignment.topLeft, // Fix the back button at the top
+            alignment: Alignment.topLeft, // Place the back button at the top left
             child: Padding(
-              padding: const EdgeInsets.only(top: 40, left: 10), // Add padding
+              padding: const EdgeInsets.only(top: 40, left: 10),
               child: IconButton(
-                icon: const Icon(Icons.arrow_back,
-                    color: Color(Config.COLOR_APP_BAR), size: 32),
+                icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -187,11 +180,9 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
           ),
           if (!_isCameraOpen)
             Align(
-              alignment: Alignment
-                  .bottomCenter, // Fix the "Ouvrir la caméra" button at the bottom
+              alignment: Alignment.bottomCenter, // Place the "Ouvrir la caméra" button at the bottom
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10.0, vertical: 20.0), // Add padding
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
                 child: ActionButton(
                   icon: Icons.camera_alt,
                   text: "Ouvrir la caméra",
@@ -210,8 +201,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                   top: 40,
                   right: 10,
                   child: IconButton(
-                    icon:
-                        const Icon(Icons.close, color: Colors.white, size: 32),
+                    icon: const Icon(Icons.close, color: Colors.white, size: 32),
                     onPressed: _quitCamera,
                   ),
                 ),

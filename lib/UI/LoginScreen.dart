@@ -53,8 +53,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
       _isEventActive = false; // Show loading screen while fetching event info
     });
 
-    Result<List<dynamic>> eventsResult =
-        await NewEventController.getAllEvents();
+    Result<List<dynamic>> eventsResult = await NewEventController.getAllEvents();
     if (eventsResult.hasError) {
       log("Error fetching events: ${eventsResult.error}"); // Log the error details
       setState(() {
@@ -107,13 +106,11 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
     if (now.isBefore(startDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showCountdownModal(context, "C'est bientôt l'heure !",
-            startDate: startDate); // Show countdown modal
+        showCountdownModal(context, "C'est bientôt l'heure !", startDate: startDate); // Show countdown modal
       });
     } else if (now.isAfter(endDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(context, "C'est fini !",
-            "Malheureusement, l'évènement est terminé.");
+        showTextModal(context, "C'est fini !", "Malheureusement, l'évènement est terminé.");
       });
     }
   }
@@ -125,7 +122,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showTextModal(
         context,
-        "Utilisateur introuvable",
+        "Dossard introuvable",
         "Cet utilisateur n'existe pas. Veuillez vérifier le numéro de dossard et réessayer.",
         showConfirmButton: true,
       );
@@ -144,19 +141,28 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     // Hide the keyboard
     FocusScope.of(context).unfocus();
 
+    if (_controller.text.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showTextModal(
+          context,
+          "Erreur",
+          "Veuillez entrer un numéro de dossard.",
+          showConfirmButton: true,
+        );
+      });
+      return;
+    }
+
     setState(() {});
 
     Navigator.push(
       context,
-      MaterialPageRoute(
-          builder: (context) =>
-              const LoadingScreen()), // Ensure LoadingScreen is correctly referenced
+      MaterialPageRoute(builder: (context) => const LoadingScreen()), // Ensure LoadingScreen is correctly referenced
     );
 
     try {
       int dossardNumber = int.parse(_controller.text);
-      Result dosNumResult = await NewUserController.getUser(
-          dossardNumber); // Use NewUserController
+      Result dosNumResult = await NewUserController.getUser(dossardNumber); // Use NewUserController
 
       if (dosNumResult.error != null) {
         // Show error message in snackbar
@@ -166,15 +172,12 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         Navigator.pop(context); // Close the loading page
       } else {
         setState(() {
-          _name = dosNumResult
-              .value['username']; // Extract username from the API response
+          _name = dosNumResult.value['username']; // Extract username from the API response
           _dossard = dossardNumber;
         });
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  ConfirmScreen(name: _name, dossard: _dossard)),
+          MaterialPageRoute(builder: (context) => ConfirmScreen(name: _name, dossard: _dossard)),
         );
       }
     } catch (e) {
@@ -194,101 +197,54 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     _controller.addListener(_onTextChanged);
 
     return Scaffold(
-      backgroundColor: Colors.white, // Set background color to white
-      resizeToAvoidBottomInset: true, // Allow resizing for other widgets
       body: Stack(
         children: [
           Positioned.fill(
-            child: IgnorePointer(
-              child: SvgPicture.asset(
-                'assets/pictures/background.svg',
-                fit: BoxFit.cover, // Ensure the image covers the available space
-              ),
+            child: SvgPicture.asset(
+              'assets/pictures/background.svg', // Revert to SVG background
+              fit: BoxFit.cover, // Ensure it covers the entire screen
             ),
           ),
           Center(
-            child: Padding(
-              // ...existing code...
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20.0), // Add margin
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start, // Align text to the left
-                children: <Widget>[
-                  Flexible(
-                    flex: 2,
-                    child: SizedBox(height: isKeyboardVisible ? 60 : 100),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Card(
+                  elevation: 10,
+                  color: Colors.white, // Ensure the card background is white
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const Visibility(
-                    //visible: !isKeyboardVisible,
-                    maintainSize: false,
-                    child: Flexible(
-                      flex: 3,
-                      child: Center(
-                        child: Image(
-                            image: AssetImage(
-                                'assets/pictures/LogoTextAnimated.gif')),
-                      ),
-                    ),
-                  ),
-                  Flexible(
-                    flex: 2,
-                    child: SizedBox(height: isKeyboardVisible ? 60 : 80),
-                  ),
-                  Expanded(
-                    flex: 12,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
                     child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.start, // Reduce margin
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // Align text to the left
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Bienvenue,',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Color(Config.COLOR_APP_BAR), // Blue color
-                            fontWeight: FontWeight.bold, // Bold
+                        const Center(
+                          child: Image(
+                            image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
+                            height: 100, // Adjust height as needed
                           ),
                         ),
-                        const SizedBox(height: 20), // Add small margin
-                        Stack(
-                          children: [
-                            RichText(
-                              text: const TextSpan(
-                                text: 'Entre ton ',
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color(Config.COLOR_APP_BAR)),
-                                children: <TextSpan>[
-                                  TextSpan(
-                                    text: 'numéro de dossard',
-                                    style: TextStyle(
-                                      fontSize:
-                                          16, // Remove font size difference
-                                      color: Color(
-                                          Config.COLOR_APP_BAR), // Blue color
-                                      fontWeight: FontWeight.bold, // Bold
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: ' pour t\'identifier à l`évènement.',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        color: Color(Config.COLOR_APP_BAR)),
-                                  ),
-                                ],
+                        const SizedBox(height: 32),
+                        const Text(
+                          'Entre ton numéro de dossard pour continuer.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color(Config.COLOR_APP_BAR), // Updated color
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Container(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Color(Config.COLOR_APP_BAR), // Bottom border in COLOR_APP_BAR
+                                width: 1,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 20), // Add small margin
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(Config.COLOR_APP_BAR)
-                                .withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(2.0),
                           ),
                           child: TextField(
                             controller: _controller,
@@ -296,70 +252,65 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(4),
                             ],
-                            textAlign: TextAlign
-                                .center, // Center the text horizontally
+                            textAlign: TextAlign.center,
                             decoration: const InputDecoration(
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(12.0),
+                              contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
                             ),
                             style: const TextStyle(
-                              fontSize: 28,
-                              color: Color(Config
-                                  .COLOR_APP_BAR), // Set input text color to APP_COLOR
-                              letterSpacing:
-                                  8.0, // Increase space between characters
-                              fontWeight: FontWeight.bold, //
+                              fontSize: 26,
+                              color: Color(Config.COLOR_APP_BAR), // Updated color
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4.0,
                             ),
                           ),
                         ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 10),
-                          child: const Text(
-                            '1 à 9999',
+                        const SizedBox(height: 8),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Entre un numéro entre 1 et 9999.',
                             style: TextStyle(
-                              color: Color(Config
-                                  .COLOR_APP_BAR), // Reduce opacity to 0.5
                               fontSize: 14,
+                              color: Color(Config.COLOR_APP_BAR), // Updated color
                             ),
                           ),
                         ),
-                        const Spacer(), // Add spacer to push the button and version text to the bottom
-                        SizedBox(
-                          width: double.infinity, // Full width
-                          child: ActionButton(
-                            icon: Icons.login, // Add connection icon
-                            text: 'Se connecter',
-                            onPressed: _getUserame,
-                          ),
+                        const SizedBox(height: 16),
+                        ActionButton(
+                          icon: Icons.login, // Add login icon
+                          text: 'Se Connecter',
+                          onPressed: _getUserame,
                         ),
-                        const SizedBox(
-                            height: 12), // Add margin below the button
+                        const SizedBox(height: 16),
+                        FutureBuilder<String>(
+                          future: Config.getAppVersion(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.done) {
+                              return Text(
+                                'Version ${snapshot.data}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF999999),
+                                ),
+                              );
+                            } else {
+                              return const Text(
+                                'Version ...',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF999999),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 25,
-            left: 25,
-            child: Center(
-              child: FutureBuilder<String>(
-                future: Config.getAppVersion(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return Text(
-                      'v${snapshot.data}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    );
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                },
+                ),
               ),
             ),
           ),

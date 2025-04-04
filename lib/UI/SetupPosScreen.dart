@@ -46,8 +46,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   void _openInGoogleMaps() async {
-    const url =
-        'geo:${Config.LAT1},${Config.LON1}?q=${Config.LAT1},${Config.LON1}';
+    const url = 'geo:${Config.LAT1},${Config.LON1}?q=${Config.LAT1},${Config.LON1}';
     await launch(url);
   }
 
@@ -55,9 +54,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     const coordinates = '${Config.LAT1}, ${Config.LON1}';
     Clipboard.setData(const ClipboardData(text: coordinates));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content:
-              Text('Les coordonnées ont été copiées dans le presse-papiers.')),
+      const SnackBar(content: Text('Les coordonnées ont été copiées dans le presse-papiers.')),
     );
   }
 
@@ -67,10 +64,8 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       backgroundColor: Colors.transparent, // Make background transparent
       builder: (BuildContext context) {
         return Container(
-          height: MediaQuery.of(context).size.height *
-              1, // Increase height to take more space
-          margin: const EdgeInsets.symmetric(
-              vertical: 20.0, horizontal: 20.0), // Add margin left and right
+          height: MediaQuery.of(context).size.height * 1, // Increase height to take more space
+          margin: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // Add margin left and right
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30.0), // Add rounded borders
             boxShadow: const [
@@ -85,8 +80,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             color: Colors.white, // Set the color of the container to white
           ),
           child: ClipRRect(
-            borderRadius:
-                BorderRadius.circular(30.0), // Clip the map to rounded borders
+            borderRadius: BorderRadius.circular(30.0), // Clip the map to rounded borders
             child: Stack(
               children: [
                 FlutterMap(
@@ -95,35 +89,27 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                     initialCameraFit: CameraFit.bounds(
                       bounds: LatLngBounds(
                         const LatLng(Config.LAT1, Config.LON1),
-                        LatLng(_currentPosition?.latitude ?? Config.LAT1,
-                            _currentPosition?.longitude ?? Config.LON1),
+                        LatLng(_currentPosition?.latitude ?? Config.LAT1, _currentPosition?.longitude ?? Config.LON1),
                       ),
-                      padding: const EdgeInsets.all(
-                          50.0), // Increase padding to zoom out more
+                      padding: const EdgeInsets.all(50.0), // Increase padding to zoom out more
                     ),
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: const ['a', 'b', 'c'],
                     ),
                     MarkerLayer(
                       markers: [
                         const Marker(
-                          point: LatLng(
-                              Config.LAT1, Config.LON1), // Updated coordinates
-                          child: Icon(Icons.place,
-                              color: Color(Config.COLOR_BUTTON),
-                              size: 48), // Increase icon size
+                          point: LatLng(Config.LAT1, Config.LON1), // Updated coordinates
+                          child: Icon(Icons.place, color: Color(Config.COLOR_BUTTON), size: 48), // Increase icon size
                         ),
                         if (_currentPosition != null)
                           Marker(
-                            point: LatLng(_currentPosition!.latitude,
-                                _currentPosition!.longitude),
+                            point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
                             child: const Icon(Icons.my_location,
-                                color: Color(Config.COLOR_APP_BAR),
-                                size: 48), // Increase icon size
+                                color: Color(Config.COLOR_APP_BAR), size: 48), // Increase icon size
                           ),
                       ],
                     ),
@@ -133,8 +119,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                   top: 10,
                   right: 10,
                   child: IconButton(
-                    icon:
-                        const Icon(Icons.close, color: Colors.black, size: 32),
+                    icon: const Icon(Icons.close, color: Colors.black, size: 32),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -208,16 +193,12 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             log("3");
             Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      const SetupTeamScreen()), // Navigate to the next screen
+              MaterialPageRoute(builder: (context) => const SetupTeamScreen()), // Navigate to the next screen
             );
           }
         } else {
           final distance = await Geolocation().distanceToZone();
-          final distanceText = distance > 0
-              ? "Tu es actuellement à ${distance.toStringAsFixed(1)} km de la zone."
-              : "";
+          final distanceText = distance > 0 ? "Tu es actuellement à ${distance.toStringAsFixed(1)} km de la zone." : "";
 
           showTextModal(
             context,
@@ -260,79 +241,75 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set background color to white
+      backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            // Make the full page scrollable
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10.0), // Add margin
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start, // Align text to the left
-                children: <Widget>[
-                  const SizedBox(height: 90), // Add margin at the top
-                  Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      child: const Image(
-                          image: AssetImage(
-                              'assets/pictures/DrawPosition-removebg.png')),
-                    ),
-                  ),
-                  const SizedBox(height: 32), // Add margin after the logo
-                  InfoCard(
-                    title: "Préparez vous",
-                    data: "Rendez-vous au point de départ de l'évènement.",
-                    actionItems: [
-                      ActionItem(
-                        icon: const Icon(Icons.map,
-                            color: Color(Config.COLOR_APP_BAR), size: 32),
-                        label: 'Carte',
-                        onPressed: () => _showMapModal(context),
+          Padding(
+            padding: const EdgeInsets.only(top: 80.0, left: 8.0, right: 8.0),
+            child: SingleChildScrollView(
+              child: Card(
+                elevation: 10,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.4,
+                          child: const Image(
+                            image: AssetImage('assets/pictures/DrawPosition-removebg.png'),
+                          ),
+                        ),
                       ),
-                      ActionItem(
-                        icon: const Icon(Icons.directions,
-                            color: Color(Config.COLOR_APP_BAR), size: 32),
-                        label: 'Maps',
-                        onPressed: _openInGoogleMaps,
+                      const SizedBox(height: 32),
+                      InfoCard(
+                        title: "Préparez-vous",
+                        data: "Rendez-vous au point de départ de l'évènement.",
+                        actionItems: [
+                          ActionItem(
+                            icon: const Icon(Icons.map, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            label: 'Carte',
+                            onPressed: () => _showMapModal(context),
+                          ),
+                          ActionItem(
+                            icon: const Icon(Icons.directions, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            label: 'Maps',
+                            onPressed: _openInGoogleMaps,
+                          ),
+                          ActionItem(
+                            icon: const Icon(Icons.copy_rounded, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            label: 'Copier',
+                            onPressed: _copyCoordinates,
+                          ),
+                        ],
                       ),
-                      ActionItem(
-                        icon: const Icon(Icons.copy_rounded,
-                            color: Color(Config.COLOR_APP_BAR), size: 32),
-                        label: 'Copier',
-                        onPressed: _copyCoordinates,
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
+                        textAlign: TextAlign.left, // Align text to the left
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(Config.COLOR_APP_BAR),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10), // Add margin between cards
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 5.0),
-                    child: Text(
-                      'Appuie sur \'Suivant\' quand tu es sur le lieu de l\'évènement',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(Config.COLOR_APP_BAR),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20), // Add margin between cards
-                  const SizedBox(
-                      height:
-                          100), // Add more margin at the bottom to allow more scrolling
-                ],
+                ),
               ),
             ),
           ),
           Align(
-            alignment: Alignment.topLeft, // Fix the back button at the top
+            alignment: Alignment.topLeft, // Place the back button at the top left
             child: Padding(
-              padding: const EdgeInsets.only(top: 40, left: 10), // Add padding
+              padding: const EdgeInsets.only(top: 40, left: 10),
               child: IconButton(
-                icon: const Icon(Icons.arrow_back,
-                    color: Color(Config.COLOR_APP_BAR), size: 32),
+                icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -340,19 +317,17 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
           ),
           Align(
-            alignment: Alignment
-                .bottomCenter, // Fix the "Suivant" button at the bottom
+            alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10.0, vertical: 20.0), // Add padding
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
               child: ActionButton(
-                icon: Icons.arrow_forward, // Add icon to "Suivant" button
+                icon: Icons.arrow_forward,
                 text: 'Suivant',
-                onPressed: _navigateToSetupTeamScreen, // Update method call
+                onPressed: _navigateToSetupTeamScreen,
               ),
             ),
           ),
-          if (_isLoading) const LoadingScreen(), // Display LoadingScreen
+          if (_isLoading) const LoadingScreen(),
         ],
       ),
     );
