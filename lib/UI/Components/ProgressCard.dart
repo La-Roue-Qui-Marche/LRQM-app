@@ -8,40 +8,18 @@ class ProgressCard extends StatelessWidget {
   final Widget logo;
 
   const ProgressCard(
-      {super.key,
-      required this.title,
-      required this.value,
-      required this.percentage,
-      required this.logo});
+      {super.key, required this.title, required this.value, required this.percentage, required this.logo});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(2.0),
-        border: Border(
-          left: BorderSide(
-            color: Color(Config.COLOR_BUTTON), // Add right border
-            width: 2.0, // Set the width of the right border
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1), // Subtle shadow color
-            blurRadius: 4.0, // Reduced blur radius for subtle shadow
-            offset: Offset(0, 2), // Vertical shadow offset
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05), // Even lighter shadow color
-            blurRadius: 2.0, // Smaller blur radius
-            offset: Offset(2, 0), // Horizontal shadow offset
-          ),
-        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -81,7 +59,7 @@ class ProgressCard extends StatelessWidget {
                       Text(
                         value,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(Config.COLOR_APP_BAR),
                         ),
@@ -110,10 +88,8 @@ class ProgressCard extends StatelessWidget {
                   flex: 4, // 66% of the row
                   child: LinearProgressIndicator(
                     value: percentage / 100,
-                    backgroundColor:
-                        const Color(Config.COLOR_BACKGROUND).withOpacity(1),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(Config.COLOR_APP_BAR)),
+                    backgroundColor: const Color(Config.COLOR_BACKGROUND).withOpacity(1),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(Config.COLOR_APP_BAR)),
                     minHeight: 4,
                   ),
                 ),

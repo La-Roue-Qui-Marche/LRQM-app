@@ -1,9 +1,10 @@
 import 'dart:developer';
-import 'dart:async'; // Import Timer from dart:async
+import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg package
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../API/NewEventController.dart';
 import '../API/NewUserController.dart';
@@ -16,10 +17,6 @@ import '../Data/EventData.dart';
 import 'Components/CountdownModal.dart';
 import 'Components/TextModal.dart';
 
-/// Class to display the login screen.
-/// This screen allows the user to enter his dossard number
-/// and check if the name is correct.
-/// The user can then access the information screen.
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -27,20 +24,11 @@ class Login extends StatefulWidget {
   State<Login> createState() => _LoginState();
 }
 
-/// State of the Login class.
 class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
-  /// Controller to get the dossard number entered by the user.
   final TextEditingController _controller = TextEditingController();
-
-  /// Name of the user.
   String _name = "";
-
-  /// Dossard number of the user.
   int _dossard = -1;
-
-  /// Event status.
   bool _isEventActive = false;
-  String _eventMessage = "";
 
   @override
   void initState() {
@@ -50,15 +38,14 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
   void _checkEventStatus() async {
     setState(() {
-      _isEventActive = false; // Show loading screen while fetching event info
+      _isEventActive = false;
     });
 
-    Result<List<dynamic>> eventsResult =
-        await NewEventController.getAllEvents();
+    Result<List<dynamic>> eventsResult = await NewEventController.getAllEvents();
     if (eventsResult.hasError) {
-      log("Error fetching events: ${eventsResult.error}"); // Log the error details
+      log("Error fetching events: ${eventsResult.error}");
       setState(() {
-        _isEventActive = true; // Render login page before showing modal
+        _isEventActive = true;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showTextModal(
@@ -66,7 +53,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
           "Erreur",
           "Erreur lors de la récupération de l'évènement. Veuillez vérifier votre connexion internet.",
           showConfirmButton: true,
-          onConfirm: _checkEventStatus, // Retry fetching events on confirmation
+          onConfirm: _checkEventStatus,
         );
       });
       return;
@@ -80,7 +67,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
     if (event == null) {
       setState(() {
-        _isEventActive = true; // Render login page before showing modal
+        _isEventActive = true;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showTextModal(
@@ -88,7 +75,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
           "Erreur",
           "L'évènement '${Config.EVENT_NAME}' n'existe pas.",
           showConfirmButton: true,
-          onConfirm: _checkEventStatus, // Retry fetching events on confirmation
+          onConfirm: _checkEventStatus,
         );
       });
       return;
@@ -98,89 +85,86 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     DateTime endDate = DateTime.parse(event['end_date']);
     DateTime now = DateTime.now();
 
-    // Save all event details using EventData
     await EventData.saveEvent(event);
 
     setState(() {
-      _isEventActive = true; // Render login page
+      _isEventActive = true;
     });
 
     if (now.isBefore(startDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showCountdownModal(context, "C'est bientôt l'heure !",
-            startDate: startDate); // Show countdown modal
+        showCountdownModal(context, "C'est bientôt l'heure !", startDate: startDate);
       });
     } else if (now.isAfter(endDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(context, "C'est fini !",
-            "Malheureusement, l'évènement est terminé.");
+        showTextModal(context, "C'est fini !", "Malheureusement, l'évènement est terminé.");
       });
     }
   }
 
   void _onTextChanged() {}
 
-  /// Show a modal when the user ID is not found.
   void _showUserNotFoundModal() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showTextModal(
         context,
-        "Utilisateur introuvable",
-        "Cet utilisateur n'existe pas. Veuillez vérifier le numéro de dossard et réessayer.",
+        "Numéro de dossard introuvable",
+        "Il faut entrer ton numéro de dossard compris entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
         showConfirmButton: true,
       );
     });
   }
 
-  /// Function to show a snackbar with the message [value].
   void showInSnackBar(String value) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
-  /// Function to get the name of the user with the dossard number entered by the user.
   void _getUserame() async {
     log("Trying to login");
 
-    // Hide the keyboard
     FocusScope.of(context).unfocus();
+
+    if (_controller.text.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showTextModal(
+          context,
+          "Numéro de dossard manquant",
+          "Il faut entrer ton numéro de dossard compris entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
+          showConfirmButton: true,
+        );
+      });
+      return;
+    }
 
     setState(() {});
 
     Navigator.push(
       context,
-      MaterialPageRoute(
-          builder: (context) =>
-              const LoadingScreen()), // Ensure LoadingScreen is correctly referenced
+      MaterialPageRoute(builder: (context) => const LoadingScreen()),
     );
 
     try {
       int dossardNumber = int.parse(_controller.text);
-      Result dosNumResult = await NewUserController.getUser(
-          dossardNumber); // Use NewUserController
+      Result dosNumResult = await NewUserController.getUser(dossardNumber);
 
       if (dosNumResult.error != null) {
-        // Show error message in snackbar
-        showInSnackBar(dosNumResult.error!);
-        _showUserNotFoundModal(); // Display modal for user not found
+        _showUserNotFoundModal();
         setState(() {});
-        Navigator.pop(context); // Close the loading page
+        Navigator.pop(context);
       } else {
         setState(() {
-          _name = dosNumResult
-              .value['username']; // Extract username from the API response
+          _name = dosNumResult.value['username'];
           _dossard = dossardNumber;
         });
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  ConfirmScreen(name: _name, dossard: _dossard)),
+          MaterialPageRoute(builder: (context) => ConfirmScreen(name: _name, dossard: _dossard)),
         );
       }
     } catch (e) {
       showInSnackBar("Numéro de dossard invalide ");
       setState(() {});
-      Navigator.pop(context); // Close the loading page
+      Navigator.pop(context);
     }
   }
 
@@ -190,105 +174,74 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
       return const LoadingScreen();
     }
 
-    bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom != 0;
     _controller.addListener(_onTextChanged);
 
     return Scaffold(
-      backgroundColor: Colors.white, // Set background color to white
-      resizeToAvoidBottomInset: true, // Allow resizing for other widgets
       body: Stack(
         children: [
           Positioned.fill(
-            child: IgnorePointer(
-              child: SvgPicture.asset(
-                'assets/pictures/background.svg',
-                fit: BoxFit.cover, // Ensure the image covers the available space
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              child: Stack(
+                children: [
+                  Image.asset(
+                    'assets/pictures/background_2.png',
+                    fit: BoxFit.cover, // Ensure the background image covers the full screen
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                  BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0), // Reduce blur effect
+                    child: Container(
+                      color: Colors.black.withOpacity(0.05), // Add a very subtle overlay
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           Center(
-            child: Padding(
-              // ...existing code...
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20.0), // Add margin
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start, // Align text to the left
-                children: <Widget>[
-                  Flexible(
-                    flex: 2,
-                    child: SizedBox(height: isKeyboardVisible ? 60 : 100),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Card(
+                  elevation: 10,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const Visibility(
-                    //visible: !isKeyboardVisible,
-                    maintainSize: false,
-                    child: Flexible(
-                      flex: 3,
-                      child: Center(
-                        child: Image(
-                            image: AssetImage(
-                                'assets/pictures/LogoTextAnimated.gif')),
-                      ),
-                    ),
-                  ),
-                  Flexible(
-                    flex: 2,
-                    child: SizedBox(height: isKeyboardVisible ? 60 : 80),
-                  ),
-                  Expanded(
-                    flex: 12,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
                     child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.start, // Reduce margin
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // Align text to the left
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Bienvenue,',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Color(Config.COLOR_APP_BAR), // Blue color
-                            fontWeight: FontWeight.bold, // Bold
+                        const SizedBox(height: 10),
+                        const Center(
+                          child: Image(
+                            image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
+                            height: 90,
                           ),
                         ),
-                        const SizedBox(height: 20), // Add small margin
-                        Stack(
-                          children: [
-                            RichText(
-                              text: const TextSpan(
-                                text: 'Entre ton ',
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color(Config.COLOR_APP_BAR)),
-                                children: <TextSpan>[
-                                  TextSpan(
-                                    text: 'numéro de dossard',
-                                    style: TextStyle(
-                                      fontSize:
-                                          16, // Remove font size difference
-                                      color: Color(
-                                          Config.COLOR_APP_BAR), // Blue color
-                                      fontWeight: FontWeight.bold, // Bold
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: ' pour t\'identifier à l`évènement.',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        color: Color(Config.COLOR_APP_BAR)),
-                                  ),
-                                ],
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Entre ton numéro de dossard pour continuer.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(Config.COLOR_APP_BAR),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Color(Config.COLOR_APP_BAR),
+                                width: 1,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 20), // Add small margin
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(Config.COLOR_APP_BAR)
-                                .withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(2.0),
                           ),
                           child: TextField(
                             controller: _controller,
@@ -296,70 +249,65 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(4),
                             ],
-                            textAlign: TextAlign
-                                .center, // Center the text horizontally
+                            textAlign: TextAlign.center,
                             decoration: const InputDecoration(
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(12.0),
+                              contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
                             ),
                             style: const TextStyle(
-                              fontSize: 28,
-                              color: Color(Config
-                                  .COLOR_APP_BAR), // Set input text color to APP_COLOR
-                              letterSpacing:
-                                  8.0, // Increase space between characters
-                              fontWeight: FontWeight.bold, //
+                              fontSize: 24,
+                              color: Color(Config.COLOR_APP_BAR),
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4.0,
                             ),
                           ),
                         ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 10),
-                          child: const Text(
-                            '1 à 9999',
+                        const SizedBox(height: 8),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Entre un numéro entre 1 et 9999.',
                             style: TextStyle(
-                              color: Color(Config
-                                  .COLOR_APP_BAR), // Reduce opacity to 0.5
                               fontSize: 14,
+                              color: Color(Config.COLOR_APP_BAR),
                             ),
                           ),
                         ),
-                        const Spacer(), // Add spacer to push the button and version text to the bottom
-                        SizedBox(
-                          width: double.infinity, // Full width
-                          child: ActionButton(
-                            icon: Icons.login, // Add connection icon
-                            text: 'Se connecter',
-                            onPressed: _getUserame,
-                          ),
+                        const SizedBox(height: 16),
+                        ActionButton(
+                          icon: Icons.login,
+                          text: 'Connexion',
+                          onPressed: _getUserame,
                         ),
-                        const SizedBox(
-                            height: 12), // Add margin below the button
+                        const SizedBox(height: 16),
+                        FutureBuilder<String>(
+                          future: Config.getAppVersion(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.done) {
+                              return Text(
+                                'Version ${snapshot.data}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF999999),
+                                ),
+                              );
+                            } else {
+                              return const Text(
+                                'Version ...',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF999999),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 25,
-            left: 25,
-            child: Center(
-              child: FutureBuilder<String>(
-                future: Config.getAppVersion(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return Text(
-                      'v${snapshot.data}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    );
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                },
+                ),
               ),
             ),
           ),

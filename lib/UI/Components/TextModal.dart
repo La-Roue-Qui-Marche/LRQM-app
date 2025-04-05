@@ -1,49 +1,80 @@
 import 'package:flutter/material.dart';
 import '../../Utils/config.dart';
 import 'ActionButton.dart';
+import 'DiscardButton.dart';
 
 void showTextModal(BuildContext context, String title, String message,
-    {bool showConfirmButton = false, VoidCallback? onConfirm}) {
+    {bool showConfirmButton = false,
+    VoidCallback? onConfirm,
+    bool showDiscardButton = false,
+    VoidCallback? onDiscard}) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      isDismissible: false, // Prevent dismissing the modal by tapping outside
+      enableDrag: false, // Disable swipe-to-dismiss
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0), // Rounded corners
-          ),
-          backgroundColor: Colors.white, // Default background color
-          title: Text(
-            title,
-            style: const TextStyle(
-              color: Color(Config.COLOR_APP_BAR), // Use COLOR_APP_BAR for text
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-          content: Column(
+        return Container(
+          width: MediaQuery.of(context).size.width, // Ensure full width
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
+                title,
+                style: const TextStyle(
+                  color: Color(Config.COLOR_APP_BAR),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
                 message,
                 style: const TextStyle(
-                  color:
-                      Color(Config.COLOR_APP_BAR), // Use COLOR_APP_BAR for text
-                  fontSize: 16, // Increase font size to 16
+                  color: Color(Config.COLOR_APP_BAR),
+                  fontSize: 16,
                 ),
-                textAlign: TextAlign.left, // Justify text alignment
+                textAlign: TextAlign.left,
               ),
-              if (showConfirmButton) ...[
-                const SizedBox(height: 20), // Add spacing before the button
-                ActionButton(
-                  text: "OK",
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close the modal
-                    if (onConfirm != null) {
-                      onConfirm(); // Execute the onConfirm callback
-                    }
-                  },
+              if (showConfirmButton || showDiscardButton) ...[
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (showDiscardButton)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          child: DiscardButton(
+                            text: "Annuler",
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ),
+                      ),
+                    if (showConfirmButton)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          child: ActionButton(
+                            text: "OK",
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              if (onConfirm != null) {
+                                onConfirm();
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ],

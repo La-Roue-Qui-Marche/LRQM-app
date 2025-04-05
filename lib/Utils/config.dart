@@ -6,7 +6,7 @@ class Config {
   // ------------------- Version----------------
   static String _appVersion = 'Unknown';
   // ------------------- API -------------------
-  static const String API_URL = 'api.rqm.duckdns.org';
+  static const String API_URL = 'api.la-rqm.dynv6.net';
   static const String API_COMMON_ADDRESS = '/app/measures/';
   // -------------- EVENT DATA ----------------
   static const String EVENT_NAME = 'TEST';
@@ -27,7 +27,7 @@ class Config {
   static const double LAT2 = 45.8179; // South-West latitude
   static const double LON2 = 5.9561; // South-West longitude
 
-  static List<mp.LatLng> ZONE_EVENT = [
+  static final List<mp.LatLng> ZONE_EVENT = [
     mp.LatLng(LAT1, LON1),
     mp.LatLng(LAT2, LON1),
     mp.LatLng(LAT2, LON2),
@@ -39,12 +39,9 @@ class Config {
   static const int COLOR_BUTTON = 0xFFFF9900;
   static const int COLOR_TITRE = 0xFFFFFFFF;
   static const int COLOR_BACKGROUND = 0xFFF0F0F0;
-
   // ----------------- Constantes -----------------
-  static const double CIRCUIT_SIZE =
-      3500.0; // Define the circuit size in meters
-  static const int TARGET_DISTANCE =
-      2000000; // Define the target total distance in meters
+  static const double CIRCUIT_SIZE = 3500.0; // Define the circuit size in meters
+  static const int TARGET_DISTANCE = 2000000; // Define the target total distance in meters
 
   /// Function to get the application version.
   static Future<String> getAppVersion() async {
