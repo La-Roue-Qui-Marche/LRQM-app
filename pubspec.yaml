@@ -31,7 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_svg: ^2.0.7 # Add this dependency for SVG support
-  flutter_map: ^7.0.2
+  flutter_map: ^6.1.0
   shared_preferences: ^2.2.3      # For storing data locally
   mobile_scanner: ^5.1.1          # For scanning QR codes
   http: ^1.2.1                    # For making HTTP requests
@@ -90,6 +90,7 @@ flutter:
     - assets/pictures/DrawScan-removebg.png
     - assets/pictures/HEIG_VD.jpg
     - assets/pictures/background.svg
+    - assets/pictures/background_2.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

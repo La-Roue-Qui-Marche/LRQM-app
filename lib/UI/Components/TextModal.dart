@@ -13,11 +13,14 @@ void showTextModal(BuildContext context, String title, String message,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
+      isDismissible: false, // Prevent dismissing the modal by tapping outside
+      enableDrag: false, // Disable swipe-to-dismiss
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (BuildContext context) {
-        return Padding(
+        return Container(
+          width: MediaQuery.of(context).size.width, // Ensure full width
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -27,7 +30,7 @@ void showTextModal(BuildContext context, String title, String message,
                 style: const TextStyle(
                   color: Color(Config.COLOR_APP_BAR),
                   fontWeight: FontWeight.bold,
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
               ),
               const SizedBox(height: 16),

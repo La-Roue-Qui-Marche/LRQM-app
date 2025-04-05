@@ -25,7 +25,7 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   _TopAppBarState createState() => _TopAppBarState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(70.0); // Increased height for modern look
+  Size get preferredSize => const Size.fromHeight(60.0); // Reduced height for a compact look
 }
 
 class _TopAppBarState extends State<TopAppBar> {
@@ -91,10 +91,7 @@ class _TopAppBarState extends State<TopAppBar> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(16.0),
-          bottomRight: Radius.circular(16.0),
-        ),
+        borderRadius: BorderRadius.zero, // Removed border radius
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -105,7 +102,7 @@ class _TopAppBarState extends State<TopAppBar> {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Reduced top margin
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Adjusted padding
           child: Row(
             children: [
               if (widget.isRecording) ...[

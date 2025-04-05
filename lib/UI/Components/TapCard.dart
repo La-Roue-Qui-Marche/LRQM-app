@@ -22,21 +22,10 @@ class TapCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isSelected
-              ? Color(Config.COLOR_BUTTON)
-              : Colors.white, // Change background color if selected
-          borderRadius: BorderRadius.circular(8.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: isSelected ? Color(Config.COLOR_BUTTON) : Colors.white, // Change background color if selected
+          borderRadius: BorderRadius.circular(12.0),
         ),
-        padding: const EdgeInsets.symmetric(
-            vertical: 8.0, horizontal: 16.0), // Reduce vertical padding
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0), // Reduce vertical padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -45,10 +34,8 @@ class TapCard extends StatelessWidget {
                 IconTheme(
                   data: IconThemeData(
                     size: 32,
-                    color: isSelected
-                        ? Colors.white
-                        : const Color(Config
-                            .COLOR_APP_BAR), // Change logo color if selected
+                    color:
+                        isSelected ? Colors.white : const Color(Config.COLOR_APP_BAR), // Change logo color if selected
                   ),
                   child: logo,
                 ),
@@ -58,10 +45,7 @@ class TapCard extends StatelessWidget {
                     text,
                     style: TextStyle(
                       fontSize: 16,
-                      color: isSelected
-                          ? Colors.white
-                          : Color(Config
-                              .COLOR_APP_BAR), // Change text color if selected
+                      color: isSelected ? Colors.white : Color(Config.COLOR_APP_BAR), // Change text color if selected
                     ),
                   ),
                 ),

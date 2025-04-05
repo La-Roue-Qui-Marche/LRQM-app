@@ -59,7 +59,7 @@ class ProgressCard extends StatelessWidget {
                       Text(
                         value,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(Config.COLOR_APP_BAR),
                         ),

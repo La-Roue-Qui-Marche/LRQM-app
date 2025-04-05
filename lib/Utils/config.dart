@@ -27,7 +27,7 @@ class Config {
   static const double LAT2 = 45.8179; // South-West latitude
   static const double LON2 = 5.9561; // South-West longitude
 
-  static List<mp.LatLng> ZONE_EVENT = [
+  static final List<mp.LatLng> ZONE_EVENT = [
     mp.LatLng(LAT1, LON1),
     mp.LatLng(LAT2, LON1),
     mp.LatLng(LAT2, LON2),

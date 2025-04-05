@@ -90,7 +90,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                     height: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.grey.withOpacity(0.1), // Subtle background for logo
+                      color: Color(Config.COLOR_BACKGROUND), // Subtle background for logo
                     ),
                     child: Center(
                       child: IconTheme(
@@ -111,7 +111,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       Text(
                         widget.title,
                         style: const TextStyle(
-                          fontSize: 18, // Slightly larger font
+                          fontSize: 16, // Slightly larger font
                           color: Color(Config.COLOR_APP_BAR),
                         ),
                       ),
@@ -119,7 +119,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       Text(
                         widget.data,
                         style: const TextStyle(
-                          fontSize: 22, // Larger font for data
+                          fontSize: 18, // Larger font for data
                           fontWeight: FontWeight.bold,
                           color: Color(Config.COLOR_APP_BAR),
                         ),

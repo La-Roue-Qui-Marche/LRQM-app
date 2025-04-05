@@ -19,7 +19,7 @@ class InfoScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Center(
-                    child: Image.asset('assets/pictures/LogoText.png', height: 80),
+                    child: Image.asset('assets/pictures/LogoText.png', height: 60),
                   ),
                   const SizedBox(height: 32),
                   const Text(
@@ -102,8 +102,8 @@ class InfoScreen extends StatelessWidget {
                                 fontSize: 18, fontWeight: FontWeight.bold, color: Color(Config.COLOR_APP_BAR)),
                           ),
                           const SizedBox(height: 12),
-                          _buildContributorProfile(context, 'https://github.com/RQMAppTB',
-                              'https://avatars.githubusercontent.com/u/179916091?v=4', 'La RQM'),
+                          _buildContributorProfile(context, 'https://github.com/La-Roue-Qui-Marche/LRQM-app',
+                              'https://avatars.githubusercontent.com/u/205062865?s=200&v=4', 'La RQM'),
                         ],
                       ),
                     ],

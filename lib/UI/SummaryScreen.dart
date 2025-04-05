@@ -50,7 +50,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     // Initialize controllers and animations for distance
     _distanceController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     _distanceAnimation = IntTween(begin: 0, end: widget.distanceAdded)
@@ -58,7 +58,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           setState(() {
-            _currentCardIndex = 1; // Show the next card
+            _currentCardIndex = 1;
           });
           _contributorsController.forward();
         }
@@ -66,7 +66,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     // Initialize controllers and animations for contributors
     _contributorsController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     _contributorsAnimation = IntTween(begin: 0, end: widget.contributors)
@@ -74,7 +74,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           setState(() {
-            _currentCardIndex = 2; // Show the next card
+            _currentCardIndex = 2;
           });
           _timeController.forward();
         }
@@ -82,7 +82,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     // Initialize controllers and animations for time
     _timeController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     _timeAnimation = IntTween(begin: 0, end: widget.timeAdded)
@@ -90,7 +90,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           setState(() {
-            _currentCardIndex = 3; // Show the next card
+            _currentCardIndex = 3;
           });
           _totalDistanceController.forward();
         }
@@ -98,7 +98,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     // Initialize controllers and animations for total distance
     _totalDistanceController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     _totalDistanceAnimation = IntTween(
@@ -108,7 +108,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           setState(() {
-            _currentCardIndex = 4; // Show the next card
+            _currentCardIndex = 4;
           });
           _eventPercentageController.forward();
         }
@@ -116,7 +116,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     // Initialize controllers and animations for event percentage
     _eventPercentageController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     _eventPercentageAnimation = Tween<double>(begin: 0, end: widget.percentageAdded)
@@ -127,19 +127,19 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     // Add auto-scroll to animations
     _distanceAnimation.addListener(() {
-      if (_distanceController.isAnimating) _scrollToBottom();
+      _scrollToBottom(); // Trigger scroll immediately when value changes
     });
     _contributorsAnimation.addListener(() {
-      if (_contributorsController.isAnimating) _scrollToBottom();
+      _scrollToBottom(); // Trigger scroll immediately when value changes
     });
     _timeAnimation.addListener(() {
-      if (_timeController.isAnimating) _scrollToBottom();
+      _scrollToBottom(); // Trigger scroll immediately when value changes
     });
     _totalDistanceAnimation.addListener(() {
-      if (_totalDistanceController.isAnimating) _scrollToBottom();
+      _scrollToBottom(); // Trigger scroll immediately when value changes
     });
     _eventPercentageAnimation.addListener(() {
-      if (_eventPercentageController.isAnimating) _scrollToBottom();
+      _scrollToBottom(); // Trigger scroll immediately when value changes
     });
   }
 
@@ -159,15 +159,13 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -179,7 +177,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
           SingleChildScrollView(
             controller: _scrollController, // Use the scroll controller
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 48.0, 16.0, 0.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 68.0, 16.0, 0.0), // Increased top padding by 20px
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -210,11 +208,11 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                                 );
                               },
                             ),
-                            const Divider(
-                              thickness: 2,
-                              color: Color(Config.COLOR_BACKGROUND), // Replace grey with Config.COLOR_BACKGROUND
-                            ),
-                            if (_currentCardIndex >= 1)
+                            if (_currentCardIndex >= 1) ...[
+                              const Divider(
+                                thickness: 2,
+                                color: Color(Config.COLOR_BACKGROUND),
+                              ),
                               AnimatedBuilder(
                                 animation: _contributorsController,
                                 builder: (context, child) {
@@ -225,11 +223,12 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                                   );
                                 },
                               ),
-                            const Divider(
-                              thickness: 2,
-                              color: Color(Config.COLOR_BACKGROUND), // Replace grey with Config.COLOR_BACKGROUND
-                            ),
-                            if (_currentCardIndex >= 2)
+                            ],
+                            if (_currentCardIndex >= 2) ...[
+                              const Divider(
+                                thickness: 2,
+                                color: Color(Config.COLOR_BACKGROUND),
+                              ),
                               AnimatedBuilder(
                                 animation: _timeController,
                                 builder: (context, child) {
@@ -240,18 +239,13 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                                   );
                                 },
                               ),
+                            ],
                           ],
                         ),
                       ),
                     ),
                   const SizedBox(height: 16),
-                  if (_currentCardIndex >= 3) ...[
-                    const TitleCard(
-                      icon: Icons.insights,
-                      title: 'Impact collectif',
-                      subtitle: 'Votre contribution à l\'évènement',
-                    ),
-                    const SizedBox(height: 16),
+                  if (_currentCardIndex >= 3)
                     Card(
                       elevation: 0.0,
                       shape: RoundedRectangleBorder(
@@ -272,11 +266,11 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                                 );
                               },
                             ),
-                            const Divider(
-                              thickness: 2,
-                              color: Color(Config.COLOR_BACKGROUND), // Replace grey with Config.COLOR_BACKGROUND
-                            ),
-                            if (_currentCardIndex >= 4)
+                            if (_currentCardIndex >= 4) ...[
+                              const Divider(
+                                thickness: 2,
+                                color: Color(Config.COLOR_BACKGROUND),
+                              ),
                               AnimatedBuilder(
                                 animation: _eventPercentageController,
                                 builder: (context, child) {
@@ -287,11 +281,11 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                                   );
                                 },
                               ),
+                            ],
                           ],
                         ),
                       ),
                     ),
-                  ],
                   const SizedBox(height: 100), // Add space for the fixed button
                 ],
               ),

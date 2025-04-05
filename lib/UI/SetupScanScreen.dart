@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../Utils/config.dart';
 import 'LoadingScreen.dart';
@@ -127,87 +128,95 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(Config.COLOR_BACKGROUND),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 80.0, left: 8.0, right: 8.0), // Add margin for the card
-            child: SingleChildScrollView(
-              child: Card(
-                elevation: 10,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: GestureDetector(
-                          onDoubleTap: _startSessionDirectly,
-                          child: Container(
-                            width: MediaQuery.of(context).size.width * 0.55,
-                            child: const Image(
-                              image: AssetImage('assets/pictures/DrawScan-removebg.png'),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 12.0),
+        child: Stack(
+          children: [
+            SvgPicture.asset(
+              'assets/pictures/background.svg', // Set the background SVG
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 40.0, left: 8.0, right: 8.0),
+                child: Card(
+                  elevation: 0,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                        Center(
+                          child: GestureDetector(
+                            onDoubleTap: _startSessionDirectly,
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.45,
+                              child: const Image(
+                                image: AssetImage('assets/pictures/DrawScan-removebg.png'),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 40),
-                      const InfoCard(
-                        title: "Le petit oiseau va sortir !",
-                        data: "Prend en photo le QR code pour démarrer ta session",
-                      ),
-                    ],
+                        const SizedBox(height: 40),
+                        const InfoCard(
+                          title: "Le petit oiseau va sortir !",
+                          data: "Prend en photo le QR code pour démarrer ta session",
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Align(
-            alignment: Alignment.topLeft, // Place the back button at the top left
-            child: Padding(
-              padding: const EdgeInsets.only(top: 40, left: 10),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ),
-          ),
-          if (!_isCameraOpen)
-            Align(
-              alignment: Alignment.bottomCenter, // Place the "Ouvrir la caméra" button at the bottom
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
-                child: ActionButton(
-                  icon: Icons.camera_alt,
-                  text: "Ouvrir la caméra",
-                  onPressed: _launchCamera,
-                ),
-              ),
-            ),
-          if (_isCameraOpen)
-            Stack(
-              children: [
-                MobileScanner(
-                  controller: controller,
-                  onDetect: _handleBarcode,
-                ),
-                Positioned(
-                  top: 40,
-                  right: 10,
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 32),
-                    onPressed: _quitCamera,
+            if (!_isCameraOpen)
+              Align(
+                alignment: Alignment.bottomCenter, // Place the "Ouvrir la caméra" button at the bottom
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+                  child: ActionButton(
+                    icon: Icons.camera_alt,
+                    text: "Ouvrir la caméra",
+                    onPressed: _launchCamera,
                   ),
                 ),
-              ],
-            ),
-        ],
+              ),
+            if (_isCameraOpen)
+              Stack(
+                children: [
+                  MobileScanner(
+                    controller: controller,
+                    onDetect: _handleBarcode,
+                  ),
+                  Positioned(
+                    top: 40,
+                    right: 10,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                      onPressed: _quitCamera,
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

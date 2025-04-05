@@ -1,9 +1,10 @@
 import 'dart:developer';
-import 'dart:async'; // Import Timer from dart:async
+import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Import flutter_svg package
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../API/NewEventController.dart';
 import '../API/NewUserController.dart';
@@ -16,10 +17,6 @@ import '../Data/EventData.dart';
 import 'Components/CountdownModal.dart';
 import 'Components/TextModal.dart';
 
-/// Class to display the login screen.
-/// This screen allows the user to enter his dossard number
-/// and check if the name is correct.
-/// The user can then access the information screen.
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -27,20 +24,11 @@ class Login extends StatefulWidget {
   State<Login> createState() => _LoginState();
 }
 
-/// State of the Login class.
 class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
-  /// Controller to get the dossard number entered by the user.
   final TextEditingController _controller = TextEditingController();
-
-  /// Name of the user.
   String _name = "";
-
-  /// Dossard number of the user.
   int _dossard = -1;
-
-  /// Event status.
   bool _isEventActive = false;
-  String _eventMessage = "";
 
   @override
   void initState() {
@@ -50,14 +38,14 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
   void _checkEventStatus() async {
     setState(() {
-      _isEventActive = false; // Show loading screen while fetching event info
+      _isEventActive = false;
     });
 
     Result<List<dynamic>> eventsResult = await NewEventController.getAllEvents();
     if (eventsResult.hasError) {
-      log("Error fetching events: ${eventsResult.error}"); // Log the error details
+      log("Error fetching events: ${eventsResult.error}");
       setState(() {
-        _isEventActive = true; // Render login page before showing modal
+        _isEventActive = true;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showTextModal(
@@ -65,7 +53,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
           "Erreur",
           "Erreur lors de la récupération de l'évènement. Veuillez vérifier votre connexion internet.",
           showConfirmButton: true,
-          onConfirm: _checkEventStatus, // Retry fetching events on confirmation
+          onConfirm: _checkEventStatus,
         );
       });
       return;
@@ -79,7 +67,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
     if (event == null) {
       setState(() {
-        _isEventActive = true; // Render login page before showing modal
+        _isEventActive = true;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showTextModal(
@@ -87,7 +75,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
           "Erreur",
           "L'évènement '${Config.EVENT_NAME}' n'existe pas.",
           showConfirmButton: true,
-          onConfirm: _checkEventStatus, // Retry fetching events on confirmation
+          onConfirm: _checkEventStatus,
         );
       });
       return;
@@ -97,16 +85,15 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     DateTime endDate = DateTime.parse(event['end_date']);
     DateTime now = DateTime.now();
 
-    // Save all event details using EventData
     await EventData.saveEvent(event);
 
     setState(() {
-      _isEventActive = true; // Render login page
+      _isEventActive = true;
     });
 
     if (now.isBefore(startDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showCountdownModal(context, "C'est bientôt l'heure !", startDate: startDate); // Show countdown modal
+        showCountdownModal(context, "C'est bientôt l'heure !", startDate: startDate);
       });
     } else if (now.isAfter(endDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -117,36 +104,32 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
   void _onTextChanged() {}
 
-  /// Show a modal when the user ID is not found.
   void _showUserNotFoundModal() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showTextModal(
         context,
-        "Dossard introuvable",
-        "Cet utilisateur n'existe pas. Veuillez vérifier le numéro de dossard et réessayer.",
+        "Numéro de dossard introuvable",
+        "Il faut entrer ton numéro de dossard compris entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
         showConfirmButton: true,
       );
     });
   }
 
-  /// Function to show a snackbar with the message [value].
   void showInSnackBar(String value) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
-  /// Function to get the name of the user with the dossard number entered by the user.
   void _getUserame() async {
     log("Trying to login");
 
-    // Hide the keyboard
     FocusScope.of(context).unfocus();
 
     if (_controller.text.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showTextModal(
           context,
-          "Erreur",
-          "Veuillez entrer un numéro de dossard.",
+          "Numéro de dossard manquant",
+          "Il faut entrer ton numéro de dossard compris entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
           showConfirmButton: true,
         );
       });
@@ -157,22 +140,20 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LoadingScreen()), // Ensure LoadingScreen is correctly referenced
+      MaterialPageRoute(builder: (context) => const LoadingScreen()),
     );
 
     try {
       int dossardNumber = int.parse(_controller.text);
-      Result dosNumResult = await NewUserController.getUser(dossardNumber); // Use NewUserController
+      Result dosNumResult = await NewUserController.getUser(dossardNumber);
 
       if (dosNumResult.error != null) {
-        // Show error message in snackbar
-        showInSnackBar(dosNumResult.error!);
-        _showUserNotFoundModal(); // Display modal for user not found
+        _showUserNotFoundModal();
         setState(() {});
-        Navigator.pop(context); // Close the loading page
+        Navigator.pop(context);
       } else {
         setState(() {
-          _name = dosNumResult.value['username']; // Extract username from the API response
+          _name = dosNumResult.value['username'];
           _dossard = dossardNumber;
         });
         Navigator.pushReplacement(
@@ -183,7 +164,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     } catch (e) {
       showInSnackBar("Numéro de dossard invalide ");
       setState(() {});
-      Navigator.pop(context); // Close the loading page
+      Navigator.pop(context);
     }
   }
 
@@ -193,25 +174,40 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
       return const LoadingScreen();
     }
 
-    bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom != 0;
     _controller.addListener(_onTextChanged);
 
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/pictures/background.svg', // Revert to SVG background
-              fit: BoxFit.cover, // Ensure it covers the entire screen
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              child: Stack(
+                children: [
+                  Image.asset(
+                    'assets/pictures/background_2.png',
+                    fit: BoxFit.cover, // Ensure the background image covers the full screen
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                  BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0), // Reduce blur effect
+                    child: Container(
+                      color: Colors.black.withOpacity(0.05), // Add a very subtle overlay
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Center(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Card(
                   elevation: 10,
-                  color: Colors.white, // Ensure the card background is white
+                  color: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -221,27 +217,28 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        const SizedBox(height: 10),
                         const Center(
                           child: Image(
                             image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
-                            height: 100, // Adjust height as needed
+                            height: 90,
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
                         const Text(
                           'Entre ton numéro de dossard pour continuer.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 18,
-                            color: Color(Config.COLOR_APP_BAR), // Updated color
+                            fontSize: 16,
+                            color: Color(Config.COLOR_APP_BAR),
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
                         Container(
                           decoration: const BoxDecoration(
                             border: Border(
                               bottom: BorderSide(
-                                color: Color(Config.COLOR_APP_BAR), // Bottom border in COLOR_APP_BAR
+                                color: Color(Config.COLOR_APP_BAR),
                                 width: 1,
                               ),
                             ),
@@ -258,8 +255,8 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                               contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
                             ),
                             style: const TextStyle(
-                              fontSize: 26,
-                              color: Color(Config.COLOR_APP_BAR), // Updated color
+                              fontSize: 24,
+                              color: Color(Config.COLOR_APP_BAR),
                               fontWeight: FontWeight.bold,
                               letterSpacing: 4.0,
                             ),
@@ -272,14 +269,14 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                             'Entre un numéro entre 1 et 9999.',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Color(Config.COLOR_APP_BAR), // Updated color
+                              color: Color(Config.COLOR_APP_BAR),
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
                         ActionButton(
-                          icon: Icons.login, // Add login icon
-                          text: 'Se Connecter',
+                          icon: Icons.login,
+                          text: 'Connexion',
                           onPressed: _getUserame,
                         ),
                         const SizedBox(height: 16),
