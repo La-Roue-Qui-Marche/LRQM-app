@@ -121,7 +121,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                           ? Text(
                               widget.data!,
                               style: const TextStyle(
-                                fontSize: 18, // Larger font for data
+                                fontSize: 16, // Larger font for data
                                 fontWeight: FontWeight.bold,
                                 color: Color(Config.COLOR_APP_BAR),
                               ),
@@ -130,7 +130,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                               baseColor: Colors.grey[300]!,
                               highlightColor: Colors.grey[100]!,
                               child: Container(
-                                height: 18,
+                                height: 16,
                                 width: 100,
                                 color: Colors.grey,
                               ),
@@ -156,7 +156,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                     Text(
                       widget.additionalDetails!,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         color: Color(Config.COLOR_APP_BAR),
                       ),
                     ),
@@ -180,7 +180,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                         Text(
                           actionItem.label,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 16,
                             color: Color(Config.COLOR_APP_BAR),
                           ),
                         ),

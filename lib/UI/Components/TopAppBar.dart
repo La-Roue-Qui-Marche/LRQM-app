@@ -127,7 +127,9 @@ class _TopAppBarState extends State<TopAppBar> {
                       color: Color(Config.COLOR_APP_BAR),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      overflow: TextOverflow.ellipsis, // Ensure text fits in a single line
                     ),
+                    maxLines: 1, // Restrict to a single line
                   ),
                 ] else ...[
                   Image.asset(

@@ -18,8 +18,8 @@ class TitleCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Color(Config.COLOR_APP_BAR),
-        borderRadius: BorderRadius.circular(16.0),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(0.0),
         boxShadow: [
           BoxShadow(
             color: Color(Config.COLOR_APP_BAR).withOpacity(0.1), // Subtle shadow color
@@ -34,7 +34,7 @@ class TitleCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
         child: Row(
           children: [
             Expanded(
@@ -63,8 +63,8 @@ class TitleCard extends StatelessWidget {
             ),
             if (icon != null)
               Container(
-                width: 60,
-                height: 60,
+                width: 55,
+                height: 55,
                 decoration: BoxDecoration(
                   color: Color(Config.COLOR_BACKGROUND).withOpacity(1),
                   shape: BoxShape.circle,
@@ -73,7 +73,7 @@ class TitleCard extends StatelessWidget {
                   child: Icon(
                     icon,
                     color: Color(Config.COLOR_APP_BAR),
-                    size: 32,
+                    size: 30,
                   ),
                 ),
               ),

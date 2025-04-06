@@ -593,15 +593,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         ),
         body: Stack(
           children: [
-            Positioned.fill(
-              child: SvgPicture.asset(
-                'assets/pictures/background.svg', // Path to the SVG file
-                fit: BoxFit.cover, // Ensure the SVG covers the entire screen
-              ),
-            ),
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 120.0), // Reserve space for NavBar and START/STOP button
+                padding: const EdgeInsets.only(bottom: 95.0), // Reserve space for NavBar and START/STOP button
                 child: PageView(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
@@ -610,84 +604,78 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                     SingleChildScrollView(
                       controller: _parentScrollController,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 0.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                           children: <Widget>[
-                            const SizedBox(height: 12), // Add margin at the top
+                            const SizedBox(height: 6), // Add margin at the top
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add left and right margin
+                              padding: const EdgeInsets.symmetric(horizontal: 0.0), // Add left and right margin
                               child: const TitleCard(
                                 icon: Icons.person,
                                 title: 'Informations ',
                                 subtitle: 'personnelles',
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Card(
-                              elevation: 0.0, // Add elevation for shadow effect
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.0), // Rounded corners
-                              ),
-                              color: Colors.white,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0), // Add padding inside the card
-                                child: Column(
-                                  children: [
-                                    InfoCard(
-                                      logo: Icon(_selectedIcon),
-                                      title: '№ de dossard: $_dossard',
-                                      data: _name.isNotEmpty ? _name : null, // Show loading if name is empty
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.all(10.0), // Add padding inside the container
+                              color: Colors.white, // Set white background color
+                              child: Column(
+                                children: [
+                                  InfoCard(
+                                    logo: Icon(_selectedIcon),
+                                    title: '№ de dossard: $_dossard',
+                                    data: _name.isNotEmpty ? _name : null, // Show loading if name is empty
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  InfoCard(
+                                    logo: Image.asset(
+                                      _isMeasureActive
+                                          ? 'assets/pictures/LogoSimpleAnimated.gif'
+                                          : 'assets/pictures/LogoSimple.png',
+                                      width: _isMeasureActive ? 32 : 26,
+                                      height: _isMeasureActive ? 32 : 26,
                                     ),
+                                    title: _isMeasureActive ? 'Distance parcourue' : 'Contribution à l\'évènement',
+                                    data: _distancePerso != null || _isMeasureActive
+                                        ? '${_formatDistance(_isMeasureActive ? _distance : (_distancePerso ?? 0))} mètres'
+                                        : null, // Show loading if distance is null
+                                    additionalDetails: _distancePerso != null || _isMeasureActive
+                                        ? _getDistanceMessage(_isMeasureActive ? _distance : (_distancePerso ?? 0))
+                                        : null, // Show loading if additional details are null
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  InfoCard(
+                                    logo: const Icon(Icons.timer_outlined),
+                                    title: _isMeasureActive
+                                        ? 'Temps passé sur le parcours'
+                                        : 'Temps total passé sur le parcours',
+                                    data: _totalTimePerso != null || _isMeasureActive
+                                        ? '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s'
+                                        : null, // Show loading if time is null
+                                  ),
+                                  if (_isMeasureActive) ...[
                                     const Divider(
                                       thickness: 2,
                                       color: Color(Config.COLOR_BACKGROUND), // Horizontal line
                                     ),
                                     InfoCard(
-                                      logo: Image.asset(
-                                        _isMeasureActive
-                                            ? 'assets/pictures/LogoSimpleAnimated.gif'
-                                            : 'assets/pictures/LogoSimple.png',
-                                        width: _isMeasureActive ? 32 : 26,
-                                        height: _isMeasureActive ? 32 : 26,
-                                      ),
-                                      title: _isMeasureActive ? 'Distance parcourue' : 'Contribution à l\'évènement',
-                                      data: _distancePerso != null || _isMeasureActive
-                                          ? '${_formatDistance(_isMeasureActive ? _distance : (_distancePerso ?? 0))} mètres'
-                                          : null, // Show loading if distance is null
-                                      additionalDetails: _distancePerso != null || _isMeasureActive
-                                          ? _getDistanceMessage(_isMeasureActive ? _distance : (_distancePerso ?? 0))
-                                          : null, // Show loading if additional details are null
+                                      logo: const Icon(Icons.groups_2),
+                                      title: 'L\'équipe',
+                                      data: _contributors != null
+                                          ? '${_contributors ?? 0} ${(_contributors ?? 0) == 1 ? "participant" : "participants"}'
+                                          : null, // Show loading if contributors are null
                                     ),
-                                    const Divider(
-                                      thickness: 2,
-                                      color: Color(Config.COLOR_BACKGROUND), // Horizontal line
-                                    ),
-                                    InfoCard(
-                                      logo: const Icon(Icons.timer_outlined),
-                                      title: _isMeasureActive
-                                          ? 'Temps passé sur le parcours'
-                                          : 'Temps total passé sur le parcours',
-                                      data: _totalTimePerso != null || _isMeasureActive
-                                          ? '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s'
-                                          : null, // Show loading if time is null
-                                    ),
-                                    if (_isMeasureActive) ...[
-                                      const Divider(
-                                        thickness: 2,
-                                        color: Color(Config.COLOR_BACKGROUND), // Horizontal line
-                                      ),
-                                      InfoCard(
-                                        logo: const Icon(Icons.groups_2),
-                                        title: 'L\'équipe',
-                                        data: _contributors != null
-                                            ? '${_contributors ?? 0} ${(_contributors ?? 0) == 1 ? "participant" : "participants"}'
-                                            : null, // Show loading if contributors are null
-                                      ),
-                                    ],
                                   ],
-                                ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -699,7 +687,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                   child: Text(
                                     'Appuie sur START pour démarrer une session',
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.grey[600],
                                     ),
@@ -716,74 +704,67 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                     SingleChildScrollView(
                       controller: _parentScrollController,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 0.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                           children: <Widget>[
-                            const SizedBox(height: 12), // Add margin at the top
+                            const SizedBox(height: 6), // Add margin at the top
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add left and right margin
+                              padding: const EdgeInsets.symmetric(horizontal: 0.0), // Add left and right margin
                               child: const TitleCard(
                                 icon: Icons.calendar_month,
                                 title: 'Informations sur',
                                 subtitle: 'l\'évènement',
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Card(
-                              elevation: 0.0, // No shadow
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.0), // Rounded corners
-                              ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.all(10.0), // Add padding inside the container
                               color: Colors.white, // Set white background color
-                              child: Padding(
-                                padding: const EdgeInsets.all(10.0), // Add padding inside the card
-                                child: Column(
-                                  children: [
-                                    ProgressCard(
-                                      title: 'Objectif',
-                                      value: _distanceTotale != null && _metersGoal != null
-                                          ? '${_formatDistance(_distanceTotale!)} m (${_formatDistance(_metersGoal!)} m)'
-                                          : null, // Show loading if values are null
-                                      percentage: _distanceTotale != null && _metersGoal != null
-                                          ? _calculateRealProgress()
-                                          : null, // Show loading if percentage is null
-                                      logo: Image.asset(
-                                        'assets/pictures/LogoSimple.png',
-                                        width: 28,
-                                        height: 28,
-                                      ),
+                              child: Column(
+                                children: [
+                                  ProgressCard(
+                                    title: 'Objectif',
+                                    value: _distanceTotale != null && _metersGoal != null
+                                        ? '${_formatDistance(_distanceTotale!)} m (${_formatDistance(_metersGoal!)} m)'
+                                        : null, // Show loading if values are null
+                                    percentage: _distanceTotale != null && _metersGoal != null
+                                        ? _calculateRealProgress()
+                                        : null, // Show loading if percentage is null
+                                    logo: Image.asset(
+                                      'assets/pictures/LogoSimple.png',
+                                      width: 28,
+                                      height: 28,
                                     ),
-                                    const Divider(
-                                      thickness: 2,
-                                      color: Color(Config.COLOR_BACKGROUND), // Horizontal line
-                                    ),
-                                    ProgressCard(
-                                      title: 'Temps restant',
-                                      value:
-                                          start != null && end != null ? _remainingTime : null, // Show loading if null
-                                      percentage: start != null && end != null
-                                          ? _calculateRemainingTimePercentage()
-                                          : null, // Show loading if percentage is null
-                                      logo: const Icon(Icons.timer_outlined),
-                                    ),
-                                    const Divider(
-                                      thickness: 2,
-                                      color: Color(Config.COLOR_BACKGROUND), // Horizontal line
-                                    ),
-                                    ProgressCard(
-                                      title: 'Participants ou groupe actuellement sur le parcours',
-                                      value: _numberOfParticipants != null
-                                          ? '${_numberOfParticipants!}'
-                                          : null, // Show loading if null
-                                      percentage: _numberOfParticipants != null
-                                          ? ((_numberOfParticipants! / 250) * 100).clamp(0, 100)
-                                          : null, // Show loading if percentage is null
-                                      logo: const Icon(Icons.groups_2),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  ProgressCard(
+                                    title: 'Temps restant',
+                                    value: start != null && end != null ? _remainingTime : null, // Show loading if null
+                                    percentage: start != null && end != null
+                                        ? _calculateRemainingTimePercentage()
+                                        : null, // Show loading if percentage is null
+                                    logo: const Icon(Icons.timer_outlined),
+                                  ),
+                                  const Divider(
+                                    thickness: 2,
+                                    color: Color(Config.COLOR_BACKGROUND), // Horizontal line
+                                  ),
+                                  ProgressCard(
+                                    title: 'Participants ou groupe actuellement sur le parcours',
+                                    value: _numberOfParticipants != null
+                                        ? '${_numberOfParticipants!}'
+                                        : null, // Show loading if null
+                                    percentage: _numberOfParticipants != null
+                                        ? ((_numberOfParticipants! / 250) * 100).clamp(0, 100)
+                                        : null, // Show loading if percentage is null
+                                    logo: const Icon(Icons.groups_2),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -797,60 +778,25 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
               ),
             ),
             Positioned(
-              bottom: 0.0, // Fixed position at the bottom
+              bottom: 0.0,
               left: 0.0,
               right: 0.0,
-              child: Container(
-                color: Colors.white, // White background for the container
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NavBar(
-                      currentPage: _currentPage,
-                      onPageSelected: (int page) {
-                        setState(() {
-                          _currentPage = page;
-                          _animateToPage(page);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 0.0), // Space between NavBar and button
-                    Center(
-                      child: _isMeasureActive
-                          ? ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: const CircleBorder(), // Circular shape
-                                padding: const EdgeInsets.all(16.0), // Adjust padding for size
-                                backgroundColor: const Color(Config.COLOR_APP_BAR), // Button color
-                              ),
-                              onPressed: () {
-                                _confirmStopMeasure(context);
-                              },
-                              child: const Icon(
-                                Icons.stop, // Stop icon
-                                color: Colors.white, // Icon color
-                                size: 32, // Adjust icon size
-                              ),
-                            )
-                          : ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: const CircleBorder(), // Circular shape
-                                padding: const EdgeInsets.all(16.0), // Adjust padding for size
-                                backgroundColor: const Color(Config.COLOR_BUTTON), // Button color
-                              ),
-                              onPressed: () {
-                                _navigateToScreen(const SetupPosScreen());
-                              },
-                              child: const Icon(
-                                Icons.flag_outlined, // Start icon
-                                color: Colors.white, // Icon color
-                                size: 32, // Adjust icon size
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
+              child: NavBar(
+                currentPage: _currentPage,
+                onPageSelected: (int page) {
+                  setState(() {
+                    _currentPage = page;
+                    _animateToPage(page);
+                  });
+                },
+                isMeasureActive: _isMeasureActive, // Pass the active state
+                onStartStopPressed: () {
+                  if (_isMeasureActive) {
+                    _confirmStopMeasure(context); // Stop the measure
+                  } else {
+                    _navigateToScreen(const SetupPosScreen()); // Start a new measure
+                  }
+                },
               ),
             ),
           ],

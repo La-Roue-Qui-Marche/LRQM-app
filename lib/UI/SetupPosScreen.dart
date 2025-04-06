@@ -122,7 +122,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       ),
       builder: (BuildContext context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.55, // Reduced height to half
+          height: MediaQuery.of(context).size.height * 0.5, // Reduced height to half
           child: Stack(
             children: [
               const DynamicMapCard(),
@@ -261,71 +261,65 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 48.0, left: 4.0, right: 4.0),
-                child: Card(
-                  elevation: 0,
+                padding: const EdgeInsets.only(top: 48.0, left: 0.0, right: 0.0),
+                child: Container(
                   color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 12.0, left: 24.0, right: 24.0, bottom: 24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        ),
-                        Center(
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.35,
-                            child: const Image(
-                              image: AssetImage('assets/pictures/DrawPosition-removebg.png'),
-                            ),
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      ),
+                      Center(
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.35,
+                          child: const Image(
+                            image: AssetImage('assets/pictures/DrawPosition-removebg.png'),
                           ),
                         ),
-                        const SizedBox(height: 32),
-                        InfoCard(
-                          title: "Préparez-vous",
-                          data: "Rendez-vous au point de départ de l'évènement.",
-                          actionItems: [
-                            ActionItem(
-                              icon: const Icon(Icons.map, color: Color(Config.COLOR_APP_BAR), size: 32),
-                              label: 'Carte',
-                              onPressed: () => _showMapModal(context),
-                            ),
-                            ActionItem(
-                              icon: const Icon(Icons.directions, color: Color(Config.COLOR_APP_BAR), size: 32),
-                              label: 'Maps',
-                              onPressed: _openInGoogleMaps,
-                            ),
-                            ActionItem(
-                              icon: const Icon(Icons.copy_rounded, color: Color(Config.COLOR_APP_BAR), size: 32),
-                              label: 'Copier',
-                              onPressed: _copyCoordinates,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(Config.COLOR_APP_BAR),
+                      ),
+                      const SizedBox(height: 32),
+                      InfoCard(
+                        title: "Préparez-vous",
+                        data: "Rendez-vous au point de départ de l'évènement.",
+                        actionItems: [
+                          ActionItem(
+                            icon: const Icon(Icons.map, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            label: 'Carte',
+                            onPressed: () => _showMapModal(context),
                           ),
+                          ActionItem(
+                            icon: const Icon(Icons.directions, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            label: 'Maps',
+                            onPressed: _openInGoogleMaps,
+                          ),
+                          ActionItem(
+                            icon: const Icon(Icons.copy_rounded, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            label: 'Copier',
+                            onPressed: _copyCoordinates,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(Config.COLOR_APP_BAR),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

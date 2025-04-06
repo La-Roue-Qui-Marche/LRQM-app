@@ -66,7 +66,7 @@ class ProgressCard extends StatelessWidget {
                           ? Text(
                               value!,
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Color(Config.COLOR_APP_BAR),
                               ),
@@ -75,7 +75,7 @@ class ProgressCard extends StatelessWidget {
                               baseColor: Colors.grey[300]!,
                               highlightColor: Colors.grey[100]!,
                               child: Container(
-                                height: 18,
+                                height: 16,
                                 width: 100,
                                 color: Colors.grey,
                               ),
@@ -89,12 +89,12 @@ class ProgressCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  flex: 1, // 33% of the row
+                  flex: 2, // 33% of the row
                   child: percentage != null
                       ? Text(
                           '${percentage!.toStringAsFixed(1)}%',
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Color(Config.COLOR_APP_BAR),
                           ),
@@ -111,19 +111,19 @@ class ProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  flex: 4, // 66% of the row
+                  flex: 10, // 66% of the row
                   child: percentage != null
                       ? LinearProgressIndicator(
                           value: percentage! / 100,
                           backgroundColor: const Color(Config.COLOR_BACKGROUND).withOpacity(1),
                           valueColor: const AlwaysStoppedAnimation<Color>(Color(Config.COLOR_APP_BAR)),
-                          minHeight: 4,
+                          minHeight: 6,
                         )
                       : Shimmer.fromColors(
                           baseColor: Colors.grey[300]!,
                           highlightColor: Colors.grey[100]!,
                           child: Container(
-                            height: 4,
+                            height: 6,
                             color: Colors.grey,
                           ),
                         ),

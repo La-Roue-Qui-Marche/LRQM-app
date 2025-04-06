@@ -1,25 +1,18 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import '../Utils/config.dart';
 import 'LoadingScreen.dart';
 import 'Components/InfoCard.dart';
 import 'Components/ActionButton.dart';
 import 'WorkingScreen.dart';
 import 'Components/TextModal.dart';
-
 import '../Data/ContributorsData.dart';
-
 import '../API/NewMeasureController.dart';
 import '../Data/UserData.dart';
 
-/// Class to display the setup scan screen.
-/// This screen allows the user to configure the number of participants
-/// and start the measure by scanning a QR code.
 class SetupScanScreen extends StatefulWidget {
   final int contributors;
 
@@ -29,15 +22,13 @@ class SetupScanScreen extends StatefulWidget {
   State<SetupScanScreen> createState() => _SetupScanScreenState();
 }
 
-/// State of the SetupScanScreen class.
 class _SetupScanScreenState extends State<SetupScanScreen> {
-  /// Instance of the MobileScannerController class
   final MobileScannerController controller = MobileScannerController(
     torchEnabled: false,
     autoStart: true,
   );
 
-  bool _isCameraOpen = false; // Add _isCameraOpen property
+  bool _isCameraOpen = false;
 
   void _navigateToLoadingScreen() async {
     controller.stop();
@@ -49,12 +40,11 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
         ),
       ),
     );
-    Future.delayed(const Duration(seconds: 3), () async {
-      await ContributorsData.saveContributors(widget.contributors); // Save the number of contributors
-      int? userId = await UserData.getUserId(); // Retrieve user ID
+    Future.delayed(const Duration(milliseconds: 800), () async {
+      await ContributorsData.saveContributors(widget.contributors);
+      int? userId = await UserData.getUserId();
       if (userId != null) {
-        await NewMeasureController.startMeasure(userId,
-            contributorsNumber: widget.contributors); // Use NewMeasureController
+        await NewMeasureController.startMeasure(userId, contributorsNumber: widget.contributors);
       } else {
         log("User ID is null. Cannot start measure.");
       }
@@ -66,10 +56,6 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
     });
   }
 
-  /// Function to handle the barcode detection
-  /// This function stops the scanner when the QR code is detected
-  /// and shows a dialog to confirm the start of the measure.
-  /// [barcodes] : List of detected barcodes
   void _handleBarcode(BarcodeCapture barcodes) {
     if (mounted && barcodes.barcodes.isNotEmpty && barcodes.barcodes.first.displayValue == Config.QR_CODE_S_VALUE) {
       _navigateToLoadingScreen();
@@ -78,7 +64,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
 
   void _launchCamera() async {
     try {
-      var status = await Permission.camera.request(); // Request camera permission
+      var status = await Permission.camera.request();
       if (status.isDenied || status.isPermanentlyDenied) {
         showTextModal(
           context,
@@ -86,7 +72,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
           "On dirait que l'accès à la caméra est bloqué. Va dans les paramètres de ton téléphone et autorise l'application à utiliser la caméra. Appuie sur OK être redirigé.",
           showConfirmButton: true,
           onConfirm: () async {
-            await openAppSettings(); // Open app settings for the user to allow permissions
+            await openAppSettings();
           },
         );
         return;
@@ -101,7 +87,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
         "Erreur d'accès à la caméra",
         "Une erreur inattendue s'est produite. Vérifie les paramètres de ton téléphone pour autoriser l'application à utiliser la caméra. Appuie sur OK pour réessayer.",
         showConfirmButton: true,
-        onConfirm: _launchCamera, // Retry launching the camera
+        onConfirm: _launchCamera,
       );
     }
   }
@@ -133,62 +119,56 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
         child: Stack(
           children: [
             SvgPicture.asset(
-              'assets/pictures/background.svg', // Set the background SVG
+              'assets/pictures/background.svg',
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
             ),
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 48.0, left: 4.0, right: 4.0),
-                child: Card(
-                  elevation: 0,
+                padding: const EdgeInsets.only(top: 48.0, left: 0.0, right: 0.0),
+                child: Container(
                   color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 12.0, left: 24.0, right: 24.0, bottom: 24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        ),
-                        Center(
-                          child: GestureDetector(
-                            onDoubleTap: _startSessionDirectly,
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.5,
-                              child: const Image(
-                                image: AssetImage('assets/pictures/DrawScan-removebg.png'),
-                              ),
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      ),
+                      Center(
+                        child: GestureDetector(
+                          onDoubleTap: _startSessionDirectly,
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            child: const Image(
+                              image: AssetImage('assets/pictures/DrawScan-removebg.png'),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 40),
-                        const InfoCard(
-                          title: "Le petit oiseau va sortir !",
-                          data: "Prend en photo le QR code pour démarrer ta session",
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 40),
+                      const InfoCard(
+                        title: "Le petit oiseau va sortir !",
+                        data: "Prend en photo le QR code pour démarrer ta session",
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
             if (!_isCameraOpen)
               Align(
-                alignment: Alignment.bottomCenter, // Place the "Ouvrir la caméra" button at the bottom
+                alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
                   child: ActionButton(

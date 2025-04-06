@@ -19,7 +19,7 @@ class ActionButton extends StatelessWidget {
       width: double.infinity, // Full width
       decoration: BoxDecoration(
         color: const Color(Config.COLOR_BUTTON),
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(4.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
