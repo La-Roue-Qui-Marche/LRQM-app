@@ -91,7 +91,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 12),
                             const InfoCard(
                               title: "L'équipe !",
                               data: "Pour combien de personnes comptes-tu les mètres ?",
@@ -101,7 +101,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 4),
                     Card(
                       elevation: 0,
                       color: Colors.white,
