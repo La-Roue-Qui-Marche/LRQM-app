@@ -22,14 +22,14 @@ class TitleCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(0.0),
         boxShadow: [
           BoxShadow(
-            color: Color(Config.COLOR_APP_BAR).withOpacity(0.1), // Subtle shadow color
-            blurRadius: 4.0, // Reduced blur radius for subtle shadow
-            offset: Offset(0, 2), // Vertical shadow offset
+            color: Color(Config.COLOR_APP_BAR).withOpacity(0.1),
+            blurRadius: 4.0,
+            offset: Offset(0, 2),
           ),
           BoxShadow(
-            color: Color(Config.COLOR_APP_BAR).withOpacity(0.05), // Even lighter shadow color
-            blurRadius: 2.0, // Smaller blur radius
-            offset: Offset(-1, 0), // Horizontal shadow offset
+            color: Color(Config.COLOR_APP_BAR).withOpacity(0.05),
+            blurRadius: 2.0,
+            offset: Offset(-1, 0),
           ),
         ],
       ),
