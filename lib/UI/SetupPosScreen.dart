@@ -43,9 +43,16 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   Future<void> _requestPermissionAndFetchPosition() async {
     var status = await Permission.location.status;
     if (status.isDenied || status.isPermanentlyDenied) {
-      await Permission.location.request();
+      final permissionStatus = await Permission.location.request();
+      if (permissionStatus.isGranted) {
+        _updateUserPosition();
+      } else {
+        log("Location permission denied.");
+        // Show a message to the user or handle denial
+      }
+    } else {
+      _updateUserPosition();
     }
-    _updateUserPosition();
   }
 
   Future<void> _updateUserPosition() async {
@@ -122,7 +129,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       ),
       builder: (BuildContext context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.5, // Reduced height to half
+          height: MediaQuery.of(context).size.height * 0.55, // Reduced height to half
           child: Stack(
             children: [
               const DynamicMapCard(),
@@ -150,6 +157,8 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
 
     try {
       var status = await Permission.location.status;
+
+      // If permission is denied or permanently denied
       if (status.isDenied || status.isPermanentlyDenied) {
         showTextModal(
           context,
@@ -246,7 +255,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     return Scaffold(
       backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Padding(
-        padding: const EdgeInsets.only(top: 12.0),
+        padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
             SvgPicture.asset(
@@ -257,7 +266,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 40.0, left: 8.0, right: 8.0),
+                padding: const EdgeInsets.only(top: 50.0, left: 4.0, right: 4.0),
                 child: Card(
                   elevation: 0,
                   color: Colors.white,
@@ -329,7 +338,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
                 child: ActionButton(
                   icon: Icons.arrow_forward,
                   text: 'Suivant',
