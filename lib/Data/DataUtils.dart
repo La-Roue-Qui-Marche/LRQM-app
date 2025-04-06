@@ -1,4 +1,4 @@
-import 'DistToSendData.dart';
+import 'SessionDistanceData.dart';
 import 'ContributorsData.dart';
 import 'TimeData.dart';
 import 'UserData.dart';
@@ -10,9 +10,8 @@ class DataUtils {
   /// Delete all data stored in the shared preferences.
   /// Return a [Future] object resolving to a boolean value indicating if the data was deleted.
   static Future<bool> deleteAllData() async {
-    return DistToSendData.removeDistToSend()
+    return SessionDistanceData.resetTotalDistance()
         .then((value) => TimeData.removeTime())
-
         .then((value) => ContributorsData.removeContributors())
         .then((value) => UserData.clearUserData())
         .then((value) => EventData.clearEventData())

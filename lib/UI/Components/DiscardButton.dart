@@ -17,9 +17,9 @@ class DiscardButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity, // Full width
-      height: 50.0, // Set height to match the "Oui" button
+      height: 48.0, // Set height to match the "Oui" button
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(Config.COLOR_APP_BAR), width: 2.0), // Outline with COLOR_APP_BAR
+        border: Border.all(color: const Color(Config.COLOR_APP_BAR), width: 1.0), // Outline with COLOR_APP_BAR
         borderRadius: BorderRadius.circular(8.0), // Same radius as ActionButton
       ),
       child: ElevatedButton(

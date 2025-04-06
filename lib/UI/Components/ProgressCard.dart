@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart'; // Add this import for shimmer effect
 import '../../Utils/config.dart';
 
 class ProgressCard extends StatelessWidget {
   final String title;
-  final String value;
-  final double percentage;
+  final String? value; // Make value nullable to handle loading state
+  final double? percentage; // Make percentage nullable to handle loading state
   final Widget logo;
 
-  const ProgressCard(
-      {super.key, required this.title, required this.value, required this.percentage, required this.logo});
+  const ProgressCard({
+    super.key,
+    required this.title,
+    this.value, // Allow null for loading state
+    this.percentage, // Allow null for loading state
+    required this.logo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,14 +62,24 @@ class ProgressCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(Config.COLOR_APP_BAR),
-                        ),
-                      ),
+                      value != null
+                          ? Text(
+                              value!,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(Config.COLOR_APP_BAR),
+                              ),
+                            )
+                          : Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                height: 18,
+                                width: 100,
+                                color: Colors.grey,
+                              ),
+                            ),
                     ],
                   ),
                 ),
@@ -74,24 +90,43 @@ class ProgressCard extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 1, // 33% of the row
-                  child: Text(
-                    '${percentage.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(Config.COLOR_APP_BAR),
-                    ),
-                  ),
+                  child: percentage != null
+                      ? Text(
+                          '${percentage!.toStringAsFixed(1)}%',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(Config.COLOR_APP_BAR),
+                          ),
+                        )
+                      : Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            height: 20,
+                            width: 40,
+                            color: Colors.grey,
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 4, // 66% of the row
-                  child: LinearProgressIndicator(
-                    value: percentage / 100,
-                    backgroundColor: const Color(Config.COLOR_BACKGROUND).withOpacity(1),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(Config.COLOR_APP_BAR)),
-                    minHeight: 4,
-                  ),
+                  child: percentage != null
+                      ? LinearProgressIndicator(
+                          value: percentage! / 100,
+                          backgroundColor: const Color(Config.COLOR_BACKGROUND).withOpacity(1),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(Config.COLOR_APP_BAR)),
+                          minHeight: 4,
+                        )
+                      : Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            height: 4,
+                            color: Colors.grey,
+                          ),
+                        ),
                 ),
               ],
             ),

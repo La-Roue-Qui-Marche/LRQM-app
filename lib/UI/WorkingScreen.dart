@@ -2,19 +2,13 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'dart:async'; // Ensure this import is present for Timer
-import 'package:flutter_svg/flutter_svg.dart'; // Import for SVG support
-import 'LoginScreen.dart';
-import 'InfoScreen.dart';
-import '../../Data/DataUtils.dart';
+import 'dart:async';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'Components/ProgressCard.dart';
 import 'Components/InfoCard.dart';
-import 'Components/ActionButton.dart';
 import 'Components/TopAppBar.dart';
 import 'Components/TitleCard.dart';
-import 'Components/DiscardButton.dart';
 import 'Components/TextModal.dart';
 
 import 'SetupPosScreen.dart';
@@ -174,7 +168,8 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   /// Function to calculate the percentage of total distance
   double _calculateTotalDistancePercentage() {
-    return (_distanceTotale ?? 0) / Config.TARGET_DISTANCE * 100;
+    if (_metersGoal == null || _metersGoal == 0) return 0.0;
+    return (_distanceTotale ?? 0) / _metersGoal! * 100;
   }
 
   /// Function to calculate the percentage of total distance based on event meters goal
@@ -407,13 +402,17 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     EventData.getEventId().then((eventId) {
       if (eventId != null) {
         // Get the total distance
-        _getValue(() => NewEventController.getTotalMeters(eventId), () async => null).then((value) => setState(() {
+        _getValue(() => NewEventController.getTotalMeters(eventId), () async => null).then((value) {
+          if (mounted) {
+            setState(() {
               _distanceTotale = value;
-            }));
+            });
+          }
+        });
 
         // Get the number of participants
         NewEventController.getActiveUsers(eventId).then((result) {
-          if (!result.hasError) {
+          if (!result.hasError && mounted) {
             setState(() {
               _numberOfParticipants = result.value;
             });
@@ -448,19 +447,24 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     // Retrieve the bib_id from UserData
     UserData.getBibId().then((bibId) {
       if (bibId != null) {
-        setState(() {
-          _dossard = bibId;
-        });
+        if (mounted) {
+          setState(() {
+            _dossard = bibId;
+          });
+        }
 
         // Get the personal distance
-        _getValue(() => NewUserController.getUserTotalMeters(int.parse(bibId)), () async => null)
-            .then((value) => setState(() {
-                  _distancePerso = value;
-                }));
+        _getValue(() => NewUserController.getUserTotalMeters(int.parse(bibId)), () async => null).then((value) {
+          if (mounted) {
+            setState(() {
+              _distancePerso = value;
+            });
+          }
+        });
 
         // Get the name of the user
         UserData.getUsername().then((username) {
-          if (username != null) {
+          if (username != null && mounted) {
             setState(() {
               _name = username;
             });
@@ -477,13 +481,17 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     EventData.getEventId().then((eventId) {
       if (eventId != null) {
         // Get the total distance
-        _getValue(() => NewEventController.getTotalMeters(eventId), () async => null).then((value) => setState(() {
+        _getValue(() => NewEventController.getTotalMeters(eventId), () async => null).then((value) {
+          if (mounted) {
+            setState(() {
               _distanceTotale = value;
-            }));
+            });
+          }
+        });
 
         // Get the number of participants
         NewEventController.getActiveUsers(eventId).then((result) {
-          if (!result.hasError) {
+          if (!result.hasError && mounted) {
             setState(() {
               _numberOfParticipants = result.value;
             });
@@ -605,12 +613,15 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                       crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                       children: <Widget>[
                         const SizedBox(height: 16), // Add margin at the top
-                        const TitleCard(
-                          icon: Icons.person,
-                          title: 'Informations ',
-                          subtitle: 'personnelles',
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add left and right margin
+                          child: const TitleCard(
+                            icon: Icons.person,
+                            title: 'Informations ',
+                            subtitle: 'personnelles',
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Card(
                           elevation: 0.0, // Add elevation for shadow effect
                           shape: RoundedRectangleBorder(
@@ -624,7 +635,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                 InfoCard(
                                   logo: Icon(_selectedIcon),
                                   title: '№ de dossard: $_dossard',
-                                  data: _name,
+                                  data: _name.isNotEmpty ? _name : null, // Show loading if name is empty
                                 ),
                                 const Divider(
                                   thickness: 2,
@@ -639,10 +650,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                     height: _isMeasureActive ? 32 : 26,
                                   ),
                                   title: _isMeasureActive ? 'Distance parcourue' : 'Contribution à l\'évènement',
-                                  data:
-                                      '${_formatDistance(_isMeasureActive ? _distance : (_distancePerso ?? 0))} mètres',
-                                  additionalDetails:
-                                      _getDistanceMessage(_isMeasureActive ? _distance : (_distancePerso ?? 0)),
+                                  data: _distancePerso != null || _isMeasureActive
+                                      ? '${_formatDistance(_isMeasureActive ? _distance : (_distancePerso ?? 0))} mètres'
+                                      : null, // Show loading if distance is null
+                                  additionalDetails: _distancePerso != null || _isMeasureActive
+                                      ? _getDistanceMessage(_isMeasureActive ? _distance : (_distancePerso ?? 0))
+                                      : null, // Show loading if additional details are null
                                 ),
                                 const Divider(
                                   thickness: 2,
@@ -653,8 +666,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                   title: _isMeasureActive
                                       ? 'Temps passé sur le parcours'
                                       : 'Temps total passé sur le parcours',
-                                  data:
-                                      '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s',
+                                  data: _totalTimePerso != null || _isMeasureActive
+                                      ? '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s'
+                                      : null, // Show loading if time is null
                                 ),
                                 if (_isMeasureActive) ...[
                                   const Divider(
@@ -664,8 +678,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                   InfoCard(
                                     logo: const Icon(Icons.groups_2),
                                     title: 'L\'équipe',
-                                    data:
-                                        '${_contributors ?? 0} ${(_contributors ?? 0) == 1 ? "participant" : "participants"}', // Handle singular/plural
+                                    data: _contributors != null
+                                        ? '${_contributors ?? 0} ${(_contributors ?? 0) == 1 ? "participant" : "participants"}'
+                                        : null, // Show loading if contributors are null
                                   ),
                                 ],
                               ],
@@ -674,7 +689,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                         ),
                         const SizedBox(height: 12),
                         const DynamicMapCard(), // Add the DynamicMapCard widget here
-                        const SizedBox(height: 12),
                         if (!_isMeasureActive) // Show message only when no session is active
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -705,12 +719,15 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                       crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                       children: <Widget>[
                         const SizedBox(height: 16), // Add margin at the top
-                        const TitleCard(
-                          icon: Icons.calendar_month,
-                          title: 'Informations sur',
-                          subtitle: 'l\'évènement',
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add left and right margin
+                          child: const TitleCard(
+                            icon: Icons.calendar_month,
+                            title: 'Informations sur',
+                            subtitle: 'l\'évènement',
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Card(
                           elevation: 0.0, // No shadow
                           shape: RoundedRectangleBorder(
@@ -723,13 +740,16 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                               children: [
                                 ProgressCard(
                                   title: 'Objectif',
-                                  value:
-                                      '${_formatDistance(_distanceTotale ?? 0)} m (${_formatDistance(_metersGoal ?? 0)} m)',
-                                  percentage: _calculateRealProgress(),
+                                  value: _distanceTotale != null && _metersGoal != null
+                                      ? '${_formatDistance(_distanceTotale!)} m (${_formatDistance(_metersGoal!)} m)'
+                                      : null, // Show loading if values are null
+                                  percentage: _distanceTotale != null && _metersGoal != null
+                                      ? _calculateRealProgress()
+                                      : null, // Show loading if percentage is null
                                   logo: Image.asset(
                                     'assets/pictures/LogoSimple.png',
-                                    width: 28, // Adjust the width as needed
-                                    height: 28, // Adjust the height as needed
+                                    width: 28,
+                                    height: 28,
                                   ),
                                 ),
                                 const Divider(
@@ -738,8 +758,10 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                 ),
                                 ProgressCard(
                                   title: 'Temps restant',
-                                  value: _remainingTime,
-                                  percentage: _calculateRemainingTimePercentage(),
+                                  value: start != null && end != null ? _remainingTime : null, // Show loading if null
+                                  percentage: start != null && end != null
+                                      ? _calculateRemainingTimePercentage()
+                                      : null, // Show loading if percentage is null
                                   logo: const Icon(Icons.timer_outlined),
                                 ),
                                 const Divider(
@@ -748,9 +770,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                 ),
                                 ProgressCard(
                                   title: 'Participants ou groupe actuellement sur le parcours',
-                                  value: '${_numberOfParticipants ?? 0}',
-                                  percentage: ((_numberOfParticipants ?? 0) / 250 * 100)
-                                      .clamp(0, 100), // Calculate percentage with max 250
+                                  value: _numberOfParticipants != null
+                                      ? '${_numberOfParticipants!}'
+                                      : null, // Show loading if null
+                                  percentage: _numberOfParticipants != null
+                                      ? ((_numberOfParticipants! / 250) * 100).clamp(0, 100)
+                                      : null, // Show loading if percentage is null
                                   logo: const Icon(Icons.groups_2),
                                 ),
                               ],

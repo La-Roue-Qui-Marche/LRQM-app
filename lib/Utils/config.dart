@@ -21,11 +21,11 @@ class Config {
   // static const double LAT2 = 46.60796048493062;
   // static const double LON2 = 6.7304699219465105;
 
-  // ------------- Zone Suisse --------------
-  static const double LAT1 = 47.8085; // North-East latitude
-  static const double LON1 = 10.4921; // North-East longitude
-  static const double LAT2 = 45.8179; // South-West latitude
-  static const double LON2 = 5.9561; // South-West longitude
+  // ------------- Further Expanded Zone Lac Léman to Include Martigny --------------
+  static const double LAT1 = 46.6000; // North-East latitude (expanded)
+  static const double LON1 = 7.1000; // North-East longitude (expanded to include Martigny)
+  static const double LAT2 = 46.1000; // South-West latitude (unchanged)
+  static const double LON2 = 5.9000; // South-West longitude (unchanged)
 
   static final List<mp.LatLng> ZONE_EVENT = [
     mp.LatLng(LAT1, LON1),
@@ -40,8 +40,6 @@ class Config {
   static const int COLOR_TITRE = 0xFFFFFFFF;
   static const int COLOR_BACKGROUND = 0xFFF0F0F0;
   // ----------------- Constantes -----------------
-  static const double CIRCUIT_SIZE = 3500.0; // Define the circuit size in meters
-  static const int TARGET_DISTANCE = 2000000; // Define the target total distance in meters
 
   /// Function to get the application version.
   static Future<String> getAppVersion() async {
