@@ -177,16 +177,19 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
           SingleChildScrollView(
             controller: _scrollController, // Use the scroll controller
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 68.0, 16.0, 0.0), // Increased top padding by 20px
+              padding: const EdgeInsets.fromLTRB(4.0, 68.0, 4.0, 0.0), // Increased top padding by 20px
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const TitleCard(
-                    icon: Icons.check_circle_outline,
-                    title: 'Félicitations !',
-                    subtitle: 'Résumé de votre contribution',
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: const TitleCard(
+                      icon: Icons.check_circle_outline,
+                      title: 'Félicitations !',
+                      subtitle: 'Résumé de votre contribution',
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
                   if (_currentCardIndex >= 0) // Ensure "Distance parcourue" appears first
                     Card(
                       elevation: 0.0,
@@ -195,7 +198,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                       ),
                       color: Colors.white,
                       child: Padding(
-                        padding: const EdgeInsets.all(10.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Column(
                           children: [
                             AnimatedBuilder(
@@ -244,7 +247,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                         ),
                       ),
                     ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
                   if (_currentCardIndex >= 3)
                     Card(
                       elevation: 0.0,

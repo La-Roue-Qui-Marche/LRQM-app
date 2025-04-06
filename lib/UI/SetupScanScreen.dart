@@ -129,7 +129,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
     return Scaffold(
       backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Padding(
-        padding: const EdgeInsets.only(top: 12.0),
+        padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
             SvgPicture.asset(
@@ -140,7 +140,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
             ),
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 40.0, left: 8.0, right: 8.0),
+                padding: const EdgeInsets.only(top: 50.0, left: 4.0, right: 4.0),
                 child: Card(
                   elevation: 0,
                   color: Colors.white,
@@ -168,7 +168,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                           child: GestureDetector(
                             onDoubleTap: _startSessionDirectly,
                             child: Container(
-                              width: MediaQuery.of(context).size.width * 0.45,
+                              width: MediaQuery.of(context).size.width * 0.5,
                               child: const Image(
                                 image: AssetImage('assets/pictures/DrawScan-removebg.png'),
                               ),
@@ -190,7 +190,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
               Align(
                 alignment: Alignment.bottomCenter, // Place the "Ouvrir la caméra" button at the bottom
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                   child: ActionButton(
                     icon: Icons.camera_alt,
                     text: "Ouvrir la caméra",

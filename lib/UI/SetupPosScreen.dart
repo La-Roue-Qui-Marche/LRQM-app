@@ -122,7 +122,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       ),
       builder: (BuildContext context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.5, // Reduced height to half
+          height: MediaQuery.of(context).size.height * 0.55, // Reduced height to half
           child: Stack(
             children: [
               const DynamicMapCard(),
@@ -149,21 +149,25 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     });
 
     try {
-      var status = await Permission.location.status;
-      if (status.isDenied || status.isPermanentlyDenied) {
-        showTextModal(
-          context,
-          "Accès à la localisation refusé",
-          "On dirait que l'accès à la localisation est bloqué. Va dans les paramètres de ton téléphone et active la localisation. Appuie sur OK pour être redirigé.",
-          showConfirmButton: true,
-          onConfirm: () async {
-            await Geolocator.openLocationSettings();
-          },
-        );
-        setState(() {
-          _isLoading = false;
-        });
-        return;
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+          showTextModal(
+            context,
+            "Accès à la localisation refusé",
+            "On dirait que l'accès à la localisation est bloqué. Va dans les paramètres de ton téléphone et active la localisation. Appuie sur OK pour être redirigé.",
+            showConfirmButton: true,
+            onConfirm: () async {
+              await Geolocator.openAppSettings();
+            },
+          );
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
       }
 
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -246,7 +250,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     return Scaffold(
       backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Padding(
-        padding: const EdgeInsets.only(top: 12.0),
+        padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
             SvgPicture.asset(
@@ -257,7 +261,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 40.0, left: 8.0, right: 8.0),
+                padding: const EdgeInsets.only(top: 50.0, left: 4.0, right: 4.0),
                 child: Card(
                   elevation: 0,
                   color: Colors.white,
@@ -329,7 +333,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                 child: ActionButton(
                   icon: Icons.arrow_forward,
                   text: 'Suivant',

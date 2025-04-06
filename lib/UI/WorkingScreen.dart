@@ -607,12 +607,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                 SingleChildScrollView(
                   controller: _parentScrollController,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                       children: <Widget>[
-                        const SizedBox(height: 16), // Add margin at the top
+                        const SizedBox(height: 12), // Add margin at the top
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add left and right margin
                           child: const TitleCard(
@@ -621,7 +621,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             subtitle: 'personnelles',
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 4),
                         Card(
                           elevation: 0.0, // Add elevation for shadow effect
                           shape: RoundedRectangleBorder(
@@ -629,7 +629,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                           ),
                           color: Colors.white,
                           child: Padding(
-                            padding: const EdgeInsets.all(10.0), // Add padding inside the card
+                            padding: const EdgeInsets.all(8.0), // Add padding inside the card
                             child: Column(
                               children: [
                                 InfoCard(
@@ -687,11 +687,11 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 6),
                         const DynamicMapCard(), // Add the DynamicMapCard widget here
                         if (!_isMeasureActive) // Show message only when no session is active
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
                             child: Center(
                               child: Text(
                                 'Appuie sur START pour démarrer une session',
@@ -704,7 +704,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             ),
                           ),
                         const SizedBox(height: 16), // Add margin before the text
-                        const SizedBox(height: 100), // Add more margin at the bottom to allow more scrolling
+                        const SizedBox(height: 120), // Add more margin at the bottom to allow more scrolling
                       ],
                     ),
                   ),
@@ -713,12 +713,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                 SingleChildScrollView(
                   controller: _parentScrollController,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
                       children: <Widget>[
-                        const SizedBox(height: 16), // Add margin at the top
+                        const SizedBox(height: 12), // Add margin at the top
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4.0), // Add left and right margin
                           child: const TitleCard(
@@ -727,7 +727,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             subtitle: 'l\'évènement',
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 4),
                         Card(
                           elevation: 0.0, // No shadow
                           shape: RoundedRectangleBorder(
@@ -782,7 +782,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             ),
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         const SizedBox(height: 100), // Add more margin at the bottom to allow more scrolling
                       ],
                     ),
@@ -796,7 +796,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
               right: 0.0,
               child: Container(
                 color: Colors.white, // White background for the container
-                padding: const EdgeInsets.symmetric(vertical: 0.0), // Remove horizontal padding
+                padding: const EdgeInsets.only(bottom: 20.0), // 20px white space at the bottom only
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

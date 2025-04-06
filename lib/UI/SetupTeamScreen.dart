@@ -46,7 +46,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
     return Scaffold(
       backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Padding(
-        padding: const EdgeInsets.only(top: 12.0),
+        padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
             SvgPicture.asset(
@@ -57,7 +57,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
             ),
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 40.0, left: 8.0, right: 8.0),
+                padding: const EdgeInsets.only(top: 50.0, left: 4.0, right: 4.0),
                 child: Column(
                   children: [
                     Card(
@@ -85,13 +85,13 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                             ),
                             Center(
                               child: Container(
-                                width: MediaQuery.of(context).size.width * 0.35,
+                                width: MediaQuery.of(context).size.width * 0.4,
                                 child: const Image(
                                   image: AssetImage('assets/pictures/DrawTeam-removebg.png'),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 12),
                             const InfoCard(
                               title: "L'équipe !",
                               data: "Pour combien de personnes comptes-tu les mètres ?",
@@ -101,7 +101,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 4),
                     Card(
                       elevation: 0,
                       color: Colors.white,
@@ -160,7 +160,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                   child: ActionButton(
                     icon: Icons.arrow_forward,
                     text: 'Suivant',
