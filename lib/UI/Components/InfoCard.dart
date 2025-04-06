@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart'; // Add this import for shimmer effect
 import '../../Utils/config.dart';
 
 class InfoCard extends StatefulWidget {
   final Widget? logo;
   final String title;
-  final String data;
+  final String? data; // Make data nullable to handle loading state
   final String? additionalDetails;
   final List<ActionItem>? actionItems;
 
@@ -12,7 +13,7 @@ class InfoCard extends StatefulWidget {
     super.key,
     this.logo,
     required this.title,
-    required this.data,
+    this.data, // Allow null for loading state
     this.additionalDetails,
     this.actionItems,
   });
@@ -116,14 +117,24 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        widget.data,
-                        style: const TextStyle(
-                          fontSize: 18, // Larger font for data
-                          fontWeight: FontWeight.bold,
-                          color: Color(Config.COLOR_APP_BAR),
-                        ),
-                      ),
+                      widget.data != null
+                          ? Text(
+                              widget.data!,
+                              style: const TextStyle(
+                                fontSize: 18, // Larger font for data
+                                fontWeight: FontWeight.bold,
+                                color: Color(Config.COLOR_APP_BAR),
+                              ),
+                            )
+                          : Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                height: 18,
+                                width: 100,
+                                color: Colors.grey,
+                              ),
+                            ),
                     ],
                   ),
                 ),

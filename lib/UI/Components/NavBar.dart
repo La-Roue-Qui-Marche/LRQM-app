@@ -50,7 +50,7 @@ class NavBar extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 40,
+          height: 35,
           decoration: BoxDecoration(
             color: Colors.transparent, // Ensure no background color is applied
             border: isSelected

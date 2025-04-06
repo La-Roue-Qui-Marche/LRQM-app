@@ -88,110 +88,110 @@ class _TopAppBarState extends State<TopAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.zero, // Removed border radius
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10.0,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Adjusted padding
-          child: Row(
-            children: [
-              if (widget.isRecording) ...[
-                AnimatedOpacity(
-                  duration: const Duration(seconds: 1),
-                  opacity: _isDotExpanded ? 1.0 : 0.0,
-                  child: Container(
-                    width: 12.0,
-                    height: 12.0,
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: _incrementInfoButtonClickCount, // Increment count on app bar tap
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.zero, // Removed border radius
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10.0,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Adjusted padding
+            child: Row(
+              children: [
+                if (widget.isRecording) ...[
+                  AnimatedOpacity(
+                    duration: const Duration(seconds: 1),
+                    opacity: _isDotExpanded ? 1.0 : 0.0,
+                    child: Container(
+                      width: 12.0,
+                      height: 12.0,
+                      decoration: const BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  "Session en cours...",
-                  style: TextStyle(
-                    color: Color(Config.COLOR_APP_BAR),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Session en cours...",
+                    style: TextStyle(
+                      color: Color(Config.COLOR_APP_BAR),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-              ] else ...[
-                GestureDetector(
-                  onTap: _incrementInfoButtonClickCount, // Increment count on logo tap
-                  child: Image.asset(
+                ] else ...[
+                  Image.asset(
                     'assets/pictures/LogoText.png', // Display the logo on the left
                     height: 28,
                   ),
+                ],
+                const Spacer(),
+                if (_showShareButton)
+                  IconButton(
+                    icon: const Icon(Icons.developer_mode, color: Color(Config.COLOR_APP_BAR)),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ShareLog()),
+                      );
+                    },
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.public, color: Color(Config.COLOR_APP_BAR)),
+                  onPressed: () async {
+                    final Uri url = Uri.parse('https://larouequimarche.ch/');
+                    await launch(url.toString(), forceSafariVC: false, forceWebView: false);
+                  },
+                ),
+                if (widget.showInfoButton)
+                  IconButton(
+                    icon: const Icon(Icons.info_outlined, color: Color(Config.COLOR_APP_BAR)),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const InfoScreen()),
+                      );
+                    },
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.logout, color: Color(Config.COLOR_APP_BAR)),
+                  onPressed: () async {
+                    if (await MeasureData.isMeasureOngoing()) {
+                      String? measureId = await MeasureData.getMeasureId();
+                      final stopResult = await NewMeasureController.stopMeasure();
+                      if (stopResult.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Failed to stop measure (ID: $measureId): ${stopResult.error}")),
+                        );
+                        return;
+                      }
+                    }
+
+                    final cleared = await DataUtils.deleteAllData();
+                    if (cleared) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Login()),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Failed to clear user data")),
+                      );
+                    }
+                  },
                 ),
               ],
-              const Spacer(),
-              if (_showShareButton)
-                IconButton(
-                  icon: const Icon(Icons.share, color: Color(Config.COLOR_APP_BAR)),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ShareLog()),
-                    );
-                  },
-                ),
-              IconButton(
-                icon: const Icon(Icons.public, color: Color(Config.COLOR_APP_BAR)),
-                onPressed: () async {
-                  final Uri url = Uri.parse('https://larouequimarche.ch/');
-                  await launch(url.toString(), forceSafariVC: false, forceWebView: false);
-                },
-              ),
-              if (widget.showInfoButton)
-                IconButton(
-                  icon: const Icon(Icons.info_outlined, color: Color(Config.COLOR_APP_BAR)),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const InfoScreen()),
-                    );
-                  },
-                ),
-              IconButton(
-                icon: const Icon(Icons.logout, color: Color(Config.COLOR_APP_BAR)),
-                onPressed: () async {
-                  if (await MeasureData.isMeasureOngoing()) {
-                    String? measureId = await MeasureData.getMeasureId();
-                    final stopResult = await NewMeasureController.stopMeasure();
-                    if (stopResult.error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Failed to stop measure (ID: $measureId): ${stopResult.error}")),
-                      );
-                      return;
-                    }
-                  }
-
-                  final cleared = await DataUtils.deleteAllData();
-                  if (cleared) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Login()),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Failed to clear user data")),
-                    );
-                  }
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),

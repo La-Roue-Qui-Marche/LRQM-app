@@ -74,6 +74,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> {
 
     final Size mapSize = MediaQuery.of(context).size;
 
+    // Calculate the zoom level dynamically based on the bounds
     double latFraction = (_latRad(maxLat) - _latRad(minLat)) / pi;
     double lonFraction = (maxLon - minLon) / 360;
 
@@ -81,7 +82,15 @@ class _DynamicMapCardState extends State<DynamicMapCard> {
     double lonZoom = _zoom(mapSize.width, 256, lonFraction);
     double zoom = min(latZoom, lonZoom);
 
-    if (!zoom.isFinite) zoom = 8.0;
+    if (!zoom.isFinite) zoom = 8.0; // Set a default zoom if calculation fails
+
+    // Ensure zoom level is not below 0.8
+    if (zoom < 0.8) zoom = 0.8;
+
+    // Adjust zoom level to zoom out a bit more to show the full size of the zone
+    zoom -= 0.2; // This zooms out a bit further to ensure the full zone is visible
+
+    if (zoom < 0.8) zoom = 0.8; // Ensure zoom doesn't go below 0.8
 
     _mapController.move(center, zoom);
   }
@@ -90,16 +99,23 @@ class _DynamicMapCardState extends State<DynamicMapCard> {
   void initState() {
     super.initState();
     _fetchUserPosition().then((_) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
+      }
     });
-    _geolocation.startListening();
-    _geolocation.stream.listen((data) {
-      _geolocation.determinePosition().then((position) {
+
+    Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      ),
+    ).listen((position) {
+      if (mounted) {
         setState(() {
           _currentPosition = position;
           _fitMapBounds();
         });
-      });
+      }
     });
   }
 
@@ -117,7 +133,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> {
     double userLon = _currentPosition?.longitude ?? defaultLon;
 
     return AbsorbPointer(
-      // Disable touch events
       absorbing: true,
       child: Container(
         height: MediaQuery.of(context).size.height * 0.5,
@@ -134,7 +149,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> {
                 mapController: _mapController,
                 options: MapOptions(
                   initialCenter: LatLng(userLat, userLon),
-                  initialZoom: 8.0,
+                  initialZoom: 0.8, // Set the initial zoom level to 0.8
                 ),
                 children: [
                   TileLayer(
@@ -145,8 +160,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> {
                     polygons: [
                       Polygon(
                         points: Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude)).toList(),
-                        color: Color(Config.COLOR_APP_BAR).withOpacity(0.1), // Fill with opacity 0.1
-                        borderColor: Color(Config.COLOR_APP_BAR),
+                        color: Color(Config.COLOR_BUTTON).withOpacity(0.2), // Fill color with 30% opacity
+                        borderColor: Color(Config.COLOR_BUTTON),
                         borderStrokeWidth: 3,
                       ),
                     ],
@@ -157,7 +172,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> {
                         point: LatLng(userLat, userLon),
                         child: Icon(
                           Icons.my_location,
-                          color: Color(Config.COLOR_BUTTON),
+                          color: Color(Config.COLOR_APP_BAR),
                           size: 32,
                         ),
                       ),

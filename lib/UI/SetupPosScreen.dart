@@ -5,11 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:io' show Platform;
 
 import 'Components/InfoCard.dart';
 import 'Components/ActionButton.dart';
 import 'Components/TextModal.dart';
-import 'Components/MapCard.dart';
+import 'Components/DynamicMapCard.dart';
 
 import '../Utils/config.dart';
 
@@ -67,10 +68,39 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   void _openInGoogleMaps() async {
-    // Using the event location as an example here (Config.LAT1, Config.LON1).
-    final url = 'geo:${Config.LAT1},${Config.LON1}?q=${Config.LAT1},${Config.LON1}';
-    if (await canLaunch(url)) {
-      await launch(url);
+    final Uri geoUrl = Uri.parse('geo:0,0?q=${Config.LAT1},${Config.LON1}');
+    final Uri fallbackUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Config.LAT1},${Config.LON1}');
+
+    try {
+      if (Platform.isAndroid) {
+        // Check if Google Maps is installed on Android
+        if (await canLaunchUrl(geoUrl)) {
+          await launchUrl(geoUrl);
+        } else {
+          // Fallback to Google Maps URL if geo URI is not supported
+          await launchUrl(fallbackUrl);
+        }
+      } else if (Platform.isIOS) {
+        // For iOS, ask the user which app to use
+        final String iosMapsUrl = 'maps:${Config.LAT1},${Config.LON1}';
+        final String appleMapsUrl = 'https://maps.apple.com/?q=${Config.LAT1},${Config.LON1}';
+
+        if (await canLaunchUrl(Uri.parse(iosMapsUrl))) {
+          await launchUrl(Uri.parse(iosMapsUrl)); // Open in Apple Maps
+        } else {
+          await launchUrl(Uri.parse(appleMapsUrl)); // Fallback to Apple Maps via URL
+        }
+      } else {
+        // For other platforms, fall back to the web URL
+        if (await canLaunchUrl(fallbackUrl)) {
+          await launchUrl(fallbackUrl);
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible d\'ouvrir l\'application de navigation ou Google Maps.')),
+      );
+      log("Error opening navigation: $e");
     }
   }
 
@@ -83,31 +113,34 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   void _showMapModal(BuildContext context) {
-    setState(() {
-      _isMapLoading = true;
-    });
-
-    // Refresh the position before showing the map modal with a 7-second timeout.
-    _updateUserPosition().timeout(const Duration(seconds: 7)).then((_) {
-      setState(() {
-        _isMapLoading = false;
-      });
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        builder: (BuildContext context) {
-          return const MapCard();
-        },
-      );
-    }).catchError((error) {
-      setState(() {
-        _isMapLoading = false;
-      });
-      log("Error or timeout updating position for map modal: $error");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load map. Please try again.')),
-      );
-    });
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.5, // Reduced height to half
+          child: Stack(
+            children: [
+              const DynamicMapCard(),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.black, size: 24),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _navigateToSetupTeamScreen() async {
