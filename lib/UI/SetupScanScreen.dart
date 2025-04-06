@@ -190,7 +190,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
               Align(
                 alignment: Alignment.bottomCenter, // Place the "Ouvrir la caméra" button at the bottom
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                   child: ActionButton(
                     icon: Icons.camera_alt,
                     text: "Ouvrir la caméra",

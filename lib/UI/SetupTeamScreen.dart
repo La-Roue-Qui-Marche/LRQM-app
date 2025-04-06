@@ -160,7 +160,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                   child: ActionButton(
                     icon: Icons.arrow_forward,
                     text: 'Suivant',

@@ -43,16 +43,9 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   Future<void> _requestPermissionAndFetchPosition() async {
     var status = await Permission.location.status;
     if (status.isDenied || status.isPermanentlyDenied) {
-      final permissionStatus = await Permission.location.request();
-      if (permissionStatus.isGranted) {
-        _updateUserPosition();
-      } else {
-        log("Location permission denied.");
-        // Show a message to the user or handle denial
-      }
-    } else {
-      _updateUserPosition();
+      await Permission.location.request();
     }
+    _updateUserPosition();
   }
 
   Future<void> _updateUserPosition() async {
@@ -156,23 +149,25 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     });
 
     try {
-      var status = await Permission.location.status;
+      LocationPermission permission = await Geolocator.checkPermission();
 
-      // If permission is denied or permanently denied
-      if (status.isDenied || status.isPermanentlyDenied) {
-        showTextModal(
-          context,
-          "Accès à la localisation refusé",
-          "On dirait que l'accès à la localisation est bloqué. Va dans les paramètres de ton téléphone et active la localisation. Appuie sur OK pour être redirigé.",
-          showConfirmButton: true,
-          onConfirm: () async {
-            await Geolocator.openLocationSettings();
-          },
-        );
-        setState(() {
-          _isLoading = false;
-        });
-        return;
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+          showTextModal(
+            context,
+            "Accès à la localisation refusé",
+            "On dirait que l'accès à la localisation est bloqué. Va dans les paramètres de ton téléphone et active la localisation. Appuie sur OK pour être redirigé.",
+            showConfirmButton: true,
+            onConfirm: () async {
+              await Geolocator.openAppSettings();
+            },
+          );
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
       }
 
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -338,7 +333,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                 child: ActionButton(
                   icon: Icons.arrow_forward,
                   text: 'Suivant',
