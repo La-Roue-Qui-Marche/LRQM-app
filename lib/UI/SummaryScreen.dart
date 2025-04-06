@@ -177,7 +177,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
           SingleChildScrollView(
             controller: _scrollController, // Use the scroll controller
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(4.0, 68.0, 4.0, 0.0), // Increased top padding by 20px
+              padding: const EdgeInsets.fromLTRB(4.0, 48.0, 4.0, 0.0), // Increased top padding by 20px
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -297,7 +297,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+              padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
               child: ActionButton(
                 icon: Icons.check,
                 text: 'OK',
