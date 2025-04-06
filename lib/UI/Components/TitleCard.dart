@@ -18,7 +18,7 @@ class TitleCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(Config.COLOR_APP_BAR).withOpacity(1),
         borderRadius: BorderRadius.circular(0.0),
         boxShadow: [
           BoxShadow(
@@ -34,7 +34,7 @@ class TitleCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
         child: Row(
           children: [
             Expanded(

@@ -101,7 +101,12 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _fetchUserPosition();
+    _fetchUserPosition().then((_) {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
+      }
+    });
+
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
@@ -112,9 +117,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         setState(() {
           _currentPosition = position;
           _isFetchingPosition = false;
-          if (_isMapReady) {
-            _fitMapBounds();
-          }
+          _fitMapBounds();
         });
       }
     });
@@ -158,7 +161,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(0.0),
-          child: _isFetchingPosition
+          child: _isFetchingPosition || !_isMapReady
               ? Container(
                   height: mapHeight,
                   width: double.infinity,
@@ -193,7 +196,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                       setState(() {
                         _isMapReady = true;
                       });
-                      _fitMapBounds();
+                      WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
                     },
                   ),
                   children: [

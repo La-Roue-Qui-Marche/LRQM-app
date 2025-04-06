@@ -8,6 +8,7 @@ import '../InfoScreen.dart';
 import '../../Data/DataUtils.dart';
 import '../../Data/MeasureData.dart';
 import '../../API/NewMeasureController.dart';
+import 'TextModal.dart';
 
 class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
@@ -168,28 +169,42 @@ class _TopAppBarState extends State<TopAppBar> {
                 IconButton(
                   icon: const Icon(Icons.logout, color: Color(Config.COLOR_APP_BAR)),
                   onPressed: () async {
-                    if (await MeasureData.isMeasureOngoing()) {
-                      String? measureId = await MeasureData.getMeasureId();
-                      final stopResult = await NewMeasureController.stopMeasure();
-                      if (stopResult.error != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Failed to stop measure (ID: $measureId): ${stopResult.error}")),
-                        );
-                        return;
-                      }
-                    }
+                    showTextModal(
+                      context,
+                      'Confirmation',
+                      'Es-tu sûr de vouloir te déconnecter ?\n\n'
+                          'Cela supprimera toutes les données locales et arrêtera toute mesure en cours.',
+                      showConfirmButton: true,
+                      onConfirm: () async {
+                        if (await MeasureData.isMeasureOngoing()) {
+                          String? measureId = await MeasureData.getMeasureId();
+                          final stopResult = await NewMeasureController.stopMeasure();
+                          if (stopResult.error != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text("Échec de l'arrêt de la mesure (ID: $measureId): ${stopResult.error}")),
+                            );
+                            return;
+                          }
+                        }
 
-                    final cleared = await DataUtils.deleteAllData();
-                    if (cleared) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const Login()),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Failed to clear user data")),
-                      );
-                    }
+                        final cleared = await DataUtils.deleteAllData();
+                        if (cleared) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const Login()),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Échec de la suppression des données utilisateur")),
+                          );
+                        }
+                      },
+                      showDiscardButton: true,
+                      onDiscard: () {
+                        Navigator.of(context).pop(); // Close the modal
+                      },
+                    );
                   },
                 ),
               ],

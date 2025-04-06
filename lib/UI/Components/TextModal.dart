@@ -21,7 +21,7 @@ void showTextModal(BuildContext context, String title, String message,
       builder: (BuildContext context) {
         return Container(
           width: MediaQuery.of(context).size.width, // Ensure full width
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

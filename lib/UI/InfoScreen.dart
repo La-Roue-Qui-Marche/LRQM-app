@@ -33,7 +33,6 @@ class InfoScreen extends StatelessWidget {
                                 Navigator.of(context).pop();
                               },
                             ),
-                            Image.asset('assets/pictures/LogoText.png', height: 40),
                           ],
                         ),
                         const SizedBox(height: 12),
