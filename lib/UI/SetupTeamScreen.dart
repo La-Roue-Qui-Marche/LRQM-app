@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../Utils/config.dart';
 import 'Components/InfoCard.dart';
 import 'Components/ActionButton.dart';
@@ -25,8 +26,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            SetupScanScreen(contributors: _selectedContributors),
+        builder: (context) => SetupScanScreen(contributors: _selectedContributors),
       ),
     );
 
@@ -44,119 +44,133 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            // Make the full page scrollable
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const SizedBox(height: 90),
-                  Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      child: const Image(
-                          image: AssetImage(
-                              'assets/pictures/DrawTeam-removebg.png')),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Container(
-                    margin: const EdgeInsets.only(
-                        top: 8.0), // Add margin before the InfoCard
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 0.0), // Add padding to the left and right
-                    child: const InfoCard(
-                      title: "L'équipe !",
-                      data: "Pour combien de personnes comptes-tu les mètres ?",
-                      actionItems: [],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 0.0), // Add padding to the left and right
-                    child: Column(
-                      children: [
-                        TapCard(
-                          logo: const Icon(Icons.looks_one, size: 32),
-                          text: "Je pars en solo",
-                          onTap: () => _selectParticipants(1),
-                          isSelected: _selectedContributors == 1,
-                        ),
-                        const SizedBox(height: 10),
-                        TapCard(
-                          logo: const Icon(Icons.looks_two, size: 32),
-                          text: "On fait la paire",
-                          onTap: () => _selectParticipants(2),
-                          isSelected: _selectedContributors == 2,
-                        ),
-                        const SizedBox(height: 10),
-                        TapCard(
-                          logo: const Icon(Icons.looks_3, size: 32),
-                          text: "On se lance en triplettte",
-                          onTap: () => _selectParticipants(3),
-                          isSelected: _selectedContributors == 3,
-                        ),
-                        const SizedBox(height: 10),
-                        TapCard(
-                          logo: const Icon(Icons.looks_4, size: 32),
-                          text: "La monstre équipe",
-                          onTap: () => _selectParticipants(4),
-                          isSelected: _selectedContributors == 4,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                      height:
-                          100), // Add more margin at the bottom to allow more scrolling
-                ],
-              ),
+      backgroundColor: const Color(Config.COLOR_BACKGROUND),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 0.0),
+        child: Stack(
+          children: [
+            SvgPicture.asset(
+              'assets/pictures/background.svg', // Set the background SVG
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          ),
-          Align(
-            alignment: Alignment.topLeft, // Fix the back button at the top
-            child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 40, left: 10, right: 10), // Add padding
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back,
-                        color: Color(Config.COLOR_APP_BAR), size: 32),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  const SizedBox(
-                      width:
-                          10), // Add padding between the back button and the text
-                  // ...existing code...
-                ],
-              ),
-            ),
-          ),
-          if (_selectedContributors > 0 && _selectedContributors < 5)
-            Align(
-              alignment: Alignment
-                  .bottomCenter, // Fix the "Suivant" button at the bottom
+            SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10.0, vertical: 20.0), // Add padding
-                child: ActionButton(
-                  icon: Icons.arrow_forward,
-                  text: 'Suivant',
-                  onPressed: _navigateToSetupScanScreen,
+                padding: const EdgeInsets.only(top: 50.0, left: 4.0, right: 4.0),
+                child: Column(
+                  children: [
+                    Card(
+                      elevation: 0,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            ),
+                            Center(
+                              child: Container(
+                                width: MediaQuery.of(context).size.width * 0.4,
+                                child: const Image(
+                                  image: AssetImage('assets/pictures/DrawTeam-removebg.png'),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const InfoCard(
+                              title: "L'équipe !",
+                              data: "Pour combien de personnes comptes-tu les mètres ?",
+                              actionItems: [],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Card(
+                      elevation: 0,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Column(
+                          children: [
+                            TapCard(
+                              logo: const Icon(Icons.looks_one, size: 32),
+                              text: "Je pars en solo",
+                              onTap: () => _selectParticipants(1),
+                              isSelected: _selectedContributors == 1,
+                            ),
+                            Container(
+                              height: 1,
+                              color: Color(Config.COLOR_BACKGROUND), // Separator color
+                            ),
+                            TapCard(
+                              logo: const Icon(Icons.looks_two, size: 32),
+                              text: "On fait la paire",
+                              onTap: () => _selectParticipants(2),
+                              isSelected: _selectedContributors == 2,
+                            ),
+                            Container(
+                              height: 1,
+                              color: Color(Config.COLOR_BACKGROUND), // Separator color
+                            ),
+                            TapCard(
+                              logo: const Icon(Icons.looks_3, size: 32),
+                              text: "On se lance en triplettte",
+                              onTap: () => _selectParticipants(3),
+                              isSelected: _selectedContributors == 3,
+                            ),
+                            Container(
+                              height: 1,
+                              color: Color(Config.COLOR_BACKGROUND), // Separator color
+                            ),
+                            TapCard(
+                              logo: const Icon(Icons.looks_4, size: 32),
+                              text: "La monstre équipe",
+                              onTap: () => _selectParticipants(4),
+                              isSelected: _selectedContributors == 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          if (_isLoading) const LoadingScreen(),
-        ],
+            if (_selectedContributors > 0 && _selectedContributors < 5)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                  child: ActionButton(
+                    icon: Icons.arrow_forward,
+                    text: 'Suivant',
+                    onPressed: _navigateToSetupScanScreen,
+                  ),
+                ),
+              ),
+            if (_isLoading) const LoadingScreen(),
+          ],
+        ),
       ),
     );
   }

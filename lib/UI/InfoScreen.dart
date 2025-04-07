@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../Utils/config.dart'; // Ensure this import is correct
 import 'package:url_launcher/url_launcher.dart';
-import '../Utils/config.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});
@@ -19,7 +19,7 @@ class InfoScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Center(
-                    child: Image.asset('assets/pictures/LogoText.png', height: 80),
+                    child: Image.asset('assets/pictures/LogoText.png', height: 60),
                   ),
                   const SizedBox(height: 32),
                   const Text(
@@ -61,7 +61,11 @@ class InfoScreen extends StatelessWidget {
                                 'https://avatars.githubusercontent.com/u/61197576?v=4', 'Thibault Seem'),
                             _buildContributorProfile(context, 'https://github.com/therundmc',
                                 'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine Cavallera'),
-                            _buildContributorProfile(context, "https://github.com/chloefont?tab=overview&from=2025-03-01&to=2025-03-14", "https://avatars.githubusercontent.com/u/60699567?v=4", 'Chloé Fontaine'),
+                            _buildContributorProfile(
+                                context,
+                                "https://github.com/chloefont?tab=overview&from=2025-03-01&to=2025-03-14",
+                                "https://avatars.githubusercontent.com/u/60699567?v=4",
+                                'Chloé Fontaine'),
                             _buildContributorProfile(context, 'https://github.com/Maxime-Nicolet',
                                 'https://avatars.githubusercontent.com/u/21175110?v=4', 'Maxime Nicolet'),
                             _buildContributorProfile(context, 'https://github.com/tchekoto',
@@ -98,8 +102,8 @@ class InfoScreen extends StatelessWidget {
                                 fontSize: 18, fontWeight: FontWeight.bold, color: Color(Config.COLOR_APP_BAR)),
                           ),
                           const SizedBox(height: 12),
-                          _buildContributorProfile(context, 'https://github.com/RQMAppTB',
-                              'https://avatars.githubusercontent.com/u/179916091?v=4', 'La RQM'),
+                          _buildContributorProfile(context, 'https://github.com/La-Roue-Qui-Marche/LRQM-app',
+                              'https://avatars.githubusercontent.com/u/205062865?s=200&v=4', 'La RQM'),
                         ],
                       ),
                     ],
