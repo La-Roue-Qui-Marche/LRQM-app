@@ -1,41 +1,58 @@
-# name: iOS Release
+name: iOS Release
 
-# on:
-#   push:
-#     branches:
-#       - main
-#       - develop
-#   pull_request:
-#     branches:
-#       - main
-#       - develop
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
 
-# jobs:
-#   build-and-release:
-#     name: Build and Release iOS App
-#     runs-on: macos-latest
+jobs:
+  build-and-release:
+    name: Build and Release iOS App
+    runs-on: macos-latest
 
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v3
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-#       - name: Set up Flutter
-#         uses: subosito/flutter-action@v2
-#         with:
-#           flutter-version: '3.24.3'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
 
-#       - name: Install Dependencies
-#         run: flutter pub get
+      - name: Install Dependencies
+        run: flutter pub get
 
-#       - name: Install CocoaPods
-#         run: pod install --repo-update
-#         working-directory: ios
+      - name: Install CocoaPods
+        run: pod install --repo-update
+        working-directory: ios
 
-#       - name: Build iOS App
-#         run: flutter build ipa --release
+      - name: Decode Certificate and Provisioning Profile
+        run: |
+          echo "${{ secrets.IOS_SIGNING_CERTIFICATE }}" | base64 -d > certificate.p12
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 -d > provisioning_profile.mobileprovision
 
-#       - name: Upload Artifact
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: LRQM-app--iOS
-#           path: build/ios/ipa/*.ipa
+      - name: Set Up Keychain
+        run: |
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          security list-keychains -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Install Provisioning Profile
+        run: mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles && cp provisioning_profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Build iOS App
+        run: flutter build ipa --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LRQM-app-iOS
+          path: build/ios/ipa/*.ipa
