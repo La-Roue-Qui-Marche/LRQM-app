@@ -13,8 +13,8 @@ void showTextModal(BuildContext context, String title, String message,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      isDismissible: false, // Prevent dismissing the modal by tapping outside
-      enableDrag: false, // Disable swipe-to-dismiss
+      isDismissible: false,
+      enableDrag: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),

@@ -45,7 +45,8 @@ dependencies:
   latlong2: ^0.9.1
   share_plus: ^7.2.2
   shimmer: ^3.0.0
-  webview_flutter: ^4.0.0
+  fl_chart: ^0.66.1 
+
 # Removed path_provider and share dependencies
 
 dev_dependencies:
@@ -94,7 +95,26 @@ flutter:
     - assets/pictures/HEIG_VD.jpg
     - assets/pictures/background.svg
     - assets/pictures/background_2.png
+    - assets/pictures/twint.png
 
+
+    - assets/icons/calendar.svg
+    - assets/icons/user.svg
+    - assets/icons/flag.svg
+    - assets/icons/circle-user.svg
+    - assets/icons/circle-user-fill.svg
+    - assets/icons/instagram.svg
+    - assets/icons/linkedin.svg
+    - assets/icons/facebook.svg
+    - assets/icons/user-fill.svg
+    - assets/icons/calendar-fill.svg
+    - assets/icons/info.svg
+    - assets/icons/sign-out.svg
+    - assets/icons/angle-left.svg
+    - assets/icons/map.svg
+    - assets/icons/copy.svg
+    - assets/icons/diamond-turn-right.svg
+    
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

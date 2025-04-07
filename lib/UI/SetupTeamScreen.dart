@@ -49,12 +49,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
         padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
-            SvgPicture.asset(
-              'assets/pictures/background.svg', // Set the background SVG
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
+            // Removed SvgPicture.asset for background
             SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.only(top: 48.0, left: 0.0, right: 0.0),
@@ -71,7 +66,12 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
+                                icon: SvgPicture.asset(
+                                  'assets/icons/angle-left.svg',
+                                  color: Colors.black87,
+                                  width: 32,
+                                  height: 32,
+                                ),
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                 },

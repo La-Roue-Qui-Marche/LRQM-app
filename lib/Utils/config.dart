@@ -40,6 +40,7 @@ class Config {
   static const int COLOR_TITRE = 0xFFFFFFFF;
   static const int COLOR_BACKGROUND = 0xFFF0F0F0;
   // ----------------- Constantes -----------------
+  static const int NUMBER_MAX_PARTICIPANTS = 150;
 
   /// Function to get the application version.
   static Future<String> getAppVersion() async {

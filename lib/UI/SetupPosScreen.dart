@@ -30,8 +30,8 @@ class SetupPosScreen extends StatefulWidget {
 
 class _SetupPosScreenState extends State<SetupPosScreen> {
   Position? _currentPosition;
-  bool _isLoading = false; // Loading state
-  bool _isMapLoading = false; // Map loading state
+  bool _isLoading = false;
+  bool _isMapLoading = false;
 
   @override
   void initState() {
@@ -39,7 +39,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     _requestPermissionAndFetchPosition();
   }
 
-  // Request permission and update current position immediately.
   Future<void> _requestPermissionAndFetchPosition() async {
     var status = await Permission.location.status;
     if (status.isDenied || status.isPermanentlyDenied) {
@@ -73,25 +72,21 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
 
     try {
       if (Platform.isAndroid) {
-        // Check if Google Maps is installed on Android
         if (await canLaunchUrl(geoUrl)) {
           await launchUrl(geoUrl);
         } else {
-          // Fallback to Google Maps URL if geo URI is not supported
           await launchUrl(fallbackUrl);
         }
       } else if (Platform.isIOS) {
-        // For iOS, ask the user which app to use
         final String iosMapsUrl = 'maps:${Config.LAT1},${Config.LON1}';
         final String appleMapsUrl = 'https://maps.apple.com/?q=${Config.LAT1},${Config.LON1}';
 
         if (await canLaunchUrl(Uri.parse(iosMapsUrl))) {
-          await launchUrl(Uri.parse(iosMapsUrl)); // Open in Apple Maps
+          await launchUrl(Uri.parse(iosMapsUrl));
         } else {
-          await launchUrl(Uri.parse(appleMapsUrl)); // Fallback to Apple Maps via URL
+          await launchUrl(Uri.parse(appleMapsUrl));
         }
       } else {
-        // For other platforms, fall back to the web URL
         if (await canLaunchUrl(fallbackUrl)) {
           await launchUrl(fallbackUrl);
         }
@@ -122,7 +117,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       ),
       builder: (BuildContext context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.5, // Reduced height to half
+          height: MediaQuery.of(context).size.height * 0.5,
           child: Stack(
             children: [
               const DynamicMapCard(),
@@ -179,7 +174,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         return;
       }
 
-      // Fetch latest user position before navigation.
       _currentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -253,74 +247,95 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
-            SvgPicture.asset(
-              'assets/pictures/background.svg',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
             SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.only(top: 48.0, left: 0.0, right: 0.0),
-                child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
+                child: Column(
+                  children: [
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              IconButton(
+                                icon: SvgPicture.asset(
+                                  'assets/icons/angle-left.svg',
+                                  color: Colors.black87,
+                                  width: 32,
+                                  height: 32,
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          ),
+                          Center(
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.35,
+                              child: const Image(
+                                image: AssetImage('assets/pictures/DrawPosition-removebg.png'),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          InfoCard(
+                            title: "Préparez-vous",
+                            data: "Rendez-vous au point de départ de l'évènement.",
+                            actionItems: [
+                              ActionItem(
+                                icon: SvgPicture.asset(
+                                  'assets/icons/map.svg',
+                                  color: Colors.black87,
+                                  width: 28,
+                                  height: 28,
+                                ),
+                                label: 'Carte',
+                                onPressed: () => _showMapModal(context),
+                              ),
+                              ActionItem(
+                                icon: SvgPicture.asset(
+                                  'assets/icons/diamond-turn-right.svg',
+                                  color: Colors.black87,
+                                  width: 28,
+                                  height: 28,
+                                ),
+                                label: 'Maps',
+                                onPressed: _openInGoogleMaps,
+                              ),
+                              ActionItem(
+                                icon: SvgPicture.asset(
+                                  'assets/icons/copy.svg',
+                                  color: Colors.black87,
+                                  width: 28,
+                                  height: 28,
+                                ),
+                                label: 'Copier',
+                                onPressed: _copyCoordinates,
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      Center(
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.35,
-                          child: const Image(
-                            image: AssetImage('assets/pictures/DrawPosition-removebg.png'),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      InfoCard(
-                        title: "Préparez-vous",
-                        data: "Rendez-vous au point de départ de l'évènement.",
-                        actionItems: [
-                          ActionItem(
-                            icon: const Icon(Icons.map, color: Color(Config.COLOR_APP_BAR), size: 32),
-                            label: 'Carte',
-                            onPressed: () => _showMapModal(context),
-                          ),
-                          ActionItem(
-                            icon: const Icon(Icons.directions, color: Color(Config.COLOR_APP_BAR), size: 32),
-                            label: 'Maps',
-                            onPressed: _openInGoogleMaps,
-                          ),
-                          ActionItem(
-                            icon: const Icon(Icons.copy_rounded, color: Color(Config.COLOR_APP_BAR), size: 32),
-                            label: 'Copier',
-                            onPressed: _copyCoordinates,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
+                    ),
+                    const SizedBox(height: 12),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Text(
                         "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
                         textAlign: TextAlign.left,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Color(Config.COLOR_APP_BAR),
+                          color: Colors.black54,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Utils/config.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});
@@ -19,7 +20,7 @@ class InfoScreen extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16.0),
-                    margin: const EdgeInsets.only(bottom: 16.0),
+                    margin: const EdgeInsets.only(bottom: 6.0),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,10 +29,19 @@ class InfoScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Color(Config.COLOR_APP_BAR), size: 32),
+                              icon: SvgPicture.asset(
+                                'assets/icons/angle-left.svg',
+                                color: Colors.black87,
+                                width: 32,
+                                height: 32,
+                              ),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
+                            ),
+                            Image.asset(
+                              'assets/pictures/LogoText.png',
+                              height: 32,
                             ),
                           ],
                         ),
@@ -63,7 +73,7 @@ class InfoScreen extends StatelessWidget {
                   const SizedBox(height: 0),
                   Container(
                     padding: const EdgeInsets.all(16.0),
-                    margin: const EdgeInsets.only(bottom: 16.0),
+                    margin: const EdgeInsets.only(bottom: 6.0),
                     color: Colors.white,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

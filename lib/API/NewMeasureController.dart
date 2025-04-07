@@ -4,17 +4,16 @@ import 'package:http/http.dart' as http;
 import '../Utils/Result.dart';
 import '../Utils/config.dart';
 import '../Data/MeasureData.dart';
+import '../Data/SessionDistanceData.dart';
 
 class NewMeasureController {
   static final http.Client _client = http.Client(); // Reusable HTTP client
 
   /// Start a new measure for a user.
-  static Future<Result<int>> startMeasure(int userId,
-      {int? contributorsNumber}) async {
+  static Future<Result<int>> startMeasure(int userId, {int? contributorsNumber}) async {
     if (await MeasureData.isMeasureOngoing()) {
       log("Debug: Measure is already ongoing.");
-      throw Exception(
-          "Cannot start a new measure while another measure is ongoing.");
+      throw Exception("Cannot start a new measure while another measure is ongoing.");
     }
 
     final uri = Uri.https(Config.API_URL, '/measures/start');
@@ -26,28 +25,27 @@ class NewMeasureController {
     log("Request: POST $uri\nBody: ${jsonEncode(body)}");
 
     return _client
-        .post(uri,
-            body: jsonEncode(body),
-            headers: {"Content-Type": "application/json"})
+        .post(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"})
         .timeout(const Duration(seconds: 10))
         .then((response) async {
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+          if (response.statusCode == 200) {
+            final responseData = jsonDecode(response.body);
 
-        // Only log critical information
-        int? measureId = responseData['id'];
-        if (measureId == null) {
-          throw Exception("id is null in the response.");
-        }
+            // Only log critical information
+            int? measureId = responseData['id'];
+            if (measureId == null) {
+              throw Exception("id is null in the response.");
+            }
 
-        await MeasureData.saveMeasureId(measureId.toString());
-        return Result<int>(value: measureId);
-      } else {
-        throw Exception('Failed to start measure: ${response.statusCode}');
-      }
-    }).onError((error, stackTrace) {
-      return Result<int>(error: error.toString());
-    });
+            await MeasureData.saveMeasureId(measureId.toString());
+            return Result<int>(value: measureId);
+          } else {
+            throw Exception('Failed to start measure: ${response.statusCode}');
+          }
+        })
+        .onError((error, stackTrace) {
+          return Result<int>(error: error.toString());
+        });
   }
 
   /// Edit the meters for a measure.
@@ -65,9 +63,7 @@ class NewMeasureController {
 
     log("Request: PUT $uri\nBody: ${jsonEncode(body)}");
 
-    return _client.put(uri,
-        body: jsonEncode(body),
-        headers: {"Content-Type": "application/json"}).then((response) {
+    return _client.put(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"}).then((response) {
       log("Response: ${response.statusCode}\nBody: ${response.body}");
       if (response.statusCode == 200) {
         log("Debug: Successfully edited meters.");
@@ -99,7 +95,8 @@ class NewMeasureController {
     return _client.put(uri).then((response) async {
       log("Response: ${response.statusCode}\nBody: ${response.body}");
       if (response.statusCode == 200) {
-        await MeasureData.clearMeasureData(); // Clear the measure ID
+        await MeasureData.clearMeasureData();
+        await SessionDistanceData.resetTotalDistance();
         log("Debug: Measure ID cleared.");
         return Result<bool>(value: true);
       } else {

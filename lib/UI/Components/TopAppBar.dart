@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'dart:async'; // Ensure this import is present for Timer
+import 'dart:async';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../Utils/config.dart';
 import '../ShareLog.dart';
 import '../LoginScreen.dart';
@@ -13,7 +13,7 @@ import 'TextModal.dart';
 class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final bool showInfoButton;
-  final bool isRecording; // New parameter to indicate recording status
+  final bool isRecording;
 
   const TopAppBar({
     super.key,
@@ -26,27 +26,27 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   _TopAppBarState createState() => _TopAppBarState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(60.0); // Reduced height for a compact look
+  Size get preferredSize => const Size.fromHeight(60.0);
 }
 
 class _TopAppBarState extends State<TopAppBar> {
   int _infoButtonClickCount = 0;
   bool _showShareButton = false;
-  bool _isDotExpanded = true; // State to toggle dot size
-  Timer? _dotAnimationTimer; // Timer for animation
+  bool _isDotExpanded = true;
+  Timer? _dotAnimationTimer;
 
   @override
   void initState() {
     super.initState();
     if (widget.isRecording) {
-      _startDotAnimation(); // Start the animation when recording
+      _startDotAnimation();
     }
   }
 
   void _startDotAnimation() {
     _dotAnimationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       setState(() {
-        _isDotExpanded = !_isDotExpanded; // Toggle the opacity state
+        _isDotExpanded = !_isDotExpanded;
       });
     });
   }
@@ -55,19 +55,19 @@ class _TopAppBarState extends State<TopAppBar> {
   void didUpdateWidget(covariant TopAppBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isRecording && _dotAnimationTimer == null) {
-      _startDotAnimation(); // Restart animation if recording starts
+      _startDotAnimation();
     } else if (!widget.isRecording && _dotAnimationTimer != null) {
       _dotAnimationTimer?.cancel();
       _dotAnimationTimer = null;
       setState(() {
-        _isDotExpanded = true; // Reset opacity when not recording
+        _isDotExpanded = true;
       });
     }
   }
 
   @override
   void dispose() {
-    _dotAnimationTimer?.cancel(); // Cancel the timer when widget is disposed
+    _dotAnimationTimer?.cancel();
     super.dispose();
   }
 
@@ -90,11 +90,11 @@ class _TopAppBarState extends State<TopAppBar> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _incrementInfoButtonClickCount, // Increment count on app bar tap
+      onTap: _incrementInfoButtonClickCount,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.zero, // Removed border radius
+          borderRadius: BorderRadius.zero,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -105,43 +105,43 @@ class _TopAppBarState extends State<TopAppBar> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0), // Adjusted padding
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
             child: Row(
               children: [
-                if (widget.isRecording) ...[
-                  AnimatedOpacity(
-                    duration: const Duration(seconds: 1),
-                    opacity: _isDotExpanded ? 1.0 : 0.0,
-                    child: Container(
-                      width: 12.0,
-                      height: 12.0,
-                      decoration: const BoxDecoration(
-                        color: Colors.redAccent,
-                        shape: BoxShape.circle,
-                      ),
+                if (widget.showInfoButton)
+                  IconButton(
+                    icon: SvgPicture.asset(
+                      'assets/icons/info.svg',
+                      color: Colors.black87,
+                      width: 20,
+                      height: 20,
                     ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const InfoScreen()),
+                      );
+                    },
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    "Session en cours...",
-                    style: TextStyle(
-                      color: Color(Config.COLOR_APP_BAR),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      overflow: TextOverflow.ellipsis, // Ensure text fits in a single line
-                    ),
-                    maxLines: 1, // Restrict to a single line
+                const Spacer(),
+                const Text(
+                  "Accueil",
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ] else ...[
-                  Image.asset(
-                    'assets/pictures/LogoText.png', // Display the logo on the left
-                    height: 28,
-                  ),
-                ],
+                  maxLines: 1,
+                ),
                 const Spacer(),
                 if (_showShareButton)
                   IconButton(
-                    icon: const Icon(Icons.developer_mode, color: Color(Config.COLOR_APP_BAR)),
+                    icon: const Icon(
+                      Icons.developer_mode,
+                      color: Colors.black87,
+                      size: 20,
+                    ),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -150,24 +150,12 @@ class _TopAppBarState extends State<TopAppBar> {
                     },
                   ),
                 IconButton(
-                  icon: const Icon(Icons.public, color: Color(Config.COLOR_APP_BAR)),
-                  onPressed: () async {
-                    final Uri url = Uri.parse('https://larouequimarche.ch/');
-                    await launch(url.toString(), forceSafariVC: false, forceWebView: false);
-                  },
-                ),
-                if (widget.showInfoButton)
-                  IconButton(
-                    icon: const Icon(Icons.info_outlined, color: Color(Config.COLOR_APP_BAR)),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const InfoScreen()),
-                      );
-                    },
+                  icon: SvgPicture.asset(
+                    'assets/icons/sign-out.svg',
+                    color: Colors.black87,
+                    width: 20,
+                    height: 20,
                   ),
-                IconButton(
-                  icon: const Icon(Icons.logout, color: Color(Config.COLOR_APP_BAR)),
                   onPressed: () async {
                     showTextModal(
                       context,
@@ -202,7 +190,7 @@ class _TopAppBarState extends State<TopAppBar> {
                       },
                       showDiscardButton: true,
                       onDiscard: () {
-                        Navigator.of(context).pop(); // Close the modal
+                        Navigator.of(context).pop();
                       },
                     );
                   },
