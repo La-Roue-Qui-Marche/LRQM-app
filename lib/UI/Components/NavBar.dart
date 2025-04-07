@@ -8,7 +8,7 @@ class NavBar extends StatelessWidget {
   final bool isMeasureActive;
   final VoidCallback onStartStopPressed;
 
-  NavBar({
+  const NavBar({
     super.key,
     required this.currentPage,
     required this.onPageSelected,
@@ -18,150 +18,125 @@ class NavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.only(bottom: 24.0, right: 12.0, left: 12.0),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildNavBarButton(
-            icon: null,
-            svgAsset: currentPage == 0 ? 'assets/icons/user-fill.svg' : 'assets/icons/user.svg',
-            isSelected: currentPage == 0,
-            onTap: () => onPageSelected(0),
-            width: screenWidth * 0.3,
-            label: 'Perso',
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: _navBarButton(
+                context,
+                svgActive: 'assets/icons/user-fill.svg',
+                svgInactive: 'assets/icons/user.svg',
+                label: 'Perso',
+                selected: currentPage == 0,
+                onTap: () => onPageSelected(0),
+              ),
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: _buildStartStopButton(),
-          ),
-          _buildNavBarButton(
-            icon: null,
-            svgAsset: currentPage == 1 ? 'assets/icons/calendar-fill.svg' : 'assets/icons/calendar.svg',
-            isSelected: currentPage == 1,
-            onTap: () => onPageSelected(1),
-            width: screenWidth * 0.3,
-            label: 'Événement',
+          _startStopButton(context),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: _navBarButton(
+                context,
+                svgActive: 'assets/icons/calendar-fill.svg',
+                svgInactive: 'assets/icons/calendar.svg',
+                label: 'Événement',
+                selected: currentPage == 1,
+                onTap: () => onPageSelected(1),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavBarButton({
-    required IconData? icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required double width,
+  Widget _navBarButton(
+    BuildContext context, {
+    required String svgActive,
+    required String svgInactive,
     required String label,
-    String? svgAsset,
+    required bool selected,
+    required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        width: width,
-        height: 70,
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (svgAsset != null)
-              SvgPicture.asset(
-                svgAsset,
-                color: isSelected ? const Color(Config.COLOR_APP_BAR) : Colors.black54,
-                width: 20.0,
-                height: 20.0,
-              )
-            else if (icon != null)
-              Icon(
-                icon,
-                color: isSelected ? const Color(Config.COLOR_APP_BAR) : Colors.black54,
-                size: 24.0,
-              ),
-            const SizedBox(height: 4.0),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? const Color(Config.COLOR_APP_BAR) : Colors.black54,
-                fontSize: 12.0,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            selected ? svgActive : svgInactive,
+            color: selected ? Theme.of(context).primaryColor : Colors.grey.shade500,
+            width: 24,
+            height: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: selected ? Theme.of(context).primaryColor : Colors.grey.shade500,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStartStopButton() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: isMeasureActive
-            ? LinearGradient(
-                colors: [
-                  const Color(0xFF5A4C9C), // Lighter shade of COLOR_APP_BAR
-                  const Color(Config.COLOR_APP_BAR), // Original COLOR_APP_BAR
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : LinearGradient(
-                colors: [
-                  const Color(0xFFFFA726), // Lighter shade of COLOR_BUTTON
-                  const Color(Config.COLOR_BUTTON), // Original COLOR_BUTTON
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-      ),
-      child: GestureDetector(
-        onTapDown: (_) => _onButtonPress(),
-        onTapUp: (_) => _onButtonRelease(),
-        onTapCancel: _onButtonRelease,
-        child: AnimatedScale(
-          scale: _isPressed ? 0.95 : 1.0,
-          duration: const Duration(milliseconds: 100),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: const CircleBorder(),
-              padding: const EdgeInsets.all(16.0),
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              elevation: 0,
+  Widget _startStopButton(BuildContext context) {
+    return GestureDetector(
+      onTap: onStartStopPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: isMeasureActive ? [Colors.redAccent, Colors.red] : [Colors.orangeAccent, Colors.deepOrange],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: (isMeasureActive ? Colors.red : Colors.deepOrange).withOpacity(0.4),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
             ),
-            onPressed: onStartStopPressed,
+          ],
+        ),
+        child: Center(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
             child: isMeasureActive
-                ? const Icon(
-                    Icons.stop,
-                    color: Colors.white,
-                    size: 28.0,
-                  )
+                ? const Icon(Icons.stop, key: ValueKey('stop'), color: Colors.white, size: 30)
                 : SvgPicture.asset(
                     'assets/icons/flag.svg',
+                    key: const ValueKey('flag'),
                     color: Colors.white,
-                    width: 28.0,
-                    height: 28.0,
+                    width: 30,
+                    height: 30,
                   ),
           ),
         ),
       ),
     );
-  }
-
-  bool _isPressed = false;
-
-  void _onButtonPress() {
-    _isPressed = true;
-  }
-
-  void _onButtonRelease() {
-    _isPressed = false;
   }
 }

@@ -1,7 +1,5 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Import for SVG support
 import '../API/NewUserController.dart';
 import '../Data/UserData.dart';
 import 'WorkingScreen.dart';
@@ -22,110 +20,104 @@ class ConfirmScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          SvgPicture.asset(
-            'assets/pictures/background.svg', // Set the background SVG
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Card(
-                  elevation: 0,
-                  color: Colors.white, // Ensure the card background is white
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Center(
-                          child: Icon(
-                            Icons.help_outline, // Use a question icon
-                            size: 60,
-                            color: Color(Config.COLOR_APP_BAR),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          "Est-ce bien toi ?",
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Color(Config.COLOR_APP_BAR),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(Config.COLOR_APP_BAR),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end, // Align "Oui" to the right
+      backgroundColor: Colors.white, // pure white background
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Card(
+                      elevation: 0,
+                      margin: EdgeInsets.zero,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      color: Colors.white,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
-                              child: DiscardButton(
-                                icon: Icons.close, // Add icon to "Non" button
-                                text: 'Non',
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
+                            const Icon(
+                              Icons.help_outline,
+                              size: 60,
+                              color: Color(Config.COLOR_APP_BAR),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              "Est-ce bien toi ?",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(Config.COLOR_APP_BAR),
                               ),
                             ),
-                            const SizedBox(width: 16), // Add spacing between buttons
-                            Expanded(
-                              child: ActionButton(
-                                icon: Icons.check, // Add icon to "Oui" button
-                                text: 'Oui',
-                                onPressed: () async {
-                                  log("Name: $name");
-                                  log("Dossard: $dossard");
-
-                                  var tmp = await NewUserController.getUser(dossard);
-                                  if (!tmp.hasError && tmp.value != null) {
-                                    // Save user data in UserData
-                                    await UserData.saveUser({
-                                      "id": tmp.value!['id'], // Use null-aware operator
-                                      "username": tmp.value!['username'], // Use null-aware operator
-                                      "bib_id": tmp.value!['bib_id'], // Use null-aware operator
-                                      "event_id": tmp.value!['event_id'], // Use null-aware operator
-                                    });
-
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(builder: (context) {
-                                        return const WorkingScreen();
-                                      }),
-                                    );
-                                  } else {
-                                    showInSnackBar(context, tmp.error ?? "An unknown error occurred.");
-                                  }
-                                },
+                            const SizedBox(height: 16),
+                            Text(
+                              name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(Config.COLOR_APP_BAR),
                               ),
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 160), // reserve space for buttons
+              ],
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 48, // 48px from bottom
+              child: Column(
+                children: [
+                  ActionButton(
+                    icon: Icons.check,
+                    text: 'Oui',
+                    onPressed: () async {
+                      log("Name: $name");
+                      log("Dossard: $dossard");
+
+                      var tmp = await NewUserController.getUser(dossard);
+                      if (!tmp.hasError && tmp.value != null) {
+                        await UserData.saveUser({
+                          "id": tmp.value!['id'],
+                          "username": tmp.value!['username'],
+                          "bib_id": tmp.value!['bib_id'],
+                          "event_id": tmp.value!['event_id'],
+                        });
+
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const WorkingScreen()),
+                        );
+                      } else {
+                        showInSnackBar(context, tmp.error ?? "Une erreur inconnue est survenue.");
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  DiscardButton(
+                    icon: Icons.close,
+                    text: 'Non',
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -614,23 +614,22 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                   : '',
                             ),
                           ),
-                          const SizedBox(height: 6),
                           const DynamicMapCard(), // Add the DynamicMapCard widget here
                           if (!_isMeasureActive) // Show message only when no session is active
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 12.0),
                               child: Center(
                                 child: Text(
-                                  'Appuie sur START pour démarrer une session',
+                                  'Appuie sur le drapeau pour démarrer une session',
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     color: Colors.black54,
                                   ),
                                 ),
                               ),
                             ),
-                          const SizedBox(height: 16), // Add margin before the text
-                          //const SizedBox(height: 120), // Add more margin at the bottom to allow more scrolling
+                          const SizedBox(height: 32), // Add margin before the text
+                          //const SizedBox(height: 135), // Add more margin at the bottom to allow more scrolling
                         ],
                       ),
                     ),
@@ -664,9 +663,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                               ),
                             ),
 
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 0),
                             const DonationCard(), // Add the DonationCard component
-                            const SizedBox(height: 100), // Add more margin at the bottom to allow more scrolling
+                            const SizedBox(height: 120), // Add more margin at the bottom to allow more scrolling
                           ],
                         ),
                       ),

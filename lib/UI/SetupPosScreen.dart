@@ -242,7 +242,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.only(top: 0.0),
         child: Stack(

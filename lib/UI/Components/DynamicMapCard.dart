@@ -154,13 +154,13 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
       absorbing: true,
       child: Container(
         height: mapHeight,
-        margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 0.0),
+        margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(0.0),
+          borderRadius: BorderRadius.circular(16.0),
           color: Colors.white,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(0.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: _isFetchingPosition || !_isMapReady
               ? Container(
                   height: mapHeight,

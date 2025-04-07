@@ -131,7 +131,7 @@ class DifferenceGraphState extends State<DifferenceGraph> {
                           ),
                           barWidth: 3,
                           isStrokeCapRound: true,
-                          dotData: FlDotData(show: true),
+                          dotData: FlDotData(show: false), // Disable dots
                           belowBarData: BarAreaData(show: false),
                         ),
                       ],

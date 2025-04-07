@@ -21,255 +21,108 @@ class EventProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 0.0),
-      padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
+      margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(0.0),
+        borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Progression de l\'événement',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color(Config.COLOR_APP_BAR),
+              color: const Color(Config.COLOR_APP_BAR),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
-          /// First Row: Objectif and Progress
+          // Objectif Info
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Text(
-                    'Objectif',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
+              const Text(
+                'Objectif',
+                style: TextStyle(fontSize: 14, color: Colors.black54),
               ),
               currentValue != null && objectif != null && objectif != '-1'
                   ? Text(
                       '$currentValue / $objectif',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(Config.COLOR_APP_BAR),
+                        fontWeight: FontWeight.w600,
+                        color: const Color(Config.COLOR_APP_BAR),
                       ),
                     )
-                  : Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      child: Container(
-                        height: 20,
-                        width: 100,
-                        color: Colors.grey[300],
-                      ),
-                    ),
+                  : _buildShimmer(width: 100),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+
+          // Progress Bar
           Row(
             children: [
               if (currentValue != null && objectif != null && objectif != '-1')
                 Padding(
-                  padding: const EdgeInsets.only(right: 14.0),
+                  padding: const EdgeInsets.only(right: 12.0),
                   child: Text(
-                    '${(_sanitizeValue(currentValue!) / _sanitizeValue(objectif!) * 100).toStringAsFixed(1)}%', // Calculate progress percentage
+                    '${(_sanitizeValue(currentValue!) / _sanitizeValue(objectif!) * 100).toStringAsFixed(1)}%',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Colors.black87,
                     ),
                   ),
                 ),
               Expanded(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(0),
+                  borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
                     value: currentValue != null && objectif != null && objectif != '-1'
                         ? _sanitizeValue(currentValue!) / _sanitizeValue(objectif!)
-                        : 0.0, // Calculate progress value
-                    backgroundColor: const Color(Config.COLOR_BACKGROUND).withOpacity(1),
+                        : 0.0,
+                    backgroundColor: const Color(Config.COLOR_BACKGROUND).withOpacity(0.2),
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       Color(Config.COLOR_APP_BAR),
                     ),
-                    minHeight: 6,
+                    minHeight: 8,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
 
-          /// Second Row: Remaining Time and Participants
+          const SizedBox(height: 24),
+
+          // Time + Participants
           Row(
             children: [
-              /// Remaining Time (60% width)
-              Expanded(
-                flex: 3, // 60% of the width
-                child: Container(
-                  padding: const EdgeInsets.all(12), // Added padding
-                  decoration: BoxDecoration(
-                    color: const Color(Config.COLOR_BACKGROUND).withOpacity(0.5), // Added background color
-                    borderRadius: BorderRadius.circular(4), // Rounded corners
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: percentage != null ? percentage! / 100 : 0.0, // Use percentage for progress
-                              backgroundColor: Colors.grey[300],
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                Color(Config.COLOR_APP_BAR),
-                              ),
-                            ),
-                            Text(
-                              '${percentage != null ? percentage!.toStringAsFixed(0) : 0}%', // Display percentage inside the circle
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Temps restant',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            remainingTime != null
-                                ? Text(
-                                    remainingTime!,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  )
-                                : Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(
-                                      height: 20,
-                                      width: 80,
-                                      color: Colors.grey[300],
-                                    ),
-                                  ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              _infoCard(
+                label: 'Temps restant',
+                value: remainingTime,
+                percentage: percentage,
+                color: const Color(Config.COLOR_APP_BAR),
+                flex: 3,
+                showProgress: true,
               ),
-            ],
-          ),
-          const SizedBox(height: 6), // Adjusted spacing between rows
-          Row(
-            children: [
-              Expanded(
-                flex: 2, // 40% of the width
-                child: Container(
-                  padding: const EdgeInsets.all(12), // Added padding
-                  decoration: BoxDecoration(
-                    color: const Color(Config.COLOR_BACKGROUND).withOpacity(0.5), // Added background color
-                    borderRadius: BorderRadius.circular(4), // Rounded corners
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: participants != null
-                                  ? (int.tryParse(participants!) ?? 0) / Config.NUMBER_MAX_PARTICIPANTS
-                                  : 0.0, // Calculate progress based on max participants
-                              backgroundColor: Colors.grey[300],
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                Color(Config.COLOR_BUTTON),
-                              ),
-                            ),
-                            Text(
-                              '${participants != null ? ((int.tryParse(participants!) ?? 0) / Config.NUMBER_MAX_PARTICIPANTS * 100).toStringAsFixed(0) : 0}%', // Display percentage
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Participants sur le parcours',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            participants != null
-                                ? Text(
-                                    participants!,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  )
-                                : Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(
-                                      height: 20,
-                                      width: 80,
-                                      color: Colors.grey[300],
-                                    ),
-                                  ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              const SizedBox(width: 12),
+              _infoCard(
+                label: 'Participants',
+                value: participants,
+                percentage: null,
+                color: const Color(Config.COLOR_BUTTON),
+                flex: 2,
+                showProgress: false,
               ),
             ],
           ),
@@ -278,8 +131,90 @@ class EventProgressCard extends StatelessWidget {
     );
   }
 
+  Widget _infoCard({
+    required String label,
+    String? value,
+    double? percentage,
+    required Color color,
+    required int flex,
+    required bool showProgress,
+  }) {
+    return Expanded(
+      flex: flex,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            if (showProgress)
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: (percentage ?? 0) / 100,
+                      strokeWidth: 4,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  ],
+                ),
+              )
+            else
+              const SizedBox(width: 0), // spacing placeholder
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  value != null
+                      ? Text(
+                          value,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        )
+                      : _buildShimmer(width: 60),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmer({double width = 80}) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        height: 18,
+        width: width,
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
   double _sanitizeValue(String value) {
-    // Remove non-numeric characters and parse to double
     return double.tryParse(value.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
   }
 }
