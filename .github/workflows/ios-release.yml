@@ -48,8 +48,15 @@ jobs:
       - name: Install Provisioning Profile
         run: mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles && cp provisioning_profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
+      - name: Flutter Doctor
+        run: flutter doctor
+
+      - name: Clean Flutter Project
+        run: flutter clean
+
+
       - name: Build iOS App
-        run: flutter build ipa --release
+        run: flutter build ipa --release -v
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
