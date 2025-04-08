@@ -64,7 +64,7 @@ jobs:
         run: flutter clean
 
       - name: Build iOS App
-        run: flutter build ipa --release -v
+        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: List build directory
         run: ls -R build/ios/archive
