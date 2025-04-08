@@ -503,7 +503,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ch.larouequimarche.app;
 				PRODUCT_NAME = LRQM;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "La Roue Qui Marche Provisioning Profile";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "ch.larouequimarche.app";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
