@@ -16,27 +16,27 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout Code
+      - name: 🧾 Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Flutter
+      - name: 🛠 Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.3'
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: flutter pub get
 
-      - name: Install CocoaPods
+      - name: 📦 Install CocoaPods
         run: pod install --repo-update
         working-directory: ios
 
-      - name: Decode Certificate and Provisioning Profile
+      - name: 🔐 Decode Certificate and Provisioning Profile
         run: |
           echo "${{ secrets.IOS_SIGNING_CERTIFICATE }}" | base64 -d > certificate.p12
           echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 -d > provisioning_profile.mobileprovision
 
-      - name: Set Up Keychain
+      - name: 🔐 Set Up Keychain
         run: |
           security create-keychain -p "" build.keychain
           security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
@@ -45,31 +45,35 @@ jobs:
           security unlock-keychain -p "" build.keychain
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-      - name: Install Provisioning Profile
+      - name: 🧾 Install Provisioning Profile
         run: mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles && cp provisioning_profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      - name: Check Keychain
+      - name: 🔎 Check Code Signing Identity
         run: security find-identity -p codesigning build.keychain
 
-      - name: Verify Provisioning Profile
-        run: security find-identity -v -p codesigning
-
-      - name: Check Xcode Version
+      - name: 📦 Validate Xcode
         run: xcodebuild -version
 
-      - name: Flutter Doctor
+      - name: 🧰 Run Flutter Doctor
         run: flutter doctor
 
-      - name: Clean Flutter Project
+      - name: 🧹 Clean Flutter Project
         run: flutter clean
 
-      - name: Build iOS App
-        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+      - name: 📱 Build iOS App (IPA)
+        run: flutter build ios --release --no-codesign --export-options-plist=ios/ExportOptions.plist
 
-      - name: List build directory
-        run: ls -R build/ios/archive
-      
-      - name: Upload Artifact
+      - name: 🔏 Sign and Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/LRQM.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ios/ExportOptions.plist
+
+      - name: 📁 List build directory
+        run: ls -R build/ios/ipa/
+
+      - name: 📤 Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: LRQM-app-iOS
