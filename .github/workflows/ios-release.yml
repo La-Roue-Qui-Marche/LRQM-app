@@ -63,9 +63,6 @@ jobs:
       - name: 📱 Build iOS App (IPA)
         run: flutter build ios --release --no-codesign
 
-      - name: 📁 List build directory
-        run: ls -R build/ios/ipa/
-
       - name: 📁 List build archives
         run: ls -R build/ios/archive/
 
