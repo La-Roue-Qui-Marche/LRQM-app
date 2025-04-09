@@ -64,7 +64,10 @@ jobs:
         run: flutter build ios --release --no-codesign
 
       - name: 📁 List build archives
-        run: ls -R build/ios/archive/
+        run: |
+          ls -R build/ios/
+          ls -R build/ios/iphoneos/
+          ls -R build/ios/archive/
 
       - name: 🔏 Sign and Export IPA
         run: |
