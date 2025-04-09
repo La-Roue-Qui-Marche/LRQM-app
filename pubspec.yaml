@@ -101,8 +101,6 @@ flutter:
     - assets/icons/calendar.svg
     - assets/icons/user.svg
     - assets/icons/flag.svg
-    - assets/icons/circle-user.svg
-    - assets/icons/circle-user-fill.svg
     - assets/icons/instagram.svg
     - assets/icons/linkedin.svg
     - assets/icons/facebook.svg

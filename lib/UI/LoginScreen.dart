@@ -122,7 +122,7 @@ class _LoginState extends State<Login> {
 
     showTextModal(
       context,
-      "Choisir un évènement",
+      "Selectionne ton évènement",
       "Merci de sélectionner ton évènement",
       dropdownItems: _events.map((e) => e['name']).toList(),
       selectedDropdownValue: selectedEvent['name'],

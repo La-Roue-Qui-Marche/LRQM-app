@@ -114,21 +114,27 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: TopAppBar(
-        title: "Scanner", // Set the title for the app bar
-        showBackButton: true, // Enable the back button
-        showInfoButton: false, // Disable the info button
-      ),
+      backgroundColor: Color(Config.COLOR_BACKGROUND),
+      appBar: _isCameraOpen
+          ? null // Hide the TopAppBar when the camera is open
+          : TopAppBar(
+              title: "Scanner",
+              showBackButton: true,
+              showInfoButton: false,
+              showLogoutButton: false,
+            ),
       body: Padding(
         padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 48.0, left: 0.0, right: 0.0),
+                padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
                 child: Container(
-                  color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.0), // Add rounded border
+                  ),
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -138,6 +144,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                         child: GestureDetector(
                           onDoubleTap: _startSessionDirectly,
                           child: Container(
+                            padding: const EdgeInsets.all(16.0), // Add padding
                             width: MediaQuery.of(context).size.width * 0.55,
                             child: const Image(
                               image: AssetImage('assets/pictures/DrawScan-removebg.png'),
@@ -159,7 +166,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 32.0),
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
                   child: ActionButton(
                     icon: Icons.camera_alt,
                     text: "Ouvrir la caméra",

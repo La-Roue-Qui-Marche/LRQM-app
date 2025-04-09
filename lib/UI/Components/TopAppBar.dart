@@ -13,63 +13,40 @@ import 'TextModal.dart';
 class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final bool showInfoButton;
-  final bool isRecording;
-  final bool showBackButton; // Add showBackButton argument
+  final bool showBackButton;
+  final bool showLogoutButton; // Add showLogoutButton argument
 
   const TopAppBar({
     super.key,
     required this.title,
     this.showInfoButton = true,
-    this.isRecording = false,
-    this.showBackButton = false, // Default to false
+    this.showBackButton = false,
+    this.showLogoutButton = true, // Default to true
   });
 
   @override
   _TopAppBarState createState() => _TopAppBarState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(60.0);
+  Size get preferredSize => const Size.fromHeight(50.0);
 }
 
 class _TopAppBarState extends State<TopAppBar> {
   int _infoButtonClickCount = 0;
   bool _showShareButton = false;
-  bool _isDotExpanded = true;
-  Timer? _dotAnimationTimer;
 
   @override
   void initState() {
     super.initState();
-    if (widget.isRecording) {
-      _startDotAnimation();
-    }
-  }
-
-  void _startDotAnimation() {
-    _dotAnimationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      setState(() {
-        _isDotExpanded = !_isDotExpanded;
-      });
-    });
   }
 
   @override
   void didUpdateWidget(covariant TopAppBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isRecording && _dotAnimationTimer == null) {
-      _startDotAnimation();
-    } else if (!widget.isRecording && _dotAnimationTimer != null) {
-      _dotAnimationTimer?.cancel();
-      _dotAnimationTimer = null;
-      setState(() {
-        _isDotExpanded = true;
-      });
-    }
   }
 
   @override
   void dispose() {
-    _dotAnimationTimer?.cancel();
     super.dispose();
   }
 
@@ -110,53 +87,67 @@ class _TopAppBarState extends State<TopAppBar> {
           child: Container(
             height: 60,
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
+            child: Stack(
               children: [
-                if (widget.showBackButton) // Conditionally show the back button
-                  _buildIconButton(
-                    onTap: () {
-                      Navigator.of(context).pop(); // Navigate back
-                    },
-                    icon: 'assets/icons/angle-left.svg', // Back button icon
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (widget.showBackButton)
+                        _buildIconButton(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: 'assets/icons/angle-left.svg',
+                        ),
+                      if (widget.showBackButton) const SizedBox(width: 8),
+                      if (widget.showInfoButton)
+                        _buildIconButton(
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen()));
+                          },
+                          icon: 'assets/icons/info.svg',
+                        ),
+                    ],
                   ),
-                if (widget.showBackButton) const SizedBox(width: 8),
-                if (widget.showInfoButton) // Conditionally show the info button
-                  _buildIconButton(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen()));
-                    },
-                    icon: 'assets/icons/info.svg', // Info button icon
+                ),
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 18,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    maxLines: 1,
                   ),
-                if (widget.showInfoButton) const SizedBox(width: 8),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      widget.title,
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      maxLines: 1,
+                ),
+                if (_showShareButton || widget.showLogoutButton)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_showShareButton)
+                          _buildIconButton(
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => ShareLog()));
+                            },
+                            iconData: Icons.developer_mode,
+                          ),
+                        if (_showShareButton) const SizedBox(width: 8),
+                        if (widget.showLogoutButton)
+                          _buildIconButton(
+                            onTap: () {
+                              _showLogoutConfirmation(context);
+                            },
+                            icon: 'assets/icons/sign-out.svg',
+                          ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                if (_showShareButton)
-                  _buildIconButton(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ShareLog()));
-                    },
-                    iconData: Icons.developer_mode, // Native Flutter icon
-                  ),
-                if (_showShareButton) const SizedBox(width: 8),
-                _buildIconButton(
-                  onTap: () {
-                    _showLogoutConfirmation(context);
-                  },
-                  icon: 'assets/icons/sign-out.svg',
-                ),
               ],
             ),
           ),
@@ -180,8 +171,8 @@ class _TopAppBarState extends State<TopAppBar> {
           child: icon != null
               ? SvgPicture.asset(
                   icon,
-                  width: 22,
-                  height: 22,
+                  width: icon == 'assets/icons/angle-left.svg' ? 26 : 22, // Adjust width for back button
+                  height: icon == 'assets/icons/angle-left.svg' ? 26 : 22,
                   color: Colors.black87,
                 )
               : Icon(

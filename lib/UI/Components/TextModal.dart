@@ -93,8 +93,7 @@ void showTextModal(
                       dropdownColor: Colors.white,
                       style: const TextStyle(
                         fontSize: 16,
-                        color: Color(Config.COLOR_APP_BAR),
-                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
                       ),
                       items: dropdownItems.map((item) {
                         return DropdownMenuItem(
@@ -103,7 +102,7 @@ void showTextModal(
                             item.toString(),
                             style: const TextStyle(
                               fontSize: 16,
-                              color: Color(Config.COLOR_APP_BAR),
+                              color: Colors.black87,
                             ),
                           ),
                         );

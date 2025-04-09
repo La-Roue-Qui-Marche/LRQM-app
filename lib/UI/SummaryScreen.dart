@@ -64,7 +64,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 48.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 56.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

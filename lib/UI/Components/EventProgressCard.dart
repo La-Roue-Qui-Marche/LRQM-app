@@ -42,7 +42,7 @@ class EventProgressCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: 0),
               Text(
                 'Progression de l\'événement',
                 style: TextStyle(
@@ -50,7 +50,7 @@ class EventProgressCard extends StatelessWidget {
                   color: Colors.black54,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
                 eventName,
                 style: const TextStyle(
@@ -75,13 +75,13 @@ class EventProgressCard extends StatelessWidget {
                               currentValue!,
                               style: const TextStyle(
                                 fontSize: 20,
-                                color: Color(Config.COLOR_APP_BAR),
+                                color: Colors.black87,
                               ),
                             ),
                             const Text(
                               ' / ',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.normal,
                                 color: Colors.black54,
                               ),
@@ -89,7 +89,7 @@ class EventProgressCard extends StatelessWidget {
                             Text(
                               objectif!,
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.normal,
                                 color: Colors.black54,
                               ),
@@ -173,7 +173,7 @@ class EventProgressCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [

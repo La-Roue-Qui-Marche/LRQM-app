@@ -44,7 +44,7 @@ class NavBar extends StatelessWidget {
                   context,
                   svgActive: 'assets/icons/user-fill.svg',
                   svgInactive: 'assets/icons/user.svg',
-                  label: 'Perso',
+                  label: 'Personel',
                   selected: currentPage == 0,
                   onTap: () => onPageSelected(0),
                 ),
@@ -85,17 +85,16 @@ class NavBar extends StatelessWidget {
         children: [
           SvgPicture.asset(
             selected ? svgActive : svgInactive,
-            color: selected ? Theme.of(context).primaryColor : Colors.grey.shade500,
-            width: 24,
-            height: 24,
+            color: selected ? Theme.of(context).primaryColor : Colors.black54,
+            width: 28,
+            height: 28,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: selected ? Theme.of(context).primaryColor : Colors.grey.shade500,
+              color: selected ? Theme.of(context).primaryColor : Colors.black54,
               fontSize: 12,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ],

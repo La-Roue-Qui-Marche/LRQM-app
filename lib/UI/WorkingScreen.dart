@@ -578,7 +578,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         appBar: TopAppBar(
           title: 'Accueil',
           showInfoButton: true, // Ensure the info button is enabled
-          isRecording: _isMeasureActive, // Pass recording status
+          showLogoutButton: true,
         ),
         body: Stack(
           children: [
