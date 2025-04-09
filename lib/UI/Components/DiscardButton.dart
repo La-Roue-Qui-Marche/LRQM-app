@@ -10,22 +10,21 @@ class DiscardButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.onPressed,
-    this.icon = Icons.close, // Default icon set to close
+    this.icon = Icons.close,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity, // Full width
-      height: 48.0, // Set height to match the "Oui" button
+      width: double.infinity,
+      height: 48.0,
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(Config.COLOR_APP_BAR), width: 1.0), // Outline with COLOR_APP_BAR
-        borderRadius: BorderRadius.circular(8.0), // Same radius as ActionButton
+        borderRadius: BorderRadius.circular(4.0),
       ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white, // Center transparent
-          shadowColor: Colors.white,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
@@ -38,7 +37,7 @@ class DiscardButton extends StatelessWidget {
             if (icon != null) const SizedBox(width: 10),
             Text(
               text,
-              style: const TextStyle(color: Color(Config.COLOR_APP_BAR), fontSize: 16), // Text color in COLOR_APP_BAR
+              style: const TextStyle(color: Color(Config.COLOR_APP_BAR), fontSize: 16),
             ),
           ],
         ),

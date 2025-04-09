@@ -23,7 +23,7 @@ class InfoCard extends StatefulWidget {
 }
 
 class ActionItem {
-  final Icon icon;
+  final Widget icon; // Changed from Icon to Widget
   final String label;
   final VoidCallback onPressed;
 
@@ -97,7 +97,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       child: IconTheme(
                         data: const IconThemeData(
                           size: 28,
-                          color: Color(Config.COLOR_APP_BAR), // Icon color
+                          color: Colors.black87, // Updated color
                         ),
                         child: widget.logo!,
                       ),
@@ -112,7 +112,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       Text(
                         widget.title,
                         style: const TextStyle(
-                          fontSize: 16, // Slightly larger font
+                          fontSize: 18, // Slightly larger font
                           color: Color(Config.COLOR_APP_BAR),
                         ),
                       ),
@@ -121,16 +121,15 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                           ? Text(
                               widget.data!,
                               style: const TextStyle(
-                                fontSize: 18, // Larger font for data
-                                fontWeight: FontWeight.bold,
-                                color: Color(Config.COLOR_APP_BAR),
+                                fontSize: 16, // Larger font for data
+                                color: Colors.black87, // Updated color
                               ),
                             )
                           : Shimmer.fromColors(
                               baseColor: Colors.grey[300]!,
                               highlightColor: Colors.grey[100]!,
                               child: Container(
-                                height: 18,
+                                height: 16,
                                 width: 100,
                                 color: Colors.grey,
                               ),
@@ -141,7 +140,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                 if (_canExpand)
                   Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: const Color(Config.COLOR_APP_BAR),
+                    color: Colors.black87, // Updated color
                   ),
               ],
             ),
@@ -156,8 +155,8 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                     Text(
                       widget.additionalDetails!,
                       style: const TextStyle(
-                        fontSize: 16,
-                        color: Color(Config.COLOR_APP_BAR),
+                        fontSize: 14,
+                        color: Colors.black54, // Updated color
                       ),
                     ),
                   if (widget.additionalDetails != null) const SizedBox(height: 16),
@@ -174,14 +173,15 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                     child: Column(
                       children: [
                         IconButton(
-                          icon: actionItem.icon,
+                          icon: actionItem.icon, // Updated to use Widget
                           onPressed: actionItem.onPressed,
+                          color: Colors.black54, // Updated color
                         ),
                         Text(
                           actionItem.label,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: Color(Config.COLOR_APP_BAR),
+                            color: Colors.black54, // Updated color
                           ),
                         ),
                       ],

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'Components/TitleCard.dart';
-import 'Components/InfoCard.dart';
-import 'Components/ActionButton.dart';
 import '../Utils/config.dart';
 import 'WorkingScreen.dart';
-import '../Utils/config.dart';
+import 'Components/ActionButton.dart';
 
 class SummaryScreen extends StatefulWidget {
   final int distanceAdded;
@@ -25,293 +22,186 @@ class SummaryScreen extends StatefulWidget {
 }
 
 class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateMixin {
-  late AnimationController _distanceController;
-  late Animation<int> _distanceAnimation;
-
-  late AnimationController _contributorsController;
-  late Animation<int> _contributorsAnimation;
-
-  late AnimationController _totalDistanceController;
-  late Animation<int> _totalDistanceAnimation;
-
-  late AnimationController _eventPercentageController;
-  late Animation<double> _eventPercentageAnimation;
-
-  late AnimationController _timeController;
-  late Animation<int> _timeAnimation;
-
-  final ScrollController _scrollController = ScrollController(); // Define the scroll controller
-
-  int _currentCardIndex = 0;
+  late final AnimationController _mainController;
+  late final List<AnimationController> _itemControllers;
 
   @override
   void initState() {
     super.initState();
-
-    // Initialize controllers and animations for distance
-    _distanceController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-    _distanceAnimation = IntTween(begin: 0, end: widget.distanceAdded)
-        .animate(CurvedAnimation(parent: _distanceController, curve: Curves.easeOut))
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() {
-            _currentCardIndex = 1;
-          });
-          _contributorsController.forward();
-        }
-      });
-
-    // Initialize controllers and animations for contributors
-    _contributorsController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-    _contributorsAnimation = IntTween(begin: 0, end: widget.contributors)
-        .animate(CurvedAnimation(parent: _contributorsController, curve: Curves.easeOut))
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() {
-            _currentCardIndex = 2;
-          });
-          _timeController.forward();
-        }
-      });
-
-    // Initialize controllers and animations for time
-    _timeController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-    _timeAnimation = IntTween(begin: 0, end: widget.timeAdded)
-        .animate(CurvedAnimation(parent: _timeController, curve: Curves.easeOut))
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() {
-            _currentCardIndex = 3;
-          });
-          _totalDistanceController.forward();
-        }
-      });
-
-    // Initialize controllers and animations for total distance
-    _totalDistanceController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-    _totalDistanceAnimation = IntTween(
-      begin: 0,
-      end: widget.distanceAdded * widget.contributors,
-    ).animate(CurvedAnimation(parent: _totalDistanceController, curve: Curves.easeOut))
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() {
-            _currentCardIndex = 4;
-          });
-          _eventPercentageController.forward();
-        }
-      });
-
-    // Initialize controllers and animations for event percentage
-    _eventPercentageController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-    _eventPercentageAnimation = Tween<double>(begin: 0, end: widget.percentageAdded)
-        .animate(CurvedAnimation(parent: _eventPercentageController, curve: Curves.easeOut));
-
-    // Start the first animation
-    _distanceController.forward();
-
-    // Add auto-scroll to animations
-    _distanceAnimation.addListener(() {
-      _scrollToBottom(); // Trigger scroll immediately when value changes
+    _mainController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..forward();
+    _itemControllers = List.generate(5, (index) {
+      return AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
     });
-    _contributorsAnimation.addListener(() {
-      _scrollToBottom(); // Trigger scroll immediately when value changes
-    });
-    _timeAnimation.addListener(() {
-      _scrollToBottom(); // Trigger scroll immediately when value changes
-    });
-    _totalDistanceAnimation.addListener(() {
-      _scrollToBottom(); // Trigger scroll immediately when value changes
-    });
-    _eventPercentageAnimation.addListener(() {
-      _scrollToBottom(); // Trigger scroll immediately when value changes
-    });
+    _startItemAnimations();
+  }
+
+  void _startItemAnimations() async {
+    for (var controller in _itemControllers) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      controller.forward();
+    }
   }
 
   @override
   void dispose() {
-    _distanceController.dispose();
-    _contributorsController.dispose();
-    _totalDistanceController.dispose();
-    _eventPercentageController.dispose();
-    _timeController.dispose();
-    _scrollController.dispose(); // Dispose the scroll controller
+    _mainController.dispose();
+    for (var controller in _itemControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  String _formatTime(int timeInSeconds) {
-    return '${(timeInSeconds ~/ 3600).toString().padLeft(2, '0')}h ${(timeInSeconds % 3600 ~/ 60).toString().padLeft(2, '0')}m ${(timeInSeconds % 60).toString().padLeft(2, '0')}s';
-  }
-
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOut,
-      );
-    }
+  String _formatTime(int seconds) {
+    return "${(seconds ~/ 3600).toString().padLeft(2, '0')}h "
+        "${(seconds % 3600 ~/ 60).toString().padLeft(2, '0')}m "
+        "${(seconds % 60).toString().padLeft(2, '0')}s";
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND), // Set background color
+      backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Stack(
         children: [
           SingleChildScrollView(
-            controller: _scrollController, // Use the scroll controller
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(4.0, 68.0, 4.0, 0.0), // Increased top padding by 20px
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: const TitleCard(
-                      icon: Icons.check_circle_outline,
-                      title: 'Félicitations !',
-                      subtitle: 'Résumé de votre contribution',
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 56.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: FadeTransition(
+                    opacity: _mainController,
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.emoji_events, color: Color(Config.COLOR_APP_BAR), size: 48),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Bravo !',
+                          style: TextStyle(fontSize: 22),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Voici le résumé de ta contribution',
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  if (_currentCardIndex >= 0) // Ensure "Distance parcourue" appears first
-                    Card(
-                      elevation: 0.0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      color: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            AnimatedBuilder(
-                              animation: _distanceController,
-                              builder: (context, child) {
-                                return InfoCard(
-                                  logo: const Icon(Icons.directions_walk, size: 32),
-                                  title: 'Distance parcourue',
-                                  data: '${_distanceAnimation.value} mètres',
-                                );
-                              },
-                            ),
-                            if (_currentCardIndex >= 1) ...[
-                              const Divider(
-                                thickness: 2,
-                                color: Color(Config.COLOR_BACKGROUND),
-                              ),
-                              AnimatedBuilder(
-                                animation: _contributorsController,
-                                builder: (context, child) {
-                                  return InfoCard(
-                                    logo: const Icon(Icons.groups, size: 32),
-                                    title: 'Nombre de participants',
-                                    data: '${_contributorsAnimation.value}',
-                                  );
-                                },
-                              ),
-                            ],
-                            if (_currentCardIndex >= 2) ...[
-                              const Divider(
-                                thickness: 2,
-                                color: Color(Config.COLOR_BACKGROUND),
-                              ),
-                              AnimatedBuilder(
-                                animation: _timeController,
-                                builder: (context, child) {
-                                  return InfoCard(
-                                    logo: const Icon(Icons.timer, size: 32),
-                                    title: 'Durée de la mesure',
-                                    data: '${_formatTime(_timeAnimation.value)}',
-                                  );
-                                },
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 4),
-                  if (_currentCardIndex >= 3)
-                    Card(
-                      elevation: 0.0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      color: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          children: [
-                            AnimatedBuilder(
-                              animation: _totalDistanceController,
-                              builder: (context, child) {
-                                return InfoCard(
-                                  logo: const Icon(Icons.add_chart, size: 32),
-                                  title: 'Distance totale ajoutée',
-                                  data: '+ ${_totalDistanceAnimation.value} mètres',
-                                );
-                              },
-                            ),
-                            if (_currentCardIndex >= 4) ...[
-                              const Divider(
-                                thickness: 2,
-                                color: Color(Config.COLOR_BACKGROUND),
-                              ),
-                              AnimatedBuilder(
-                                animation: _eventPercentageController,
-                                builder: (context, child) {
-                                  return InfoCard(
-                                    logo: const Icon(Icons.pie_chart, size: 32),
-                                    title: 'Pourcentage de l\'évènement',
-                                    data: '+ ${_eventPercentageAnimation.value.toStringAsFixed(2)}%',
-                                  );
-                                },
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 100), // Add space for the fixed button
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                _buildSummaryCard(),
+                const SizedBox(height: 120),
+              ],
             ),
           ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
               child: ActionButton(
                 icon: Icons.check,
                 text: 'OK',
-                onPressed: () {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const WorkingScreen()),
-                    (route) => false,
-                  );
-                },
+                onPressed: () => Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const WorkingScreen()),
+                  (route) => false,
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildSummaryCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _animatedItem(0, Icons.directions_walk, "Distance parcourue", widget.distanceAdded, isMeter: true),
+          const Divider(height: 32),
+          _animatedItem(1, Icons.group, "Participants", widget.contributors),
+          const Divider(height: 32),
+          _animatedItem(2, Icons.timer, "Temps total", widget.timeAdded, isTime: true),
+          const Divider(height: 32),
+          _animatedItem(3, Icons.add_chart, "Distance totale", widget.distanceAdded * widget.contributors,
+              isMeter: true),
+          const Divider(height: 32),
+          _animatedItem(4, Icons.pie_chart, "% Evènement", widget.percentageAdded, isPercentage: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _animatedItem(int index, IconData icon, String title, dynamic value,
+      {bool isTime = false, bool isPercentage = false, bool isMeter = false}) {
+    return FadeTransition(
+      opacity: _itemControllers[index],
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(Config.COLOR_APP_BAR), size: 32),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+                const SizedBox(height: 4),
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 800),
+                  builder: (context, animationValue, child) {
+                    return Text(
+                      _formatAnimatedValue(value, animationValue,
+                          isTime: isTime, isPercentage: isPercentage, isMeter: isMeter),
+                      style: const TextStyle(fontSize: 18, color: Colors.black87),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatAnimatedValue(dynamic target, double progress,
+      {bool isTime = false, bool isPercentage = false, bool isMeter = false}) {
+    if (isTime && target is int) {
+      return _formatTime((target * progress).toInt());
+    } else if (isPercentage && target is double) {
+      return '+${(target * progress).toStringAsFixed(2)}%';
+    } else if (target is int) {
+      return '${(target * progress).toInt()}${isMeter ? ' m' : ''}';
+    } else {
+      return target.toString();
+    }
   }
 }

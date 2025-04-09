@@ -1,5 +1,5 @@
-import 'dart:developer';
 import 'dart:async';
+import 'dart:developer';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -9,10 +9,10 @@ import '../API/NewEventController.dart';
 import '../API/NewUserController.dart';
 import '../Utils/Result.dart';
 import '../Utils/config.dart';
+import '../Data/EventData.dart';
 import 'ConfirmScreen.dart';
 import 'LoadingScreen.dart';
 import 'Components/ActionButton.dart';
-import '../Data/EventData.dart';
 import 'Components/CountdownModal.dart';
 import 'Components/TextModal.dart';
 
@@ -23,16 +23,28 @@ class Login extends StatefulWidget {
   State<Login> createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
+class _LoginState extends State<Login> {
   final TextEditingController _controller = TextEditingController();
   String _name = "";
   int _dossard = -1;
   bool _isEventActive = false;
+  String? _eventName;
+
+  List<dynamic> _events = [];
+  dynamic _selectedEvent;
 
   @override
   void initState() {
     super.initState();
+    _loadSavedEvent();
     _checkEventStatus();
+  }
+
+  Future<void> _loadSavedEvent() async {
+    String? eventName = await EventData.getEventName();
+    setState(() {
+      _eventName = eventName;
+    });
   }
 
   void _checkEventStatus() async {
@@ -43,48 +55,37 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     Result<List<dynamic>> eventsResult = await NewEventController.getAllEvents();
     if (eventsResult.hasError) {
       log("Error fetching events: ${eventsResult.error}");
-      setState(() {
-        _isEventActive = true;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(
-          context,
-          "Erreur",
-          "Erreur lors de la récupération de l'évènement. Veuillez vérifier votre connexion internet.",
-          showConfirmButton: true,
-          onConfirm: _checkEventStatus,
-        );
-      });
+      _showErrorModal("Erreur lors de la récupération de l'évènement.");
       return;
     }
 
-    var events = eventsResult.value!;
-    var event = events.firstWhere(
-      (event) => event['name'] == Config.EVENT_NAME,
-      orElse: () => null,
-    );
-
-    if (event == null) {
-      setState(() {
-        _isEventActive = true;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(
-          context,
-          "Erreur",
-          "L'évènement '${Config.EVENT_NAME}' n'existe pas.",
-          showConfirmButton: true,
-          onConfirm: _checkEventStatus,
-        );
-      });
+    var events = eventsResult.value ?? [];
+    if (events.isEmpty) {
+      _showErrorModal("Aucun évènement trouvé.");
       return;
     }
+
+    setState(() {
+      _events = events;
+    });
+
+    if (_events.length == 1) {
+      _handleEventSelected(_events.first);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showEventSelectionModal();
+      });
+    }
+  }
+
+  void _handleEventSelected(dynamic event) async {
+    _selectedEvent = event;
+    await EventData.saveEvent(event);
+    _loadSavedEvent();
 
     DateTime startDate = DateTime.parse(event['start_date']);
     DateTime endDate = DateTime.parse(event['end_date']);
     DateTime now = DateTime.now();
-
-    await EventData.saveEvent(event);
 
     setState(() {
       _isEventActive = true;
@@ -101,14 +102,48 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     }
   }
 
-  void _onTextChanged() {}
+  void _showErrorModal(String message) {
+    setState(() {
+      _isEventActive = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showTextModal(
+        context,
+        "Erreur",
+        message,
+        showConfirmButton: true,
+        onConfirm: _checkEventStatus,
+      );
+    });
+  }
+
+  void _showEventSelectionModal() {
+    dynamic selectedEvent = _events.first;
+
+    showTextModal(
+      context,
+      "Selectionne ton évènement",
+      "Merci de sélectionner ton évènement",
+      dropdownItems: _events.map((e) => e['name']).toList(),
+      selectedDropdownValue: selectedEvent['name'],
+      onDropdownChanged: (value) {
+        selectedEvent = _events.firstWhere((e) => e['name'] == value);
+      },
+      showConfirmButton: true,
+      onConfirm: () {
+        if (selectedEvent != null) {
+          _handleEventSelected(selectedEvent);
+        }
+      },
+    );
+  }
 
   void _showUserNotFoundModal() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showTextModal(
         context,
         "Numéro de dossard introuvable",
-        "Il faut entrer ton numéro de dossard compris entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
+        "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
         showConfirmButton: true,
       );
     });
@@ -118,7 +153,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
-  void _getUserame() async {
+  void _getUsername() async {
     log("Trying to login");
 
     FocusScope.of(context).unfocus();
@@ -128,14 +163,12 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         showTextModal(
           context,
           "Numéro de dossard manquant",
-          "Il faut entrer ton numéro de dossard compris entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
+          "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
           showConfirmButton: true,
         );
       });
       return;
     }
-
-    setState(() {});
 
     Navigator.push(
       context,
@@ -148,11 +181,24 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
       if (dosNumResult.error != null) {
         _showUserNotFoundModal();
-        setState(() {});
         Navigator.pop(context);
       } else {
+        final user = dosNumResult.value;
+        if (user['event_id'] != _selectedEvent['id']) {
+          Navigator.pop(context);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            showTextModal(
+              context,
+              "Utilisateur non trouvé",
+              "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
+              showConfirmButton: true,
+            );
+          });
+          return;
+        }
+
         setState(() {
-          _name = dosNumResult.value['username'];
+          _name = user['username'];
           _dossard = dossardNumber;
         });
         Navigator.pushReplacement(
@@ -161,8 +207,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         );
       }
     } catch (e) {
-      showInSnackBar("Numéro de dossard invalide ");
-      setState(() {});
+      showInSnackBar("Numéro de dossard invalide");
       Navigator.pop(context);
     }
   }
@@ -173,138 +218,119 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
       return const LoadingScreen();
     }
 
-    _controller.addListener(_onTextChanged);
-
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              child: Stack(
-                children: [
-                  Image.asset(
-                    'assets/pictures/background_2.png',
-                    fit: BoxFit.cover, // Ensure the background image covers the full screen
-                    width: double.infinity,
-                    height: double.infinity,
+            child: Stack(
+              children: [
+                Image.asset(
+                  'assets/pictures/background_2.png',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.05),
                   ),
-                  BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0), // Reduce blur effect
-                    child: Container(
-                      color: Colors.black.withOpacity(0.05), // Add a very subtle overlay
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Center(
             child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Card(
-                  elevation: 10,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 10),
-                        const Center(
-                          child: Image(
-                            image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
-                            height: 90,
-                          ),
+              padding: const EdgeInsets.all(16.0),
+              child: Card(
+                elevation: 10,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 10),
+                      const Center(
+                        child: Image(
+                          image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
+                          height: 90,
                         ),
-                        const SizedBox(height: 24),
+                      ),
+                      const SizedBox(height: 24),
+                      if (_eventName != null)
                         const Text(
                           'Entre ton numéro de dossard pour continuer.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _controller,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [LengthLimitingTextInputFormatter(4)],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          color: Color(Config.COLOR_APP_BAR),
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4.0,
+                        ),
+                        decoration: const InputDecoration(
+                          hintStyle: TextStyle(
+                            fontSize: 18,
+                            color: Color(Config.COLOR_APP_BAR),
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 1),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 3),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Numéro entre 1 et 9999.',
+                          style: TextStyle(
+                            fontSize: 14,
                             color: Color(Config.COLOR_APP_BAR),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Color(Config.COLOR_APP_BAR),
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                          child: TextField(
-                            controller: _controller,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(4),
-                            ],
+                      ),
+                      const SizedBox(height: 24),
+                      ActionButton(
+                        icon: Icons.login,
+                        text: 'Connexion',
+                        onPressed: _getUsername,
+                      ),
+                      const SizedBox(height: 20),
+                      FutureBuilder<String>(
+                        future: Config.getAppVersion(),
+                        builder: (context, snapshot) {
+                          final version = snapshot.data ?? '...';
+                          final eventName = _eventName ?? '...';
+                          return Text(
+                            'v$version  /  $eventName',
                             textAlign: TextAlign.center,
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                            ),
                             style: const TextStyle(
-                              fontSize: 24,
-                              color: Color(Config.COLOR_APP_BAR),
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 4.0,
+                              fontSize: 12,
+                              color: Colors.black54,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Entre un numéro entre 1 et 9999.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(Config.COLOR_APP_BAR),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ActionButton(
-                          icon: Icons.login,
-                          text: 'Connexion',
-                          onPressed: _getUserame,
-                        ),
-                        const SizedBox(height: 16),
-                        FutureBuilder<String>(
-                          future: Config.getAppVersion(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.done) {
-                              return Text(
-                                'Version ${snapshot.data}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF999999),
-                                ),
-                              );
-                            } else {
-                              return const Text(
-                                'Version ...',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF999999),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),

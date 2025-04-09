@@ -9,7 +9,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND), // Set background color to light grey
+      backgroundColor: const Color(Config.COLOR_BACKGROUND),
       body: Stack(
         children: [
           Positioned.fill(
@@ -20,12 +20,12 @@ class LoadingScreen extends StatelessWidget {
                 children: [
                   Image.asset(
                     'assets/pictures/LogoSimpleAnimated.gif',
-                    width: 60.0, // Set width to 50px
+                    width: 48.0,
                   ),
                   if (text != null) ...[
                     const SizedBox(height: 32),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0), // Add padding
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Text(
                         text!,
                         style: const TextStyle(

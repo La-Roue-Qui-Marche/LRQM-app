@@ -1,73 +1,141 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../Utils/config.dart';
 
 class NavBar extends StatelessWidget {
   final int currentPage;
   final Function(int) onPageSelected;
+  final bool isMeasureActive;
+  final VoidCallback onStartStopPressed;
 
   const NavBar({
     super.key,
     required this.currentPage,
     required this.onPageSelected,
+    required this.isMeasureActive,
+    required this.onStartStopPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.only(top: 16, bottom: 24, left: 12, right: 12), // Adjusted top padding
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12.0),
+                child: _navBarButton(
+                  context,
+                  svgActive: 'assets/icons/user-fill.svg',
+                  svgInactive: 'assets/icons/user.svg',
+                  label: 'Personel',
+                  selected: currentPage == 0,
+                  onTap: () => onPageSelected(0),
+                ),
+              ),
+            ),
+            _startStopButton(context),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: _navBarButton(
+                  context,
+                  svgActive: 'assets/icons/calendar-fill.svg',
+                  svgInactive: 'assets/icons/calendar.svg',
+                  label: 'Événement',
+                  selected: currentPage == 1,
+                  onTap: () => onPageSelected(1),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0.0), // Add 10 padding on left and right
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space buttons evenly
+  Widget _navBarButton(
+    BuildContext context, {
+    required String svgActive,
+    required String svgInactive,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildNavBarButton(
-            icon: Icons.person,
-            isSelected: currentPage == 0,
-            onTap: () => onPageSelected(0),
-            width: currentPage == 0 ? screenWidth * 0.50 : screenWidth * 0.50,
+          SvgPicture.asset(
+            selected ? svgActive : svgInactive,
+            color: selected ? Theme.of(context).primaryColor : Colors.black54,
+            width: 28,
+            height: 28,
           ),
-          _buildNavBarButton(
-            icon: Icons.calendar_month,
-            isSelected: currentPage == 1,
-            onTap: () => onPageSelected(1),
-            width: currentPage == 1 ? screenWidth * 0.50 : screenWidth * 0.50,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: selected ? Theme.of(context).primaryColor : Colors.black54,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavBarButton({
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required double width,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      width: width, // Dynamically set width based on selection
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 35,
-          decoration: BoxDecoration(
-            color: Colors.transparent, // Ensure no background color is applied
-            border: isSelected
-                ? const Border(
-                    top: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 4.0), // Set top border to 4px
-                  )
-                : null, // Add top border only when selected
-            borderRadius: BorderRadius.circular(0.0), // Add rounded corners
+  Widget _startStopButton(BuildContext context) {
+    return GestureDetector(
+      onTap: onStartStopPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: isMeasureActive ? [Colors.redAccent, Colors.red] : [Colors.orangeAccent, Colors.deepOrange],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Center(
-            child: Icon(
-              icon,
-              color: isSelected
-                  ? const Color(Config.COLOR_APP_BAR)
-                  : const Color(Config.COLOR_APP_BAR), // Keep icon color consistent
-              size: isSelected ? 20.0 : 20.0, // Increase icon size when selected
+          boxShadow: [
+            BoxShadow(
+              color: (isMeasureActive ? Colors.red : Colors.deepOrange).withOpacity(0.4),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
             ),
+          ],
+        ),
+        child: Center(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: isMeasureActive
+                ? const Icon(Icons.stop, key: ValueKey('stop'), color: Colors.white, size: 30)
+                : SvgPicture.asset(
+                    'assets/icons/flag.svg',
+                    key: const ValueKey('flag'),
+                    color: Colors.white,
+                    width: 30,
+                    height: 30,
+                  ),
           ),
         ),
       ),

@@ -22,10 +22,10 @@ class Config {
   // static const double LON2 = 6.7304699219465105;
 
   // ------------- Further Expanded Zone Lac Léman to Include Martigny --------------
-  static const double LAT1 = 46.6000; // North-East latitude (expanded)
-  static const double LON1 = 7.1000; // North-East longitude (expanded to include Martigny)
-  static const double LAT2 = 46.1000; // South-West latitude (unchanged)
-  static const double LON2 = 5.9000; // South-West longitude (unchanged)
+  static const double LAT1 = 46.8000; // North-East latitude (expanded)
+  static const double LON1 = 6.9000; // North-East longitude (expanded to include Martigny)
+  static const double LAT2 = 46.4500; // South-West latitude (unchanged)
+  static const double LON2 = 6.4000; // South-West longitude (unchanged)
 
   static final List<mp.LatLng> ZONE_EVENT = [
     mp.LatLng(LAT1, LON1),
@@ -40,6 +40,7 @@ class Config {
   static const int COLOR_TITRE = 0xFFFFFFFF;
   static const int COLOR_BACKGROUND = 0xFFF0F0F0;
   // ----------------- Constantes -----------------
+  static const int NUMBER_MAX_PARTICIPANTS = 150;
 
   /// Function to get the application version.
   static Future<String> getAppVersion() async {

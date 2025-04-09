@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart'; // Import the share package
-import 'dart:io'; // Import dart:io for file operations
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
 import '../../Utils/LogHelper.dart';
 
 class ShareLog extends StatefulWidget {
@@ -43,7 +43,7 @@ class _ShareLogState extends State<ShareLog> {
     }
 
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    final directory = await Directory.systemTemp.createTemp('logs'); // Temporary directory
+    final directory = await Directory.systemTemp.createTemp('logs');
     final file = File('${directory.path}/logs_$timestamp.txt');
     await file.writeAsString(logs.join('\n'));
 
@@ -60,7 +60,7 @@ class _ShareLogState extends State<ShareLog> {
     }
 
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    final directory = await Directory.systemTemp.createTemp('logs'); // Temporary directory
+    final directory = await Directory.systemTemp.createTemp('logs');
     final file = File('${directory.path}/logs_$timestamp.txt');
     await file.writeAsString(logs.join('\n'));
 
