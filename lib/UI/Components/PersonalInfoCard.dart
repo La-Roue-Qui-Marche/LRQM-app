@@ -115,7 +115,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           Text(
             'Ta contribution à l\'événement',
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: Colors.black54,
             ),
           ),
@@ -209,7 +209,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
             value != null
                 ? Text(
                     value,
-                    style: const TextStyle(fontSize: 20, color: Colors.black87),
+                    style: const TextStyle(fontSize: 18, color: Color(Config.COLOR_APP_BAR)),
                   )
                 : _buildShimmer(width: 60),
           ],

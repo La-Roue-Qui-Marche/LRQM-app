@@ -35,7 +35,7 @@ class DonationCard extends StatelessWidget {
           Text(
             'Faire un don',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: Colors.black54,
             ),
           ),

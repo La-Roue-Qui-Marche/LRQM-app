@@ -53,8 +53,7 @@ class InfoScreen extends StatelessWidget {
                     const Text(
                       "L'équipe de développement",
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                         color: Colors.black87,
                       ),
                     ),
@@ -71,8 +70,7 @@ class InfoScreen extends StatelessWidget {
                               const Text(
                                 "Product Owner",
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                   color: Colors.black87,
                                 ),
                               ),
@@ -89,8 +87,7 @@ class InfoScreen extends StatelessWidget {
                               const Text(
                                 "GitHub Repo",
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                   color: Colors.black87,
                                 ),
                               ),
@@ -143,7 +140,7 @@ class InfoScreen extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: Colors.black54,
             ),
           ),

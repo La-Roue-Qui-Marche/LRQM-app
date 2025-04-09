@@ -46,19 +46,19 @@ class EventProgressCard extends StatelessWidget {
               Text(
                 'Progression de l\'événement',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   color: Colors.black54,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 0),
               Text(
                 eventName,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Objectif Info
               Row(
@@ -74,14 +74,14 @@ class EventProgressCard extends StatelessWidget {
                             Text(
                               currentValue!,
                               style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.black87,
+                                fontSize: 18,
+                                color: Color(Config.COLOR_APP_BAR),
                               ),
                             ),
                             const Text(
                               ' / ',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.normal,
                                 color: Colors.black54,
                               ),
@@ -89,7 +89,7 @@ class EventProgressCard extends StatelessWidget {
                             Text(
                               objectif!,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.normal,
                                 color: Colors.black54,
                               ),
@@ -212,8 +212,8 @@ class EventProgressCard extends StatelessWidget {
                     ? Text(
                         value,
                         style: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.black87,
+                          fontSize: 18,
+                          color: Color(Config.COLOR_APP_BAR),
                         ),
                       )
                     : _buildShimmer(width: 60),
