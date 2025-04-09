@@ -30,6 +30,17 @@ class InfoScreen extends StatelessWidget {
                 image: 'assets/pictures/HEIG_VD.jpg',
                 secondaryContent:
                     "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement.",
+                child: const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    "- Nicolas Fontaine",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               _buildCard(
