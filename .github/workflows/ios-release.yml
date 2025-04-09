@@ -61,7 +61,7 @@ jobs:
         run: flutter clean
 
       - name: 📱 Build iOS App (IPA)
-        run: flutter build ios --release --no-codesign --export-options-plist=ios/ExportOptions.plist
+        run: flutter build ios --release --no-codesign
 
       - name: 🔏 Sign and Export IPA
         run: |
