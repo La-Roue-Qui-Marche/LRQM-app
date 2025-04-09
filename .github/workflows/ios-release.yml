@@ -60,14 +60,19 @@ jobs:
       - name: 🧹 Clean Flutter Project
         run: flutter clean
 
-      - name: 📱 Build iOS App (IPA)
+      - name: 📱 Build iOS App (No Code Signing)
         run: flutter build ios --release --no-codesign
 
-      - name: 📁 List build archives
+      - name: 📦 Archive the App
         run: |
-          ls -R build/ios/
-          ls -R build/ios/iphoneos/
-          ls -R build/ios/archive/
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
 
       - name: 🔏 Sign and Export IPA
         run: |
