@@ -115,9 +115,8 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           Text(
             'Ta contribution à l\'événement',
             style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(Config.COLOR_APP_BAR),
+              fontSize: 18,
+              color: Colors.black54,
             ),
           ),
           const SizedBox(height: 20),
@@ -126,7 +125,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           _buildInfoCards(),
           const SizedBox(height: 16),
           _buildFunMessage(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           if (widget.isSessionActive) const DifferenceGraph(),
         ],
       ),
@@ -148,15 +147,15 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
             height: 32,
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('№ de dossard: ${widget.bibNumber}', style: const TextStyle(fontSize: 14, color: Colors.black87)),
+              Text('№ de dossard: ${widget.bibNumber}', style: const TextStyle(fontSize: 16, color: Colors.black87)),
               const SizedBox(height: 4),
               widget.userName.isNotEmpty
-                  ? Text(widget.userName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))
+                  ? Text(widget.userName, style: const TextStyle(fontSize: 16, color: Colors.black54))
                   : _buildShimmer(width: 100),
             ],
           ),
@@ -188,7 +187,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     if (widget.contribution.isNotEmpty) {
       return Text(
         _getDistanceMessage(_currentContribution),
-        style: const TextStyle(fontSize: 14, color: Colors.black54),
+        style: const TextStyle(fontSize: 14, color: Colors.black87),
       );
     }
     return _buildShimmer(width: double.infinity, height: 16);
@@ -210,7 +209,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
             value != null
                 ? Text(
                     value,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                    style: const TextStyle(fontSize: 20, color: Colors.black87),
                   )
                 : _buildShimmer(width: 60),
           ],
@@ -316,7 +315,6 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
               widget.label,
               style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
             ),

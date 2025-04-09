@@ -72,9 +72,10 @@ class DifferenceGraphState extends State<DifferenceGraph> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Vitesse moyenne",
+                  "Contribution moyenne",
                   style: TextStyle(
                     fontSize: 14,
+                    color: Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 8),

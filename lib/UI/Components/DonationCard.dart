@@ -35,9 +35,8 @@ class DonationCard extends StatelessWidget {
           Text(
             'Faire un don',
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: const Color(Config.COLOR_APP_BAR),
+              fontSize: 18,
+              color: Colors.black54,
             ),
           ),
           const SizedBox(height: 12),
@@ -45,7 +44,7 @@ class DonationCard extends StatelessWidget {
             'Chaque don aide PluSport, FRAGILE Vaud et le sentier Handicap & Nature à accomplir leur mission.',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade700,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 20),
@@ -73,8 +72,7 @@ class DonationCard extends StatelessWidget {
             'Suis-nous sur les réseaux sociaux :',
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
+              color: Colors.black54,
             ),
           ),
           const SizedBox(height: 12),

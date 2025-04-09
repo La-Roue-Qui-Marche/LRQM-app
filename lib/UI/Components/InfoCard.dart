@@ -112,8 +112,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       Text(
                         widget.title,
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16, // Slightly larger font
+                          fontSize: 18, // Slightly larger font
                           color: Color(Config.COLOR_APP_BAR),
                         ),
                       ),

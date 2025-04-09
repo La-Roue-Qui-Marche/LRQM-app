@@ -6,6 +6,7 @@ import 'Components/ActionButton.dart';
 import 'SetupScanScreen.dart';
 import 'LoadingScreen.dart';
 import 'Components/TapCard.dart';
+import 'Components/TopAppBar.dart'; // Import the TopAppBar component
 
 class SetupTeamScreen extends StatefulWidget {
   const SetupTeamScreen({super.key});
@@ -44,43 +45,32 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(Config.COLOR_BACKGROUND),
+      appBar: TopAppBar(
+        title: "Équipe", // Set the title for the app bar
+        showBackButton: true, // Enable the back button
+        showInfoButton: false, // Disable the info button
+      ),
       body: Padding(
         padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
           children: [
-            // Removed SvgPicture.asset for background
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 48.0, left: 0.0, right: 0.0),
+                padding: const EdgeInsets.only(top: 12.0, left: 0.0, right: 0.0),
                 child: Column(
                   children: [
                     Container(
                       color: Colors.white,
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              IconButton(
-                                icon: SvgPicture.asset(
-                                  'assets/icons/angle-left.svg',
-                                  color: Colors.black87,
-                                  width: 32,
-                                  height: 32,
-                                ),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ],
-                          ),
+                          // Remove the manual back button here
                           Center(
                             child: Container(
-                              width: MediaQuery.of(context).size.width * 0.4,
+                              width: MediaQuery.of(context).size.width * 0.45,
                               child: const Image(
                                 image: AssetImage('assets/pictures/DrawTeam-removebg.png'),
                               ),
@@ -95,10 +85,9 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Container(
                       color: Colors.white,
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
                           TapCard(
@@ -148,7 +137,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 32.0),
                   child: ActionButton(
                     icon: Icons.arrow_forward,
                     text: 'Suivant',

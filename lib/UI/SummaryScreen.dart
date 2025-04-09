@@ -91,7 +91,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                         const SizedBox(height: 16),
                         const Text(
                           'Bravo !',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 22),
                         ),
                         const SizedBox(height: 8),
                         const Text(
@@ -180,7 +180,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                     return Text(
                       _formatAnimatedValue(value, animationValue,
                           isTime: isTime, isPercentage: isPercentage, isMeter: isMeter),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 18, color: Colors.black87),
                     );
                   },
                 ),

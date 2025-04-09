@@ -11,6 +11,7 @@ import 'Components/InfoCard.dart';
 import 'Components/ActionButton.dart';
 import 'Components/TextModal.dart';
 import 'Components/DynamicMapCard.dart';
+import 'Components/TopAppBar.dart'; // Import the TopAppBar component
 
 import '../Utils/config.dart';
 
@@ -120,7 +121,10 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           height: MediaQuery.of(context).size.height * 0.5,
           child: Stack(
             children: [
-              const DynamicMapCard(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0), // Add 10px bottom padding
+                child: const DynamicMapCard(),
+              ),
               Positioned(
                 top: 10,
                 right: 10,
@@ -243,6 +247,11 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: TopAppBar(
+        title: "Setup Position", // Set the title for the app bar
+        showInfoButton: false, // Hide the info button if not needed
+        showBackButton: true, // Enable the back button
+      ),
       body: Padding(
         padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
@@ -254,30 +263,14 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                   children: [
                     Container(
                       color: Colors.white,
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              IconButton(
-                                icon: SvgPicture.asset(
-                                  'assets/icons/angle-left.svg',
-                                  color: Colors.black87,
-                                  width: 32,
-                                  height: 32,
-                                ),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ],
-                          ),
                           Center(
                             child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.35,
+                              width: MediaQuery.of(context).size.width * 0.45,
                               child: const Image(
                                 image: AssetImage('assets/pictures/DrawPosition-removebg.png'),
                               ),
@@ -342,7 +335,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 32.0),
                 child: ActionButton(
                   icon: Icons.arrow_forward,
                   text: 'Suivant',

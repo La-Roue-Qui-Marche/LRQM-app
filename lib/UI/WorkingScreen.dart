@@ -7,7 +7,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'Components/InfoCard.dart';
 import 'Components/TopAppBar.dart';
-import 'Components/TitleCard.dart';
 import 'Components/TextModal.dart';
 
 import 'SetupPosScreen.dart';
@@ -577,8 +576,8 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       child: Scaffold(
         backgroundColor: const Color(Config.COLOR_BACKGROUND), // Set background color
         appBar: TopAppBar(
-          title: 'Informations',
-          showInfoButton: true,
+          title: 'Accueil',
+          showInfoButton: true, // Ensure the info button is enabled
           isRecording: _isMeasureActive, // Pass recording status
         ),
         body: Stack(
@@ -622,7 +621,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                 child: Text(
                                   'Appuie sur le drapeau pour démarrer une session',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     color: Colors.black54,
                                   ),
                                 ),

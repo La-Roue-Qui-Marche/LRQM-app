@@ -12,6 +12,7 @@ import 'Components/TextModal.dart';
 import '../Data/ContributorsData.dart';
 import '../API/NewMeasureController.dart';
 import '../Data/UserData.dart';
+import 'Components/TopAppBar.dart'; // Import the TopAppBar component
 
 class SetupScanScreen extends StatefulWidget {
   final int contributors;
@@ -114,6 +115,11 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: TopAppBar(
+        title: "Scanner", // Set the title for the app bar
+        showBackButton: true, // Enable the back button
+        showInfoButton: false, // Disable the info button
+      ),
       body: Padding(
         padding: const EdgeInsets.only(top: 0.0),
         child: Stack(
@@ -123,32 +129,16 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                 padding: const EdgeInsets.only(top: 48.0, left: 0.0, right: 0.0),
                 child: Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          IconButton(
-                            icon: SvgPicture.asset(
-                              'assets/icons/angle-left.svg',
-                              color: Colors.black87,
-                              width: 32,
-                              height: 32,
-                            ),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      ),
                       Center(
                         child: GestureDetector(
                           onDoubleTap: _startSessionDirectly,
                           child: Container(
-                            width: MediaQuery.of(context).size.width * 0.5,
+                            width: MediaQuery.of(context).size.width * 0.55,
                             child: const Image(
                               image: AssetImage('assets/pictures/DrawScan-removebg.png'),
                             ),
@@ -169,7 +159,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 32.0),
                   child: ActionButton(
                     icon: Icons.camera_alt,
                     text: "Ouvrir la caméra",

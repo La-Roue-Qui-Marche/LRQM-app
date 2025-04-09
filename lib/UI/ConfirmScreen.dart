@@ -20,7 +20,7 @@ class ConfirmScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // pure white background
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
@@ -37,7 +37,7 @@ class ConfirmScreen extends StatelessWidget {
                       color: Colors.white,
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -71,49 +71,56 @@ class ConfirmScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 160), // reserve space for buttons
+                const SizedBox(height: 160), // Reserve space for buttons
               ],
             ),
             Positioned(
               left: 16,
               right: 16,
-              bottom: 48, // 48px from bottom
-              child: Column(
-                children: [
-                  ActionButton(
-                    icon: Icons.check,
-                    text: 'Oui',
-                    onPressed: () async {
-                      log("Name: $name");
-                      log("Dossard: $dossard");
+              bottom: 0, // Align to bottom
+              child: SafeArea(
+                top: false,
+                bottom: true, // ✅ Protect bottom (gesture bar / notch)
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24), // Add nice spacing above gesture area
+                  child: Column(
+                    children: [
+                      ActionButton(
+                        icon: Icons.check,
+                        text: 'Oui',
+                        onPressed: () async {
+                          log("Name: $name");
+                          log("Dossard: $dossard");
 
-                      var tmp = await NewUserController.getUser(dossard);
-                      if (!tmp.hasError && tmp.value != null) {
-                        await UserData.saveUser({
-                          "id": tmp.value!['id'],
-                          "username": tmp.value!['username'],
-                          "bib_id": tmp.value!['bib_id'],
-                          "event_id": tmp.value!['event_id'],
-                        });
+                          var tmp = await NewUserController.getUser(dossard);
+                          if (!tmp.hasError && tmp.value != null) {
+                            await UserData.saveUser({
+                              "id": tmp.value!['id'],
+                              "username": tmp.value!['username'],
+                              "bib_id": tmp.value!['bib_id'],
+                              "event_id": tmp.value!['event_id'],
+                            });
 
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const WorkingScreen()),
-                        );
-                      } else {
-                        showInSnackBar(context, tmp.error ?? "Une erreur inconnue est survenue.");
-                      }
-                    },
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const WorkingScreen()),
+                            );
+                          } else {
+                            showInSnackBar(context, tmp.error ?? "Une erreur inconnue est survenue.");
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 6),
+                      DiscardButton(
+                        icon: Icons.close,
+                        text: 'Non',
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 6),
-                  DiscardButton(
-                    icon: Icons.close,
-                    text: 'Non',
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
+                ),
               ),
             ),
           ],

@@ -14,12 +14,14 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final bool showInfoButton;
   final bool isRecording;
+  final bool showBackButton; // Add showBackButton argument
 
   const TopAppBar({
     super.key,
     required this.title,
     this.showInfoButton = true,
-    this.isRecording = false, // Default to false,
+    this.isRecording = false,
+    this.showBackButton = false, // Default to false
   });
 
   @override
@@ -94,112 +96,139 @@ class _TopAppBarState extends State<TopAppBar> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.zero,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 10.0,
+              blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+          top: true,
+          bottom: false,
+          child: Container(
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                if (widget.showInfoButton)
-                  IconButton(
-                    icon: SvgPicture.asset(
-                      'assets/icons/info.svg',
-                      color: Colors.black87,
-                      width: 20,
-                      height: 20,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const InfoScreen()),
-                      );
+                if (widget.showBackButton) // Conditionally show the back button
+                  _buildIconButton(
+                    onTap: () {
+                      Navigator.of(context).pop(); // Navigate back
                     },
+                    icon: 'assets/icons/angle-left.svg', // Back button icon
                   ),
-                const Spacer(),
-                const Text(
-                  "Accueil",
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    overflow: TextOverflow.ellipsis,
+                if (widget.showBackButton) const SizedBox(width: 8),
+                if (widget.showInfoButton) // Conditionally show the info button
+                  _buildIconButton(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen()));
+                    },
+                    icon: 'assets/icons/info.svg', // Info button icon
                   ),
-                  maxLines: 1,
+                if (widget.showInfoButton) const SizedBox(width: 8),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      widget.title,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      maxLines: 1,
+                    ),
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 if (_showShareButton)
-                  IconButton(
-                    icon: const Icon(
-                      Icons.developer_mode,
-                      color: Colors.black87,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ShareLog()),
-                      );
+                  _buildIconButton(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => ShareLog()));
                     },
+                    iconData: Icons.developer_mode, // Native Flutter icon
                   ),
-                IconButton(
-                  icon: SvgPicture.asset(
-                    'assets/icons/sign-out.svg',
-                    color: Colors.black87,
-                    width: 20,
-                    height: 20,
-                  ),
-                  onPressed: () async {
-                    showTextModal(
-                      context,
-                      'Confirmation',
-                      'Es-tu sûr de vouloir te déconnecter ?\n\n'
-                          'Cela supprimera toutes les données locales et arrêtera toute mesure en cours.',
-                      showConfirmButton: true,
-                      onConfirm: () async {
-                        if (await MeasureData.isMeasureOngoing()) {
-                          String? measureId = await MeasureData.getMeasureId();
-                          final stopResult = await NewMeasureController.stopMeasure();
-                          if (stopResult.error != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text("Échec de l'arrêt de la mesure (ID: $measureId): ${stopResult.error}")),
-                            );
-                            return;
-                          }
-                        }
-
-                        final cleared = await DataUtils.deleteAllData();
-                        if (cleared) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const Login()),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Échec de la suppression des données utilisateur")),
-                          );
-                        }
-                      },
-                      showDiscardButton: true,
-                      onDiscard: () {
-                        Navigator.of(context).pop();
-                      },
-                    );
+                if (_showShareButton) const SizedBox(width: 8),
+                _buildIconButton(
+                  onTap: () {
+                    _showLogoutConfirmation(context);
                   },
+                  icon: 'assets/icons/sign-out.svg',
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required VoidCallback onTap,
+    String? icon,
+    IconData? iconData,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(30),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: icon != null
+              ? SvgPicture.asset(
+                  icon,
+                  width: 22,
+                  height: 22,
+                  color: Colors.black87,
+                )
+              : Icon(
+                  iconData,
+                  size: 22,
+                  color: Colors.black87,
+                ),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showTextModal(
+      context,
+      'Confirmation',
+      'Es-tu sûr de vouloir te déconnecter ?\n\n'
+          'Cela supprimera toutes les données locales et arrêtera toute mesure en cours.',
+      showConfirmButton: true,
+      onConfirm: () async {
+        if (await MeasureData.isMeasureOngoing()) {
+          String? measureId = await MeasureData.getMeasureId();
+          final stopResult = await NewMeasureController.stopMeasure();
+          if (stopResult.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Échec de l'arrêt de la mesure (ID: $measureId): ${stopResult.error}")),
+            );
+            return;
+          }
+        }
+
+        final cleared = await DataUtils.deleteAllData();
+        if (cleared) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Login()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Échec de la suppression des données utilisateur")),
+          );
+        }
+      },
+      showDiscardButton: true,
+      onDiscard: () {
+        Navigator.of(context).pop();
+      },
     );
   }
 }

@@ -18,51 +18,54 @@ class NavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: _navBarButton(
-                context,
-                svgActive: 'assets/icons/user-fill.svg',
-                svgInactive: 'assets/icons/user.svg',
-                label: 'Perso',
-                selected: currentPage == 0,
-                onTap: () => onPageSelected(0),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.only(top: 16, bottom: 24, left: 12, right: 12), // Adjusted top padding
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12.0),
+                child: _navBarButton(
+                  context,
+                  svgActive: 'assets/icons/user-fill.svg',
+                  svgInactive: 'assets/icons/user.svg',
+                  label: 'Perso',
+                  selected: currentPage == 0,
+                  onTap: () => onPageSelected(0),
+                ),
               ),
             ),
-          ),
-          _startStopButton(context),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: _navBarButton(
-                context,
-                svgActive: 'assets/icons/calendar-fill.svg',
-                svgInactive: 'assets/icons/calendar.svg',
-                label: 'Événement',
-                selected: currentPage == 1,
-                onTap: () => onPageSelected(1),
+            _startStopButton(context),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: _navBarButton(
+                  context,
+                  svgActive: 'assets/icons/calendar-fill.svg',
+                  svgInactive: 'assets/icons/calendar.svg',
+                  label: 'Événement',
+                  selected: currentPage == 1,
+                  onTap: () => onPageSelected(1),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
