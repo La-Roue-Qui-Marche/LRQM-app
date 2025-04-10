@@ -6,6 +6,7 @@ class NavBar extends StatelessWidget {
   final int currentPage;
   final Function(int) onPageSelected;
   final bool isMeasureActive;
+  final bool canStartNewSession; // New parameter to control start button state
   final VoidCallback onStartStopPressed;
 
   const NavBar({
@@ -13,59 +14,58 @@ class NavBar extends StatelessWidget {
     required this.currentPage,
     required this.onPageSelected,
     required this.isMeasureActive,
+    required this.canStartNewSession,
     required this.onStartStopPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.only(top: 16, bottom: 24, left: 12, right: 12), // Adjusted top padding
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 12.0),
-                child: _navBarButton(
-                  context,
-                  svgActive: 'assets/icons/user-fill.svg',
-                  svgInactive: 'assets/icons/user.svg',
-                  label: 'Personel',
-                  selected: currentPage == 0,
-                  onTap: () => onPageSelected(0),
-                ),
+    return Container(
+      // Removed SafeArea
+      padding: const EdgeInsets.only(top: 16, bottom: 24, left: 12, right: 12), // Adjusted top padding
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: _navBarButton(
+                context,
+                svgActive: 'assets/icons/user-fill.svg',
+                svgInactive: 'assets/icons/user.svg',
+                label: 'Personnel',
+                selected: currentPage == 0,
+                onTap: () => onPageSelected(0),
               ),
             ),
-            _startStopButton(context),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12.0),
-                child: _navBarButton(
-                  context,
-                  svgActive: 'assets/icons/calendar-fill.svg',
-                  svgInactive: 'assets/icons/calendar.svg',
-                  label: 'Événement',
-                  selected: currentPage == 1,
-                  onTap: () => onPageSelected(1),
-                ),
+          ),
+          _startStopButton(context),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: _navBarButton(
+                context,
+                svgActive: 'assets/icons/calendar-fill.svg',
+                svgInactive: 'assets/icons/calendar.svg',
+                label: 'Événement',
+                selected: currentPage == 1,
+                onTap: () => onPageSelected(1),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -104,25 +104,33 @@ class NavBar extends StatelessWidget {
 
   Widget _startStopButton(BuildContext context) {
     return GestureDetector(
-      onTap: onStartStopPressed,
+      onTap: canStartNewSession ? onStartStopPressed : null, // Disable tap if not allowed
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         width: 60,
         height: 60,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: isMeasureActive ? [Colors.redAccent, Colors.red] : [Colors.orangeAccent, Colors.deepOrange],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isMeasureActive ? Colors.red : Colors.deepOrange).withOpacity(0.4),
-              blurRadius: 10,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          gradient: canStartNewSession
+              ? LinearGradient(
+                  colors: isMeasureActive ? [Colors.redAccent, Colors.red] : [Colors.orangeAccent, Colors.deepOrange],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : LinearGradient(
+                  colors: [Colors.grey, Colors.grey.shade400], // Greyed out when disabled
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          boxShadow: canStartNewSession
+              ? [
+                  BoxShadow(
+                    color: (isMeasureActive ? Colors.red : Colors.deepOrange).withOpacity(0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : [],
         ),
         child: Center(
           child: AnimatedSwitcher(

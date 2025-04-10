@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../Utils/config.dart';
 import 'ActionButton.dart';
@@ -14,6 +15,7 @@ void showTextModal(
   List<dynamic>? dropdownItems,
   Function(dynamic)? onDropdownChanged,
   dynamic selectedDropdownValue,
+  DateTime? countdownStartDate, // Added parameter for countdown
 }) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     showModalBottomSheet(
@@ -31,132 +33,253 @@ void showTextModal(
           bottom: true,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(Config.COLOR_APP_BAR),
-                  ),
-                  textAlign: TextAlign.left, // Changed from TextAlign.center to TextAlign.left
-                ),
-                const SizedBox(height: 16),
-                if (dropdownItems == null) ...[
-                  Text(
-                    message,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.left, // Changed from TextAlign.center to TextAlign.left
-                  ),
-                ] else ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
-                    child: DropdownButtonFormField<dynamic>(
-                      value: selectedDropdownValue,
-                      hint: Text(
-                        message,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.left, // Added textAlign property
-                      ),
-                      isExpanded: true,
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down,
-                        color: Color(Config.COLOR_APP_BAR),
-                      ),
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(Config.COLOR_APP_BAR),
-                            width: 1.5,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(Config.COLOR_APP_BAR),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      dropdownColor: Colors.white,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                      items: dropdownItems.map((item) {
-                        return DropdownMenuItem(
-                          value: item,
-                          child: Text(
-                            item.toString(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        if (onDropdownChanged != null) {
-                          onDropdownChanged(newValue);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                if (showConfirmButton || showDiscardButton)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (showDiscardButton)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                            child: DiscardButton(
-                              text: "Annuler",
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                if (onDiscard != null) {
-                                  onDiscard();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      if (showConfirmButton)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                            child: ActionButton(
-                              text: "OK",
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                if (onConfirm != null) {
-                                  onConfirm();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-              ],
+            child: _TextModalContent(
+              title: title,
+              message: message,
+              showConfirmButton: showConfirmButton,
+              onConfirm: onConfirm,
+              showDiscardButton: showDiscardButton,
+              onDiscard: onDiscard,
+              dropdownItems: dropdownItems,
+              onDropdownChanged: onDropdownChanged,
+              selectedDropdownValue: selectedDropdownValue,
+              countdownStartDate: countdownStartDate,
             ),
           ),
         );
       },
     );
   });
+}
+
+class _TextModalContent extends StatefulWidget {
+  final String title;
+  final String message;
+  final bool showConfirmButton;
+  final VoidCallback? onConfirm;
+  final bool showDiscardButton;
+  final VoidCallback? onDiscard;
+  final List<dynamic>? dropdownItems;
+  final Function(dynamic)? onDropdownChanged;
+  final dynamic selectedDropdownValue;
+  final DateTime? countdownStartDate;
+
+  const _TextModalContent({
+    required this.title,
+    required this.message,
+    this.showConfirmButton = false,
+    this.onConfirm,
+    this.showDiscardButton = false,
+    this.onDiscard,
+    this.dropdownItems,
+    this.onDropdownChanged,
+    this.selectedDropdownValue,
+    this.countdownStartDate,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _TextModalContentState createState() => _TextModalContentState();
+}
+
+class _TextModalContentState extends State<_TextModalContent> {
+  Timer? _timer; // Initialize _timer to null
+  String _countdown = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.countdownStartDate != null) {
+      _startCountdown();
+    }
+  }
+
+  void _startCountdown() {
+    _updateCountdown();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      _updateCountdown();
+      if (DateTime.now().isAfter(widget.countdownStartDate!)) {
+        timer.cancel();
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      }
+    });
+  }
+
+  void _updateCountdown() {
+    Duration difference = widget.countdownStartDate!.difference(DateTime.now());
+    setState(() {
+      _countdown = "${difference.inDays} J : "
+          "${difference.inHours.remainder(24).toString().padLeft(2, '0')} H : "
+          "${difference.inMinutes.remainder(60).toString().padLeft(2, '0')} M : "
+          "${difference.inSeconds.remainder(60).toString().padLeft(2, '0')} S";
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_timer != null) {
+      _timer!.cancel(); // Check if _timer is not null before canceling
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          widget.title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(Config.COLOR_APP_BAR),
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (widget.countdownStartDate == null) ...[
+          if (widget.dropdownItems == null)
+            Text(
+              widget.message,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.left,
+            ),
+          if (widget.dropdownItems != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: DropdownButtonFormField<dynamic>(
+                value: widget.selectedDropdownValue,
+                hint: Text(
+                  widget.message,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Color(Config.COLOR_APP_BAR),
+                ),
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  filled: true,
+                  fillColor: Colors.white,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(Config.COLOR_APP_BAR),
+                      width: 1.5,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(Config.COLOR_APP_BAR),
+                      width: 2,
+                    ),
+                  ),
+                ),
+                dropdownColor: Colors.white,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+                items: widget.dropdownItems!.map((item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(
+                      item.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (widget.onDropdownChanged != null) {
+                    widget.onDropdownChanged!(newValue);
+                  }
+                },
+              ),
+            ),
+        ] else ...[
+          Text(
+            widget.message,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.left,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(Config.COLOR_APP_BAR).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Text(
+              _countdown,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(Config.COLOR_APP_BAR),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+        const SizedBox(height: 24),
+        if (widget.showConfirmButton || widget.showDiscardButton)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              if (widget.showDiscardButton)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                    child: DiscardButton(
+                      text: "Annuler",
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        if (widget.onDiscard != null) {
+                          widget.onDiscard!();
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              if (widget.showConfirmButton)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                    child: ActionButton(
+                      text: "OK",
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        if (widget.onConfirm != null) {
+                          widget.onConfirm!();
+                        }
+                      },
+                    ),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
 }

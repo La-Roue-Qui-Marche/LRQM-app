@@ -122,7 +122,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
       }
     });
 
-    Future.delayed(const Duration(seconds: 10), () {
+    Future.delayed(const Duration(seconds: 6), () {
       if (mounted && !_isMapReady) {
         setState(() {
           _isMapReady = true;

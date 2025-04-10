@@ -13,7 +13,6 @@ import '../Data/EventData.dart';
 import 'ConfirmScreen.dart';
 import 'LoadingScreen.dart';
 import 'Components/ActionButton.dart';
-import 'Components/CountdownModal.dart';
 import 'Components/TextModal.dart';
 
 class Login extends StatefulWidget {
@@ -93,7 +92,13 @@ class _LoginState extends State<Login> {
 
     if (now.isBefore(startDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showCountdownModal(context, "C'est bientôt l'heure !", startDate: startDate);
+        showTextModal(
+          context,
+          "C'est bientôt l'heure !",
+          "L'évènement \"${_selectedEvent['name']}\" n'a pas encore démarré. "
+              "Pas de stress, on compte les secondes ensemble jusqu'au top départ !",
+          countdownStartDate: startDate, // Use countdown functionality
+        );
       });
     } else if (now.isAfter(endDate)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -280,7 +285,6 @@ class _LoginState extends State<Login> {
                         style: const TextStyle(
                           fontSize: 24,
                           color: Color(Config.COLOR_APP_BAR),
-                          fontWeight: FontWeight.bold,
                           letterSpacing: 4.0,
                         ),
                         decoration: const InputDecoration(
@@ -292,7 +296,7 @@ class _LoginState extends State<Login> {
                             borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 1),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 3),
+                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 2),
                           ),
                           contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
                         ),

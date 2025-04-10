@@ -112,12 +112,19 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Ta contribution à l\'événement',
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
+          Row(
+            children: [
+              const Icon(Icons.volunteer_activism_outlined, color: Colors.pinkAccent),
+              const SizedBox(width: 8),
+              const Text(
+                'Ta contribution à l\'événement',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           _buildHeader(),
@@ -315,7 +322,7 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
               widget.label,
               style: const TextStyle(
                 fontSize: 14,
-                color: Colors.green,
+                color: Colors.greenAccent,
               ),
             ),
           ),

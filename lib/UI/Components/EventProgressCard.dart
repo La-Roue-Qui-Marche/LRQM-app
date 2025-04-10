@@ -42,13 +42,19 @@ class EventProgressCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 0),
-              Text(
-                'Progression de l\'événement',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.flag_outlined, color: Colors.blueAccent),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Progression de l\'événement',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 0),
               Text(
@@ -194,7 +200,7 @@ class EventProgressCard extends StatelessWidget {
               ),
             )
           else
-            const SizedBox(width: 0), // spacing placeholder
+            const SizedBox(width: 0),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
