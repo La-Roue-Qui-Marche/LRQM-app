@@ -37,7 +37,7 @@ class DiscardButton extends StatelessWidget {
             if (icon != null) const SizedBox(width: 10),
             Text(
               text,
-              style: const TextStyle(color: Color(Config.COLOR_APP_BAR), fontSize: 16),
+              style: const TextStyle(color: Color(Config.COLOR_APP_BAR), fontSize: 18),
             ),
           ],
         ),

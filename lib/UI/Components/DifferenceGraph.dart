@@ -126,8 +126,8 @@ class DifferenceGraphState extends State<DifferenceGraph> {
                           isCurved: true,
                           gradient: LinearGradient(
                             colors: [
-                              Color(Config.COLOR_APP_BAR),
-                              Color(Config.COLOR_APP_BAR).withOpacity(0.4),
+                              Color(Config.COLOR_BUTTON),
+                              Color(Config.COLOR_BUTTON).withOpacity(0.4),
                             ],
                           ),
                           barWidth: 3,

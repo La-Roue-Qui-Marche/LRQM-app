@@ -122,7 +122,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 12.0), // Add 10px bottom padding
+                padding: const EdgeInsets.only(bottom: 32.0), // Add 10px bottom padding
                 child: const DynamicMapCard(),
               ),
               Positioned(

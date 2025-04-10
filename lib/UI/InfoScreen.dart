@@ -45,19 +45,11 @@ class InfoScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _buildCard(
                 context,
-                title: "Informations supplémentaires",
+                title: "L'équipe de développement",
                 content: null,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      "L'équipe de développement",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                     _buildContributorsSection(context),
                     const SizedBox(height: 24),
                     Row(
@@ -142,6 +134,7 @@ class InfoScreen extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               color: Colors.black54,
+              fontWeight: FontWeight.w600,
             ),
           ),
           if (content != null) ...[

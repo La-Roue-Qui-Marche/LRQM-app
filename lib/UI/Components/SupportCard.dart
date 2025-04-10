@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Utils/config.dart';
 
-class DonationCard extends StatelessWidget {
-  const DonationCard({super.key});
+class SupportCard extends StatelessWidget {
+  const SupportCard({super.key});
 
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
@@ -32,16 +32,23 @@ class DonationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Faire un don',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
+          Row(
+            children: [
+              const Icon(Icons.favorite_outline, color: Colors.redAccent),
+              const SizedBox(width: 8),
+              Text(
+                'Nous soutenir',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Text(
-            'Chaque don aide PluSport, FRAGILE Vaud et le sentier Handicap & Nature à accomplir leur mission.',
+            'La Roue qui Marche tisse des liens entre les personnes en situation de handicap et les personnes sans handicap. En devenant membre, bénévole ou simplement en parlant de nous, vous contribuez à bâtir des ponts entre deux mondes.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.black87,
@@ -50,10 +57,10 @@ class DonationCard extends StatelessWidget {
           const SizedBox(height: 20),
           Center(
             child: ElevatedButton.icon(
-              onPressed: () => _launchUrl('https://larouequimarche.ch/nous-soutenir/#faire-don'),
-              icon: const Icon(Icons.favorite, color: Colors.white),
+              onPressed: () => _launchUrl('https://larouequimarche.ch/nous-soutenir/'),
+              icon: const Icon(Icons.open_in_browser, color: Colors.white),
               label: const Text(
-                'Faire un don maintenant',
+                'Découvrir comment aider',
                 style: TextStyle(color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
@@ -86,7 +93,7 @@ class DonationCard extends StatelessWidget {
                 _launchUrl('https://www.linkedin.com/company/la-roue-qui-marche');
               }),
               _socialIcon('assets/icons/instagram.svg', () {
-                _launchUrl('https://www.instagram.com/larouequimarche/#');
+                _launchUrl('https://www.instagram.com/larouequimarche/');
               }),
             ],
           ),
