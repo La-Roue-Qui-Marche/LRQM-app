@@ -8,7 +8,7 @@ This is a **cross-platform application**, compatible with both Android and iOS d
 
 ---
 
-## 🚀 Features
+## Features
 
 - **User Authentication**: Enter your Dossard number to access your personal contributions.
 - **Track Contributions**: View your progress and contributions toward the project goal.
@@ -18,7 +18,7 @@ This is a **cross-platform application**, compatible with both Android and iOS d
 
 ---
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 To compile and run this project, ensure you have the following installed:
 
@@ -27,7 +27,7 @@ To compile and run this project, ensure you have the following installed:
 
 ---
 
-## 🏗️ Setup Instructions
+## Setup Instructions
 
 1. Clone this repository:
 
@@ -50,13 +50,13 @@ To compile and run this project, ensure you have the following installed:
 
 ---
 
-## 🔗 Server Configuration
+## Server Configuration
 
 This application communicates with the [LRQM Server](https://github.com/chloefont/LRQM-server). Ensure the server is set up and running before using the app.
 
 ---
 
-## 📋 Permissions Required
+## Permissions Required
 
 This application requires the following permissions to function properly:
 
@@ -67,19 +67,19 @@ Please ensure these permissions are granted when prompted to enjoy the full func
 
 ---
 
-## 📂 Configuration File
+## Configuration File
 
 The configuration file containing the app's parameters can be found [here](lib/Utils/config.dart).
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the terms of the [LICENSE](LICENSE) file.
 
 ---
 
-## 📷 Assets
+## Assets
 
 This project uses the following fonts:
 
@@ -89,13 +89,13 @@ Font licenses are available in the [assets/fonts/](assets/fonts/) directory.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests to improve the app.
 
 ---
 
-## 📧 Contact
+## Contact
 
 For any inquiries, please contact the project maintainers via the [Issues](https://github.com/La-Roue-Qui-Marche/LRQM-app/issues) section.
 
