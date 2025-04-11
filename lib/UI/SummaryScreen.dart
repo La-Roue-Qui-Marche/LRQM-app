@@ -115,11 +115,21 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
               child: ActionButton(
                 icon: Icons.check,
                 text: 'OK',
-                onPressed: () => Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const WorkingScreen()),
-                  (route) => false,
-                ),
+                onPressed: () {
+                  for (var controller in _itemControllers) {
+                    if (controller.isAnimating) {
+                      controller.stop();
+                    }
+                  }
+                  if (_mainController.isAnimating) {
+                    _mainController.stop();
+                  }
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const WorkingScreen()),
+                    (route) => false,
+                  );
+                },
               ),
             ),
           ),

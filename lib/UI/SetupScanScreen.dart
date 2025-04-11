@@ -12,7 +12,8 @@ import 'Components/TextModal.dart';
 import '../Data/ContributorsData.dart';
 import '../API/NewMeasureController.dart';
 import '../Data/UserData.dart';
-import 'Components/TopAppBar.dart'; // Import the TopAppBar component
+import 'Components/TopAppBar.dart';
+import '../Utils/Permission.dart';
 
 class SetupScanScreen extends StatefulWidget {
   final int contributors;
@@ -65,8 +66,8 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
 
   void _launchCamera() async {
     try {
-      var status = await Permission.camera.request();
-      if (status.isDenied || status.isPermanentlyDenied) {
+      bool isGranted = await PermissionHelper.requestCameraPermission();
+      if (!isGranted) {
         showTextModal(
           context,
           "Accès à la caméra refusé",

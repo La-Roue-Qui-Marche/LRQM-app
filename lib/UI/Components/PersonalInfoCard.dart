@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Utils/config.dart';
-import 'DifferenceGraph.dart';
+import 'ContributionGraph.dart';
 
 class PersonalInfoCard extends StatefulWidget {
   final bool isSessionActive;
@@ -27,8 +27,6 @@ class PersonalInfoCard extends StatefulWidget {
 }
 
 class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
-  final GlobalKey<DifferenceGraphState> _differenceGraphKey = GlobalKey<DifferenceGraphState>();
-
   late int _currentContribution;
   late int _previousContribution;
   final List<Widget> _particles = [];
@@ -133,7 +131,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           const SizedBox(height: 16),
           _buildFunMessage(),
           const SizedBox(height: 8),
-          if (widget.isSessionActive) const DifferenceGraph(),
+          if (widget.isSessionActive) const ContributionGraph(),
         ],
       ),
     );
@@ -213,7 +211,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           children: [
             Text(label, style: const TextStyle(fontSize: 14, color: Colors.black54)),
             const SizedBox(height: 4),
-            value != null
+            value != null && value.isNotEmpty
                 ? Text(
                     value,
                     style: const TextStyle(fontSize: 18, color: Color(Config.COLOR_APP_BAR)),

@@ -40,7 +40,6 @@
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>processing</string>
 		<string>fetch</string>
 		<string>location</string>
 	</array>
@@ -65,7 +64,5 @@
 	<array>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	</array>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to location when open.</string>
 </dict>
 </plist>

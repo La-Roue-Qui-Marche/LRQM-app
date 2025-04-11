@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../Utils/config.dart';
 import '../../Geolocalisation/Geolocation.dart';
+import '../../Utils/Permission.dart';
 
 class DynamicMapCard extends StatefulWidget {
   const DynamicMapCard({Key? key}) : super(key: key);
@@ -28,9 +29,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
   Future<void> _fetchUserPosition() async {
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        await Geolocator.openLocationSettings();
+      if (!await PermissionHelper.handlePermission()) {
         return;
       }
       Position position = await Geolocator.getCurrentPosition(
