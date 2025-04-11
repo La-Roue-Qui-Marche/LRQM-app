@@ -27,6 +27,11 @@ def keystorePropertiesFile = rootProject.file("key.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
+// flutter_background_geolocation
+Project background_geolocation = project(':flutter_background_geolocation')
+apply from: "${background_geolocation.projectDir}/background_geolocation.gradle"
+
+
 android {
     namespace = "ch.larouequimarche.app"
     compileSdk = flutter.compileSdkVersion
@@ -60,8 +65,10 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+            shrinkResources false
         }
     }
+    
 }
 
 flutter {

@@ -10,7 +10,6 @@ import 'Components/TextModal.dart';
 import 'SetupPosScreen.dart';
 import 'LoadingScreen.dart';
 import 'SummaryScreen.dart';
-import 'LoginScreen.dart';
 
 import '../Utils/Result.dart';
 import '../Utils/config.dart';
@@ -24,7 +23,6 @@ import '../Data/EventData.dart';
 import '../Data/UserData.dart';
 import '../Data/MeasureData.dart';
 import '../Data/ContributorsData.dart';
-import '../Data/DataUtils.dart';
 
 import 'Components/NavBar.dart';
 import 'Components/DynamicMapCard.dart';

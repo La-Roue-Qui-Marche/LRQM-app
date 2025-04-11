@@ -2,46 +2,68 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:flutter_background_geolocation/flutter_background_geolocation.dart' as bg;
 
 import '../../Utils/config.dart';
-import '../../Geolocalisation/Geolocation.dart';
 
 class DynamicMapCard extends StatefulWidget {
   const DynamicMapCard({Key? key}) : super(key: key);
 
   @override
-  _DynamicMapCardState createState() => _DynamicMapCardState();
+  State<DynamicMapCard> createState() => _DynamicMapCardState();
 }
 
 class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAliveClientMixin {
   final MapController _mapController = MapController();
-  final Geolocation _geolocation = Geolocation();
-  Position? _currentPosition;
+  bg.Location? _currentLocation;
   bool _isFetchingPosition = true;
   bool _isMapReady = false;
 
-  bool isValidCoordinate(double? value) {
-    return value != null && value.isFinite;
+  @override
+  void initState() {
+    super.initState();
+    _fetchPosition();
+
+    // Always show map after 5 seconds even if no location
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && !_isMapReady) {
+        setState(() {
+          _isMapReady = true;
+        });
+      }
+    });
   }
 
-  Future<void> _fetchUserPosition() async {
+  Future<void> _fetchPosition() async {
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        await Geolocator.openLocationSettings();
-        return;
+      final state = await bg.BackgroundGeolocation.state;
+
+      if (state.authorization != 0) {
+        // Authorized → Fetch position
+        final location = await bg.BackgroundGeolocation.getCurrentPosition(samples: 1);
+        if (mounted) {
+          setState(() {
+            _currentLocation = location;
+            _isFetchingPosition = false;
+          });
+          WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
+        }
+
+        // Listen live updates
+        bg.BackgroundGeolocation.onLocation((bg.Location location) {
+          if (mounted) {
+            setState(() {
+              _currentLocation = location;
+            });
+          }
+        });
+      } else {
+        // Not authorized → Only show map
+        setState(() {
+          _isFetchingPosition = false;
+        });
       }
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      setState(() {
-        _currentPosition = position;
-        _isFetchingPosition = false;
-      });
     } catch (e) {
-      debugPrint("Error fetching user position: $e");
       setState(() {
         _isFetchingPosition = false;
       });
@@ -62,17 +84,13 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
     final double defaultLat = Config.LAT1;
     final double defaultLon = Config.LON1;
-    double userLat = defaultLat;
-    double userLon = defaultLon;
+    double userLat = _currentLocation?.coords.latitude ?? defaultLat;
+    double userLon = _currentLocation?.coords.longitude ?? defaultLon;
 
-    if (_currentPosition != null &&
-        isValidCoordinate(_currentPosition!.latitude) &&
-        isValidCoordinate(_currentPosition!.longitude)) {
-      userLat = _currentPosition!.latitude;
-      userLon = _currentPosition!.longitude;
-    }
-
-    List<LatLng> points = [LatLng(userLat, userLon), ...Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude))];
+    List<LatLng> points = [
+      LatLng(userLat, userLon),
+      ...Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude)),
+    ];
 
     double minLat = points.map((p) => p.latitude).reduce(min);
     double maxLat = points.map((p) => p.latitude).reduce(max);
@@ -82,7 +100,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     LatLng center = LatLng((minLat + maxLat) / 2, (minLon + maxLon) / 2);
 
     final Size mapSize = MediaQuery.of(context).size;
-
     double latFraction = (_latRad(maxLat) - _latRad(minLat)) / pi;
     double lonFraction = (maxLon - minLon) / 360;
 
@@ -99,56 +116,27 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   }
 
   @override
-  void initState() {
-    super.initState();
-    _fetchUserPosition().then((_) {
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
-      }
-    });
-
-    Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 5,
-      ),
-    ).listen((position) {
-      if (mounted) {
-        setState(() {
-          _currentPosition = position;
-          _isFetchingPosition = false;
-          _fitMapBounds();
-        });
-      }
-    });
-
-    Future.delayed(const Duration(seconds: 6), () {
-      if (mounted && !_isMapReady) {
-        setState(() {
-          _isMapReady = true;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _geolocation.stopListening();
-    super.dispose();
-  }
-
-  @override
   bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final double defaultLat = Config.LAT1;
-    final double defaultLon = Config.LON1;
-    double userLat = _currentPosition?.latitude ?? defaultLat;
-    double userLon = _currentPosition?.longitude ?? defaultLon;
 
     final mapHeight = MediaQuery.of(context).size.height * 0.5;
+
+    final userMarker = _currentLocation != null
+        ? Marker(
+            point: LatLng(
+              _currentLocation!.coords.latitude,
+              _currentLocation!.coords.longitude,
+            ),
+            child: const Icon(
+              Icons.my_location,
+              color: Color(Config.COLOR_APP_BAR),
+              size: 32,
+            ),
+          )
+        : null;
 
     return AbsorbPointer(
       absorbing: true,
@@ -162,20 +150,11 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
           child: _isFetchingPosition || !_isMapReady
-              ? Container(
-                  height: mapHeight,
-                  width: double.infinity,
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: Image.asset(
-                          'assets/pictures/LogoSimpleAnimated.gif',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+                      const CircularProgressIndicator(),
                       const SizedBox(height: 10),
                       const Text(
                         "Chargement de la carte...",
@@ -190,13 +169,15 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    initialCenter: LatLng(userLat, userLon),
+                    initialCenter: LatLng(Config.LAT1, Config.LON1),
                     initialZoom: 0.8,
                     onMapReady: () {
-                      setState(() {
-                        _isMapReady = true;
-                      });
-                      WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
+                      if (mounted) {
+                        setState(() {
+                          _isMapReady = true;
+                        });
+                        WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
+                      }
                     },
                   ),
                   children: [
@@ -214,18 +195,10 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                         ),
                       ],
                     ),
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          point: LatLng(userLat, userLon),
-                          child: Icon(
-                            Icons.my_location,
-                            color: Color(Config.COLOR_APP_BAR),
-                            size: 32,
-                          ),
-                        ),
-                      ],
-                    ),
+                    if (userMarker != null)
+                      MarkerLayer(
+                        markers: [userMarker],
+                      ),
                   ],
                 ),
         ),

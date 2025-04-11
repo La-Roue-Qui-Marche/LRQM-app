@@ -1,93 +1,75 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart' as geo;
+import 'package:background_location/background_location.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
 import 'package:lrqm/API/NewMeasureController.dart';
 import 'package:lrqm/Data/SessionDistanceData.dart';
 import 'package:lrqm/Data/TimeData.dart';
 import 'package:lrqm/Utils/config.dart';
 import 'package:lrqm/Utils/LogHelper.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Geolocation {
-  late StreamSubscription<geo.Position> _positionStream;
-  late geo.LocationSettings _settings;
-  geo.Position? _oldPos;
   int _distance = 0;
   int _lastSentDistance = 0;
-  int _mesureToWait = 3;
   int _outsideCounter = 0;
   DateTime _startTime = DateTime.now();
   bool _positionStreamStarted = false;
-  int _totalDistanceSent = 0; // Track the total distance sent to the server
+  int _totalDistanceSent = 0;
+  double? _lastLat;
+  double? _lastLng;
+  DateTime? _lastTimestamp;
 
   final StreamController<Map<String, int>> _streamController = StreamController<Map<String, int>>();
   Timer? _timeTimer;
 
-  Geolocation() {
-    _settings = _getSettings();
-  }
+  Geolocation();
 
   Stream<Map<String, int>> get stream => _streamController.stream;
 
-  // Permissions
   static Future<bool> handlePermission() async {
-    final geo.GeolocatorPlatform geoPlatform = geo.GeolocatorPlatform.instance;
-
-    if (!await geoPlatform.isLocationServiceEnabled()) {
-      LogHelper.writeLog("Location services are disabled.");
+    try {
+      await BackgroundLocation.setAndroidNotification(
+        title: 'Location Tracking',
+        message: 'Tracking your location in background',
+        icon: '@mipmap/ic_launcher',
+      );
+      await BackgroundLocation.setAndroidConfiguration(1000);
+      return true;
+    } catch (e) {
+      LogHelper.logError("Permission error: $e");
       return false;
     }
-
-    geo.LocationPermission permission = await geoPlatform.checkPermission();
-    if (permission == geo.LocationPermission.denied) {
-      permission = await geoPlatform.requestPermission();
-      if (permission == geo.LocationPermission.denied) return false;
-    }
-
-    if (permission == geo.LocationPermission.deniedForever) {
-      LogHelper.writeLog("Location permissions are permanently denied.");
-      return false;
-    }
-
-    return true;
   }
 
-  // Platform-specific settings
-  geo.LocationSettings _getSettings() {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return geo.AndroidSettings(
-        accuracy: geo.LocationAccuracy.high,
-        distanceFilter: 5,
-        intervalDuration: const Duration(seconds: 5),
-        foregroundNotificationConfig: const geo.ForegroundNotificationConfig(
-          notificationText: "Pas de panique, c'est la RQM qui vous suit!",
-          notificationTitle: "Running in Background",
-          enableWakeLock: true,
-          notificationIcon: geo.AndroidResource(name: 'launcher_icon', defType: 'mipmap'),
-        ),
-      );
-    } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
-      return geo.AppleSettings(
-        accuracy: geo.LocationAccuracy.high,
-        activityType: geo.ActivityType.fitness,
-        pauseLocationUpdatesAutomatically: false,
-        showBackgroundLocationIndicator: true,
-      );
+  static Future<bool> checkPermission() async {
+    final status = await Permission.locationAlways.status;
+
+    if (status.isGranted) {
+      return true;
+    }
+
+    final requestStatus = await Permission.locationAlways.request();
+
+    if (requestStatus.isGranted) {
+      LogHelper.logInfo("Location permission granted.");
+      return true;
     } else {
-      return const geo.LocationSettings(
-        accuracy: geo.LocationAccuracy.high,
-        distanceFilter: 5,
-      );
+      LogHelper.logError("Location permission denied.");
+      return false;
     }
   }
 
-  // Start geolocation tracking
   Future<void> startListening() async {
-    log("Attempting to start position stream...");
-    LogHelper.logInfo("Starting geolocation tracking...");
+    log("Attempting to start BackgroundLocation...");
+    LogHelper.logInfo("Starting BackgroundLocation...");
 
-    // Reset the total distance to 0 at the start of a measure
+    if (!await checkPermission()) {
+      LogHelper.logError("Permission denied, cannot start tracking.");
+      _streamController.sink.add({"time": -1, "distance": -1});
+      return;
+    }
+
     final resetSuccess = await SessionDistanceData.resetTotalDistance();
     if (resetSuccess) {
       LogHelper.logInfo("Successfully reset total distance to 0.");
@@ -95,7 +77,7 @@ class Geolocation {
       LogHelper.logWarn("Failed to reset total distance to 0.");
     }
 
-    if (_positionStreamStarted || !(await handlePermission())) {
+    if (_positionStreamStarted) {
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
     }
@@ -104,64 +86,71 @@ class Geolocation {
     _startTime = DateTime.now();
     _distance = 0;
     _outsideCounter = 0;
-
+    _totalDistanceSent = 0;
     _lastSentDistance = await SessionDistanceData.getTotalDistance() ?? 0;
 
     _timeTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       final seconds = DateTime.now().difference(_startTime).inSeconds;
-      _streamController.sink.add({"time": seconds, "distance": _distance});
+      if (!_streamController.isClosed) {
+        _streamController.sink.add({"time": seconds, "distance": _distance});
+      }
     });
 
-    _oldPos = await geo.Geolocator.getCurrentPosition();
+    await BackgroundLocation.setAndroidNotification(
+      title: 'Location Tracking',
+      message: 'Tracking your location in background',
+      icon: '@mipmap/ic_launcher',
+    );
+    await BackgroundLocation.setAndroidConfiguration(1000);
 
-    _positionStream = geo.Geolocator.getPositionStream(locationSettings: _settings).listen(_handlePositionUpdate);
+    BackgroundLocation.startLocationService(distanceFilter: 5);
+    BackgroundLocation.getLocationUpdates(_onLocation);
   }
 
-  void _handlePositionUpdate(geo.Position position) async {
-    LogHelper.logInfo(
-        "Position updated: Lat=${position.latitude}, Lng=${position.longitude}, Acc=${position.accuracy}");
-
+  void _onLocation(Location location) async {
     if (!_positionStreamStarted) {
-      LogHelper.logWarn("Position update received but no session is active. Ignoring update.");
+      LogHelper.logWarn("Location received but tracking not active. Ignoring.");
       return;
     }
 
-    if (_mesureToWait > 0) {
-      _oldPos = position;
-      _mesureToWait--;
+    LogHelper.logInfo("Location update: ${location.latitude}, ${location.longitude}, acc: ${location.accuracy}");
+
+    if (location.accuracy != null && location.accuracy! > 20) {
+      LogHelper.logWarn("Bad GPS point (accuracy=${location.accuracy}m), ignoring.");
+      _updateLastLocation(location);
       return;
     }
 
-    if (_oldPos == null) {
-      _oldPos = position;
+    if (_lastLat == null || _lastLng == null) {
+      _updateLastLocation(location);
       return;
     }
 
-    final dist = geo.Geolocator.distanceBetween(
-      _oldPos!.latitude,
-      _oldPos!.longitude,
-      position.latitude,
-      position.longitude,
+    final dist = _calculateDistance(
+      _lastLat!,
+      _lastLng!,
+      location.latitude!,
+      location.longitude!,
     ).round();
 
-    final timeDiffSec = position.timestamp?.difference(_oldPos!.timestamp ?? DateTime.now()).inSeconds ?? 1;
+    final timeDiffSec = _lastTimestamp == null ? 0 : DateTime.now().difference(_lastTimestamp!).inSeconds;
+
     final speed = timeDiffSec > 0 ? dist / timeDiffSec : 0;
 
-    // Filter: ignore noisy data
-    if (position.accuracy > 20 || dist > 50 || speed > 10) {
-      LogHelper.logWarn("Filtered GPS point: $dist m @ ${speed.toStringAsFixed(2)} m/s, acc=${position.accuracy}");
-      _oldPos = position; // Save the old position even if the point is filtered
+    if (dist > 200 || speed > 30) {
+      LogHelper.logWarn("GPS jump detected ($dist m, $speed m/s), ignoring.");
+      _updateLastLocation(location);
       return;
     }
 
-    _oldPos = position;
+    _updateLastLocation(location);
     _distance += dist;
 
-    if (!isLocationInZone(position)) {
+    if (!await _isLocationInZone(location.latitude!, location.longitude!)) {
       _outsideCounter++;
-      LogHelper.logWarn("User outside zone. Outside counter: $_outsideCounter");
+      LogHelper.logWarn("Outside zone detected ($_outsideCounter)");
       if (_outsideCounter > 5) {
-        LogHelper.logError("User outside too long, stopping...");
+        LogHelper.logError("Outside zone for too long, stopping...");
         if (!_streamController.isClosed) {
           _streamController.sink.add({"time": DateTime.now().difference(_startTime).inSeconds, "distance": -1});
         }
@@ -172,7 +161,7 @@ class Geolocation {
       _outsideCounter = 0;
       final diff = _distance - _lastSentDistance;
       if (diff > 0) {
-        await _sendDistanceToServer(diff, position);
+        await _sendDistanceToServer(diff);
       }
     }
 
@@ -181,63 +170,74 @@ class Geolocation {
     }
   }
 
-  Future<void> _sendDistanceToServer(int diff, geo.Position position) async {
+  void _updateLastLocation(Location location) {
+    _lastLat = location.latitude;
+    _lastLng = location.longitude;
+    _lastTimestamp = DateTime.now();
+  }
+
+  Future<void> _sendDistanceToServer(int diff) async {
     final response = await NewMeasureController.editMeters(diff);
     if (response.error != null) {
       LogHelper.logError("Error sending to server: ${response.error}");
       return;
     }
 
-    _totalDistanceSent += diff; // Update the total distance sent
+    _totalDistanceSent += diff;
     _lastSentDistance = _distance;
     await SessionDistanceData.saveTotalDistance(_lastSentDistance);
     await TimeData.saveSessionTime(DateTime.now().difference(_startTime).inSeconds);
 
-    // Compare total distance sent to the saved distance
     if (_totalDistanceSent != _lastSentDistance) {
-      LogHelper.logWarn(
-          "Discrepancy detected: Total distance sent ($_totalDistanceSent m) does not match saved distance ($_lastSentDistance m).");
+      LogHelper.logWarn("Discrepancy: total sent $_totalDistanceSent != saved $_lastSentDistance");
     }
 
-    LogHelper.logInfo(
-        "Distance sent: $diff m — Total sent: $_totalDistanceSent m — Total saved: $_lastSentDistance m ");
+    LogHelper.logInfo("Sent $diff m, total $_totalDistanceSent m, saved $_lastSentDistance m");
   }
 
   void stopListening() {
     if (_positionStreamStarted) {
-      LogHelper.logInfo("Stopping geolocation tracking...");
-      _positionStream.cancel();
+      LogHelper.logInfo("Stopping BackgroundLocation...");
+      BackgroundLocation.stopLocationService();
       _timeTimer?.cancel();
       _streamController.close();
       _positionStreamStarted = false;
-      log("Position stream stopped.");
+      log("Tracking stopped.");
     }
   }
 
-  bool isLocationInZone(geo.Position point) {
-    final pos = mp.LatLng(point.latitude, point.longitude);
+  Future<bool> _isLocationInZone(double lat, double lng) async {
+    final pos = mp.LatLng(lat, lng);
     return mp.PolygonUtil.containsLocation(pos, Config.ZONE_EVENT, false);
   }
 
   Future<bool> isInZone() async {
-    final pos = await geo.Geolocator.getCurrentPosition();
-    return isLocationInZone(pos);
+    final location = BackgroundLocation();
+    final loc = await location.getCurrentLocation();
+    return _isLocationInZone(loc.latitude!, loc.longitude!);
   }
 
   Future<double> distanceToZone() async {
-    final pos = await geo.Geolocator.getCurrentPosition();
-    if (isLocationInZone(pos)) return -1;
+    final location = BackgroundLocation();
+    final loc = await location.getCurrentLocation();
+    final pos = mp.LatLng(loc.latitude!, loc.longitude!);
 
-    final currentPoint = mp.LatLng(pos.latitude, pos.longitude);
+    if (await _isLocationInZone(loc.latitude!, loc.longitude!)) return -1;
+
     double minDistance = double.infinity;
-
     for (int i = 0; i < Config.ZONE_EVENT.length; i++) {
       final p1 = Config.ZONE_EVENT[i];
       final p2 = Config.ZONE_EVENT[(i + 1) % Config.ZONE_EVENT.length];
-      final dist = mp.PolygonUtil.distanceToLine(currentPoint, p1, p2).toDouble();
+      final dist = mp.PolygonUtil.distanceToLine(pos, p1, p2).toDouble();
       if (dist < minDistance) minDistance = dist;
     }
-
     return double.parse((minDistance / 1000).toStringAsFixed(1));
+  }
+
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    return mp.SphericalUtil.computeDistanceBetween(
+      mp.LatLng(lat1, lon1),
+      mp.LatLng(lat2, lon2),
+    ).toDouble();
   }
 }
