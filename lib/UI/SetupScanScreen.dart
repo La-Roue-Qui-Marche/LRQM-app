@@ -146,14 +146,13 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                           onDoubleTap: _startSessionDirectly,
                           child: Container(
                             padding: const EdgeInsets.all(16.0), // Add padding
-                            width: MediaQuery.of(context).size.width * 0.55,
+                            width: MediaQuery.of(context).size.width * 0.45,
                             child: const Image(
-                              image: AssetImage('assets/pictures/DrawScan-removebg.png'),
+                              image: AssetImage('assets/pictures/DrawScan-AI.png'),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
                       const InfoCard(
                         title: "Le petit oiseau va sortir !",
                         data: "Prend en photo le QR code pour démarrer ta session",

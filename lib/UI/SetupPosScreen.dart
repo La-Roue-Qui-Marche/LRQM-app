@@ -177,14 +177,13 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         children: [
           Center(
             child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.45,
+              width: MediaQuery.of(context).size.width * 0.4,
               child: const Padding(
                 padding: EdgeInsets.only(top: 16.0),
-                child: Image(image: AssetImage('assets/pictures/DrawPosition-removebg.png')),
+                child: Image(image: AssetImage('assets/pictures/DrawPos-AI.png')),
               ),
             ),
           ),
-          const SizedBox(height: 32),
           InfoCard(
             title: "Préparez-vous",
             data: "Rendez-vous au point de départ de l'évènement.",
