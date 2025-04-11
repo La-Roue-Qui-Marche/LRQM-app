@@ -546,7 +546,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     showTextModal(
       context,
       'Confirmation',
-      'Tu es sûr de vouloir arrêter la mesure en cours ?\n\n'
+      'Arrêter la mesure en cours ?\n\n'
           'Cela mettra fin à l\'enregistrement de ta distance et de ton temps. '
           'Si tu veux continuer plus tard, tu devras redémarrer une nouvelle mesure.\n\n'
           'Prends une pause si nécessaire, mais n\'oublie pas de revenir pour continuer '

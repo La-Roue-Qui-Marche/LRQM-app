@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 
 class LogHelper {
   static final List<String> _logs = [];
@@ -16,6 +17,9 @@ class LogHelper {
     final timestamp = DateTime.now().toIso8601String();
     final logEntry = "[$level] $timestamp: $msg";
     _logs.add(logEntry);
+
+    // Log to console
+    dev.log(logEntry, name: 'LogHelper');
 
     // Émet une copie non modifiable
     _logStreamController.add(List.unmodifiable(_logs));
