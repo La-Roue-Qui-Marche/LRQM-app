@@ -14,6 +14,7 @@ jobs:
   build-and-release:
     name: Build and Release iOS App
     runs-on: macos-latest
+    timeout-minutes: 60
 
     steps:
       - name: 🧾 Checkout Code
