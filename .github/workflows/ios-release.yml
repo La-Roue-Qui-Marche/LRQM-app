@@ -65,7 +65,9 @@ jobs:
         run: flutter build ios --release --no-codesign
 
       - name: 📦 Archive the App
+        timeout-minutes: 10
         run: |
+          set -x
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
