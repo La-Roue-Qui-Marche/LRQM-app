@@ -12,7 +12,8 @@ import 'Components/TextModal.dart';
 import '../Data/ContributorsData.dart';
 import '../API/NewMeasureController.dart';
 import '../Data/UserData.dart';
-import 'Components/TopAppBar.dart'; // Import the TopAppBar component
+import 'Components/TopAppBar.dart';
+import '../Utils/Permission.dart';
 
 class SetupScanScreen extends StatefulWidget {
   final int contributors;
@@ -41,7 +42,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
         ),
       ),
     );
-    Future.delayed(const Duration(milliseconds: 800), () async {
+    Future.delayed(const Duration(seconds: 2), () async {
       await ContributorsData.saveContributors(widget.contributors);
       int? userId = await UserData.getUserId();
       if (userId != null) {
@@ -65,8 +66,8 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
 
   void _launchCamera() async {
     try {
-      var status = await Permission.camera.request();
-      if (status.isDenied || status.isPermanentlyDenied) {
+      bool isGranted = await PermissionHelper.requestCameraPermission();
+      if (!isGranted) {
         showTextModal(
           context,
           "Accès à la caméra refusé",
@@ -145,14 +146,13 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                           onDoubleTap: _startSessionDirectly,
                           child: Container(
                             padding: const EdgeInsets.all(16.0), // Add padding
-                            width: MediaQuery.of(context).size.width * 0.55,
+                            width: MediaQuery.of(context).size.width * 0.45,
                             child: const Image(
-                              image: AssetImage('assets/pictures/DrawScan-removebg.png'),
+                              image: AssetImage('assets/pictures/DrawScan-AI.png'),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
                       const InfoCard(
                         title: "Le petit oiseau va sortir !",
                         data: "Prend en photo le QR code pour démarrer ta session",

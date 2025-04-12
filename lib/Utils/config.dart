@@ -8,10 +8,6 @@ class Config {
   // ------------------- API -------------------
   static const String API_URL = 'api.la-rqm.dynv6.net';
   static const String API_COMMON_ADDRESS = '/app/measures/';
-  // -------------- EVENT DATA ----------------
-  static const String EVENT_NAME = 'TEST';
-  static const String START_TIME = '2024-01-25 17:00:00';
-  static const String END_TIME = '2025-06-22 17:00:00';
   // ----------------- QR code -----------------
   static const String QR_CODE_S_VALUE = 'Ready';
   static const String QR_CODE_F_VALUE = 'Stop';
@@ -34,13 +30,22 @@ class Config {
     mp.LatLng(LAT1, LON2),
   ];
 
+  // ----------------- Geolocation Config -----------------
+  static const Duration LOCATION_UPDATE_INTERVAL = Duration(seconds: 5);
+  static const int LOCATION_DISTANCE_FILTER = 5;
+  static const int MAX_CHUNK_SIZE = 40;
+  static const double ACCURACY_THRESHOLD = 20;
+  static const int DISTANCE_THRESHOLD = 40;
+  static const double SPEED_THRESHOLD = 10;
+  static const Duration API_INTERVAL = Duration(seconds: 10);
+  static const int OUTSIDE_COUNTER_MAX = 5;
+
   // ----------------- Couleurs -----------------
   static const int COLOR_APP_BAR = 0xFF403c74;
   static const int COLOR_BUTTON = 0xFFFF9900;
   static const int COLOR_TITRE = 0xFFFFFFFF;
   static const int COLOR_BACKGROUND = 0xFFF0F0F0;
   // ----------------- Constantes -----------------
-  static const int NUMBER_MAX_PARTICIPANTS = 150;
 
   /// Function to get the application version.
   static Future<String> getAppVersion() async {

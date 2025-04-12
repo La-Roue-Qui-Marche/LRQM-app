@@ -45,7 +45,7 @@ class InfoScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _buildCard(
                 context,
-                title: "L'équipe de développement",
+                title: "L'équipe de développement bénévole",
                 content: null,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,8 +178,6 @@ class InfoScreen extends StatelessWidget {
       spacing: 20,
       runSpacing: 20,
       children: [
-        _buildContributorProfile(context, 'https://github.com/MasterZeus97',
-            'https://avatars.githubusercontent.com/u/61197576?v=4', 'Thibault Seem'),
         _buildContributorProfile(context, 'https://github.com/therundmc',
             'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine Cavallera'),
         _buildContributorProfile(context, 'https://github.com/chloefont',

@@ -24,11 +24,15 @@ class SummaryScreen extends StatefulWidget {
 class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateMixin {
   late final AnimationController _mainController;
   late final List<AnimationController> _itemControllers;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
+    // Create the main controller and start it.
     _mainController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..forward();
+
+    // Create a list of item controllers (for the five animated items).
     _itemControllers = List.generate(5, (index) {
       return AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
     });
@@ -36,14 +40,19 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
   }
 
   void _startItemAnimations() async {
+    // Animate each item with a delay.
     for (var controller in _itemControllers) {
       await Future.delayed(const Duration(milliseconds: 300));
-      controller.forward();
+      if (!mounted || _isDisposed) return; // Prevent calls if widget is disposed.
+      if (controller.status == AnimationStatus.dismissed) {
+        controller.forward();
+      }
     }
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _mainController.dispose();
     for (var controller in _itemControllers) {
       controller.dispose();
@@ -115,11 +124,22 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
               child: ActionButton(
                 icon: Icons.check,
                 text: 'OK',
-                onPressed: () => Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const WorkingScreen()),
-                  (route) => false,
-                ),
+                onPressed: () {
+                  // Stop any ongoing animations.
+                  for (var controller in _itemControllers) {
+                    if (controller.isAnimating) {
+                      controller.stop();
+                    }
+                  }
+                  if (_mainController.isAnimating) {
+                    _mainController.stop();
+                  }
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const WorkingScreen()),
+                    (route) => false,
+                  );
+                },
               ),
             ),
           ),
