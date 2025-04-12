@@ -49,7 +49,7 @@ class GeolocationConfig {
     this.accuracyThreshold = 20, // meters
     this.distanceThreshold = 50, // meters
     this.speedThreshold = 10, // m/s
-    this.backgroundSwitchDelay = const Duration(seconds: 1),
+    this.backgroundSwitchDelay = const Duration(milliseconds: 500),
     this.outsideCounterMax = 10,
     this.notificationTitle = "La RQM Background Tracking",
     this.notificationText = "Tracking in progress...",
