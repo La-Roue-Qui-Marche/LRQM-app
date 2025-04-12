@@ -175,7 +175,9 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       children: [
         _infoCard(
           label: 'Contribution',
-          value: "${_formatDistance(_currentContribution)} m",
+          value: widget.contribution.isNotEmpty
+              ? "${_formatDistance(_currentContribution)} m"
+              : null, // Pass null to trigger shimmer
           color: const Color(Config.COLOR_APP_BAR),
         ),
         const SizedBox(width: 12),

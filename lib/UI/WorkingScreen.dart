@@ -419,7 +419,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     log("Dispose");
     _timer?.cancel();
     _stopEventRefreshTimer(); // Ensure the event refresh timer is stopped
-    _geolocation.stopListening(); // Stop geolocation stream
     super.dispose();
   }
 

@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../Utils/config.dart';
 import '../../Geolocalisation/Geolocation.dart';
@@ -22,16 +22,49 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   Position? _currentPosition;
   bool _isFetchingPosition = true;
   bool _isMapReady = false;
+  StreamSubscription<Position>? _positionSubscription;
 
   bool isValidCoordinate(double? value) {
     return value != null && value.isFinite;
   }
 
+  Future<void> _initLocation() async {
+    bool permissionGranted = await PermissionHelper.handlePermission();
+    if (!mounted) return;
+
+    if (permissionGranted) {
+      await _fetchUserPosition();
+      _positionSubscription = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 5,
+        ),
+      ).listen((position) {
+        if (mounted) {
+          setState(() {
+            _currentPosition = position;
+            _isFetchingPosition = false;
+            _fitMapBounds();
+          });
+        }
+      });
+    } else {
+      setState(() {
+        _isFetchingPosition = false;
+      });
+    }
+
+    Future.delayed(const Duration(seconds: 6), () {
+      if (mounted && !_isMapReady) {
+        setState(() {
+          _isMapReady = true;
+        });
+      }
+    });
+  }
+
   Future<void> _fetchUserPosition() async {
     try {
-      if (!await PermissionHelper.handlePermission()) {
-        return;
-      }
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -100,39 +133,12 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _fetchUserPosition().then((_) {
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
-      }
-    });
-
-    Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 5,
-      ),
-    ).listen((position) {
-      if (mounted) {
-        setState(() {
-          _currentPosition = position;
-          _isFetchingPosition = false;
-          _fitMapBounds();
-        });
-      }
-    });
-
-    Future.delayed(const Duration(seconds: 6), () {
-      if (mounted && !_isMapReady) {
-        setState(() {
-          _isMapReady = true;
-        });
-      }
-    });
+    _initLocation();
   }
 
   @override
   void dispose() {
-    _geolocation.stopListening();
+    _positionSubscription?.cancel();
     super.dispose();
   }
 
@@ -142,6 +148,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
     final double defaultLat = Config.LAT1;
     final double defaultLon = Config.LON1;
     double userLat = _currentPosition?.latitude ?? defaultLat;

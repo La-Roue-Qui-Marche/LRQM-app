@@ -135,7 +135,7 @@ class _ShareLogState extends State<ShareLog> {
                     child: Text(
                       logs[index],
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontFamily: 'monospace',
                         color: _getLogColor(logs[index]),
                       ),

@@ -42,7 +42,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
         ),
       ),
     );
-    Future.delayed(const Duration(milliseconds: 800), () async {
+    Future.delayed(const Duration(seconds: 2), () async {
       await ContributorsData.saveContributors(widget.contributors);
       int? userId = await UserData.getUserId();
       if (userId != null) {
