@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
@@ -6,20 +7,24 @@ import 'ContributionGraph.dart';
 
 class PersonalInfoCard extends StatefulWidget {
   final bool isSessionActive;
+  final bool isCountingInZone;
   final String logoPath;
   final String bibNumber;
   final String userName;
   final String contribution;
   final String totalTime;
+  final Stream<Map<String, int>> geoStream;
 
   const PersonalInfoCard({
     super.key,
     required this.isSessionActive,
+    required this.isCountingInZone,
     required this.logoPath,
     required this.bibNumber,
     required this.userName,
     required this.contribution,
     required this.totalTime,
+    required this.geoStream,
   });
 
   @override
@@ -28,14 +33,17 @@ class PersonalInfoCard extends StatefulWidget {
 
 class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
   late int _currentContribution;
-  late int _previousContribution;
   final List<Widget> _particles = [];
 
   @override
   void initState() {
     super.initState();
     _currentContribution = _parseDistance(widget.contribution);
-    _previousContribution = _currentContribution;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -52,7 +60,6 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       _spawnParticle("+$diff m");
 
       setState(() {
-        _previousContribution = _currentContribution;
         _currentContribution = newContribution;
       });
     }
@@ -128,10 +135,10 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           _buildHeader(),
           const SizedBox(height: 24),
           _buildInfoCards(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           _buildFunMessage(),
-          const SizedBox(height: 8),
-          if (widget.isSessionActive) const ContributionGraph(),
+          const SizedBox(height: 12),
+          if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
         ],
       ),
     );
@@ -241,20 +248,34 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   Widget _statusBadge() {
+    String statusText;
+    Color badgeColor;
+
+    if (!widget.isSessionActive) {
+      statusText = 'En pause';
+      badgeColor = Colors.grey.shade600;
+    } else if (!widget.isCountingInZone) {
+      statusText = 'Hors Zone';
+      badgeColor = Colors.red.shade400;
+    } else {
+      statusText = 'Actif';
+      badgeColor = Colors.green.shade400;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: widget.isSessionActive ? Colors.green.shade400 : Colors.grey.shade300,
+        color: badgeColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.circle, size: 10, color: widget.isSessionActive ? Colors.white : Colors.grey.shade600),
+          Icon(Icons.circle, size: 10, color: Colors.white),
           const SizedBox(width: 6),
           Text(
-            widget.isSessionActive ? 'Actif' : 'En pause',
-            style: TextStyle(fontSize: 12, color: widget.isSessionActive ? Colors.white : Colors.grey.shade600),
+            statusText,
+            style: const TextStyle(fontSize: 12, color: Colors.white),
           ),
         ],
       ),

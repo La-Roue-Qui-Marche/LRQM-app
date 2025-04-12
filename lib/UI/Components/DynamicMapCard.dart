@@ -6,7 +6,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../Utils/config.dart';
-import '../../Geolocalisation/Geolocation.dart';
 import '../../Utils/Permission.dart';
 
 class DynamicMapCard extends StatefulWidget {
@@ -18,7 +17,6 @@ class DynamicMapCard extends StatefulWidget {
 
 class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAliveClientMixin {
   final MapController _mapController = MapController();
-  final Geolocation _geolocation = Geolocation();
   Position? _currentPosition;
   bool _isFetchingPosition = true;
   bool _isMapReady = false;

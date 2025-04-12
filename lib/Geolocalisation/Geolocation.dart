@@ -83,7 +83,6 @@ class Geolocation with WidgetsBindingObserver {
   bool _isSending = false;
   bool _isCountingInZone = true;
 
-  /// Provides a broadcast stream with keys "time", "distance", and "isCountingInZone" (1 or 0).
   Stream<Map<String, int>> get stream => _streamController.stream;
 
   geo.LocationSettings _getSettings() {
@@ -178,7 +177,7 @@ class Geolocation with WidgetsBindingObserver {
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
     LogHelper.logInfo("[GEO] Update: Lat=$lat, Lng=$lng, Acc=${acc.toStringAsFixed(1)}m");
 
-    // On first update or when a reset is required, simply record the new position.
+    // On first update or when a reset is needed, record the new position.
     if (_resetPosition || _oldPos == null) {
       _saveOldPos(lat, lng, acc, timestamp);
       _resetPosition = false;
@@ -204,33 +203,33 @@ class Geolocation with WidgetsBindingObserver {
     }
 
     final inZone = isLocationInZone(lat, lng);
-
     if (inZone) {
-      // If the user re-enters the zone after having paused counting,
-      // reset the baseline to avoid accumulating a jump.
+      // If the user was previously paused for being outside, log the re-entry.
       if (!_isCountingInZone) {
         LogHelper.logInfo("[ZONE] User re-entered zone, resuming counting. Resetting baseline.");
         _isCountingInZone = true;
-        _outsideCounter = 0;
-        _saveOldPos(lat, lng, acc, timestamp);
-        return;
+      } else if (_outsideCounter > 0) {
+        LogHelper.logInfo("[ZONE] Back in zone. Resetting outside counter.");
       }
-      // In zone: reset outside counter and accumulate distance.
       _outsideCounter = 0;
       _distance += dist;
     } else {
-      // Outside the zone: increment counter.
       _outsideCounter++;
-      if (_outsideCounter > config.outsideCounterMax) {
+      LogHelper.logWarn("[ZONE] Outside zone counter: $_outsideCounter");
+
+      // Allow counting while within grace period.
+      if (_outsideCounter <= config.outsideCounterMax) {
+        _distance += dist;
+      } else {
         if (_isCountingInZone) {
           LogHelper.logError("[ZONE] Outside too long, pausing counting!");
           _isCountingInZone = false;
         }
-        // Do not accumulate distance if already considered "outside."
+        // Once grace period is exceeded, further distance is not counted.
       }
     }
 
-    // Always update the baseline for the next update.
+    // Update baseline regardless.
     _saveOldPos(lat, lng, acc, timestamp);
   }
 
@@ -256,7 +255,6 @@ class Geolocation with WidgetsBindingObserver {
 
     _isSending = true;
     try {
-      // Send chunks no larger than the configured maximum.
       int chunk = diff > config.maxChunkSize ? config.maxChunkSize : diff;
       final response = await NewMeasureController.editMeters(chunk);
       if (response.error != null) {
@@ -273,44 +271,58 @@ class Geolocation with WidgetsBindingObserver {
     }
   }
 
-  /// Attempts to send all remaining unsent distance until the diff is 0.
   Future<void> _sendFinalDiff() async {
-    LogHelper.logInfo("[GEO] Sending final diff before stopping...");
-    while (_distance - _lastSentDistance > 0) {
-      if (!_isSending) {
-        await _attemptToSendDiff();
+    int diff = _distance - _lastSentDistance;
+    if (diff > 0) {
+      LogHelper.logInfo("[GEO] Sending final diff of $diff m before stopping...");
+      try {
+        final response = await NewMeasureController.editMeters(diff);
+        if (response.error != null) {
+          LogHelper.logError("[API] Failed to send final diff: ${response.error}");
+        } else {
+          _lastSentDistance += diff;
+          _totalDistanceSent += diff;
+          LogHelper.logInfo("[API] Sent final diff of $diff m. Total sent=${_totalDistanceSent}m");
+        }
+      } catch (e) {
+        LogHelper.logError("[API] Exception in sending final diff: $e");
       }
-      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      LogHelper.logInfo("[GEO] No final diff to send.");
     }
-    LogHelper.logInfo("[GEO] All meters have been sent; final diff is 0.");
   }
 
   Future<void> stopListening() async {
     if (!_positionStreamStarted) return;
     LogHelper.logInfo("[GEO] Stopping geolocation...");
 
-    // Cancel the position stream.
-    await _positionStream?.cancel();
-    _positionStream = null;
+    try {
+      await _positionStream?.cancel();
+      _positionStream = null;
 
-    // Stop timers.
-    _timeTimer?.cancel();
-    _apiTimer?.cancel();
+      _timeTimer?.cancel();
+      _apiTimer?.cancel();
 
-    // Attempt to send any remaining unsent meters.
-    await _sendFinalDiff();
+      await _sendFinalDiff();
 
-    // Close the stream controller.
-    if (!_streamController.isClosed) {
-      _streamController.close();
+      if (!_streamController.isClosed) {
+        _streamController.close();
+      }
+
+      await bg.BackgroundLocation.stopLocationService();
+      _positionStreamStarted = false;
+
+      final result = await NewMeasureController.stopMeasure();
+      if (result.value == true) {
+        LogHelper.logInfo("[GEO] Measure stopped successfully.");
+      } else {
+        LogHelper.logError("[GEO] Failed to stop measure: ${result.error}");
+      }
+    } catch (e) {
+      LogHelper.logError("[GEO] Exception during stopListening: $e");
+    } finally {
+      LogHelper.logInfo("[GEO] Geolocation stopped.");
     }
-
-    // Drain any residual position stream and stop the background service.
-    await geo.Geolocator.getPositionStream().drain();
-    await bg.BackgroundLocation.stopLocationService();
-
-    _positionStreamStarted = false;
-    log("[GEO] Geolocation stopped.");
   }
 
   bool isLocationInZone(double lat, double lng) {

@@ -1,12 +1,12 @@
-import 'dart:async';
-import 'dart:developer';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../Utils/config.dart';
-import '../../Geolocalisation/Geolocation.dart';
 
 class ContributionGraph extends StatefulWidget {
-  const ContributionGraph({super.key});
+  final Stream<Map<String, int>> geoStream; // Stream passed as a parameter
+
+  const ContributionGraph({super.key, required this.geoStream});
 
   @override
   ContributionGraphState createState() => ContributionGraphState();
@@ -14,54 +14,51 @@ class ContributionGraph extends StatefulWidget {
 
 class ContributionGraphState extends State<ContributionGraph> {
   final List<FlSpot> _graphData = [];
-  int _lastTotalDistance = 0;
-  Timer? _updateTimer; // Timer for periodic updates.
-
   static const int maxGraphPoints = 150;
+  static const int updateIntervalSeconds = 10; // Interval for calculating the diff
+  int _lastDistance = 0; // Track the last distance value
+  int _accumulatedDistance = 0; // Accumulate distance over the interval
+  Timer? _updateTimer; // Timer to trigger updates every 10 seconds
 
   @override
   void initState() {
     super.initState();
-    _startPeriodicUpdates();
-  }
 
-  void _startPeriodicUpdates() {
-    final geolocation = Geolocation(); // Singleton instance
-    log('Starting periodic updates for ContributionGraph...');
-    _updateTimer?.cancel(); // Cancel any existing timer before starting a new one
-    _updateTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      final totalDistance = geolocation.totalDistance;
-      log('Total distance fetched: $totalDistance');
-      final diff = totalDistance - _lastTotalDistance;
-      final diffmms = (diff / 10).toDouble();
-      _lastTotalDistance = totalDistance;
-
-      setState(() {
-        if (_graphData.length >= maxGraphPoints) {
-          _graphData.removeAt(0);
-          // Shift all X values back to keep the graph clean
-          for (int i = 0; i < _graphData.length; i++) {
-            _graphData[i] = FlSpot(i.toDouble(), _graphData[i].y);
-          }
-        }
-
-        _graphData.add(FlSpot(_graphData.length.toDouble(), diffmms));
-      });
+    // Listen to the stream and accumulate distance
+    widget.geoStream.listen((event) {
+      final currentDistance = event["distance"] ?? 0;
+      final diff = currentDistance - _lastDistance; // Calculate the difference
+      _lastDistance = currentDistance; // Update the last distance
+      _accumulatedDistance += diff; // Accumulate the difference
     });
-  }
 
-  void stopAndClearGraph() {
-    _updateTimer?.cancel();
-    setState(() {
-      _graphData.clear();
-      _lastTotalDistance = 0;
-    });
+    // Set up a timer to update the graph every 10 seconds
+    _updateTimer = Timer.periodic(
+      const Duration(seconds: updateIntervalSeconds),
+      (_) {
+        _addContributionValue(_accumulatedDistance.toDouble() / 10);
+        _accumulatedDistance = 0; // Reset the accumulated distance
+      },
+    );
   }
 
   @override
   void dispose() {
-    _updateTimer?.cancel(); // Cancel the timer to avoid memory leaks
+    _updateTimer?.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
+  }
+
+  void _addContributionValue(double contribution) {
+    setState(() {
+      if (_graphData.length >= maxGraphPoints) {
+        _graphData.removeAt(0);
+        // Shift all X values back to keep the graph clean
+        for (int i = 0; i < _graphData.length; i++) {
+          _graphData[i] = FlSpot(i.toDouble(), _graphData[i].y);
+        }
+      }
+      _graphData.add(FlSpot(_graphData.length.toDouble(), contribution));
+    });
   }
 
   @override

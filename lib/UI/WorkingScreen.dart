@@ -10,7 +10,6 @@ import 'Components/TextModal.dart';
 import 'SetupPosScreen.dart';
 import 'LoadingScreen.dart';
 import 'SummaryScreen.dart';
-import 'LoginScreen.dart';
 
 import '../Utils/Result.dart';
 import '../Utils/config.dart';
@@ -18,13 +17,11 @@ import '../Geolocalisation/Geolocation.dart';
 
 import '../API/NewEventController.dart';
 import '../API/NewUserController.dart';
-import '../API/NewMeasureController.dart';
 
 import '../Data/EventData.dart';
 import '../Data/UserData.dart';
 import '../Data/MeasureData.dart';
 import '../Data/ContributorsData.dart';
-import '../Data/DataUtils.dart';
 
 import 'Components/NavBar.dart';
 import 'Components/DynamicMapCard.dart';
@@ -81,18 +78,16 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   final ScrollController _parentScrollController = ScrollController();
 
-  Geolocation _geolocation = Geolocation();
+  late GeolocationConfig _geoConfig;
+  late Geolocation _geolocation;
+
   int _distance = 0;
 
-  /// Event meters goal
   int? _metersGoal;
-
-  Timer? _eventRefreshTimer; // Timer for event refresh
-
-  bool _isEventOver = false; // Flag to track if the event is over
-
-  /// Add a state variable to track if a measure is ongoing
+  Timer? _eventRefreshTimer;
+  bool _isEventOver = false;
   bool _isMeasureOngoing = false;
+  bool _isCountingInZone = true;
 
   /// Function to check if a measure is ongoing and update the state
   Future<void> _updateMeasureStatus() async {
@@ -133,20 +128,8 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       if (await MeasureData.isMeasureOngoing()) {
         try {
           _geolocation.stopListening();
-          await NewMeasureController.stopMeasure();
         } catch (e) {
           log("Failed to stop measure: $e");
-        }
-      }
-
-      if (await MeasureData.isMeasureOngoing()) {
-        String? measureId = await MeasureData.getMeasureId();
-        final stopResult = await NewMeasureController.stopMeasure();
-        if (stopResult.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Échec de l'arrêt de la mesure (ID: $measureId): ${stopResult.error}")),
-          );
-          return;
         }
       }
 
@@ -184,7 +167,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       if (value.hasError) {
         throw Exception("Could not fetch value because : ${value.error}");
       } else {
-        log("Value: ${value.value}");
         return value.value!;
       }
     }).onError((error, stackTrace) {
@@ -209,18 +191,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     return elapsed.inSeconds / totalDuration.inSeconds * 100;
   }
 
-  /// Function to calculate the percentage of total distance
-  double _calculateTotalDistancePercentage() {
-    if (_metersGoal == null || _metersGoal == 0) return 0.0;
-    return (_distanceTotale ?? 0) / _metersGoal! * 100;
-  }
-
-  /// Function to calculate the percentage of total distance based on event meters goal
-  double _calculateRealProgress() {
-    if (_metersGoal == null || _metersGoal == 0) return 0.0;
-    return (_distanceTotale ?? 0) / _metersGoal! * 100;
-  }
-
   String _formatDistance(int distance) {
     return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}\'');
   }
@@ -228,6 +198,18 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
+
+    _geoConfig = GeolocationConfig(
+      locationUpdateInterval: Config.LOCATION_UPDATE_INTERVAL,
+      locationDistanceFilter: Config.LOCATION_DISTANCE_FILTER,
+      maxChunkSize: Config.MAX_CHUNK_SIZE,
+      accuracyThreshold: Config.ACCURACY_THRESHOLD,
+      distanceThreshold: Config.DISTANCE_THRESHOLD,
+      speedThreshold: Config.SPEED_THRESHOLD,
+      apiInterval: Config.API_INTERVAL,
+      outsideCounterMax: Config.OUTSIDE_COUNTER_MAX,
+    );
+    _geolocation = Geolocation(config: _geoConfig);
 
     // Retrieve the event start and end times
     EventData.getStartDate().then((startDate) {
@@ -297,12 +279,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           if (event["distance"] == -1) {
             log("Stream event: $event");
             _geolocation.stopListening();
-            NewMeasureController.stopMeasure();
           } else {
             if (mounted) {
               setState(() {
                 _distance = event["distance"] ?? 0;
                 _sessionTimePerso = event["time"];
+                _isCountingInZone = (event["isCountingInZone"] ?? 1) == 1;
               });
             }
           }
@@ -374,7 +356,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       }
     });
 
-    // Timer to refresh "Informations sur l'évènement" values every second
     _startEventRefreshTimer();
   }
 
@@ -382,43 +363,48 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     _eventRefreshTimer?.cancel(); // Cancel any existing timer
     _eventRefreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
       if (mounted) {
-        _refreshEventValues(); // Always refresh values when on the screen
+        _refreshEventValues();
       }
     });
   }
 
   void _stopEventRefreshTimer() {
-    _eventRefreshTimer?.cancel(); // Stop the timer
+    _eventRefreshTimer?.cancel();
     _eventRefreshTimer = null;
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    _stopEventRefreshTimer(); // Stop refreshing when leaving the screen
+    _stopEventRefreshTimer();
   }
 
   @override
   void activate() {
     super.activate();
-    _startEventRefreshTimer(); // Restart refreshing when returning to the screen
+    _startEventRefreshTimer();
   }
 
   void _navigateToScreen(Widget screen) {
-    _stopEventRefreshTimer(); // Stop the timer before navigating
+    _stopEventRefreshTimer();
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => screen),
     ).then((_) {
-      _startEventRefreshTimer(); // Restart the timer when returning
+      _startEventRefreshTimer();
     });
+  }
+
+  void _startSetupPosScreen() {
+    _navigateToScreen(SetupPosScreen(geolocation: _geolocation));
   }
 
   @override
   void dispose() {
     log("Dispose");
     _timer?.cancel();
-    _stopEventRefreshTimer(); // Ensure the event refresh timer is stopped
+    _stopEventRefreshTimer();
+    _geolocation.stopListening();
     super.dispose();
   }
 
@@ -558,8 +544,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           ),
         );
         try {
-          _geolocation.stopListening();
-          await NewMeasureController.stopMeasure();
+          await _geolocation.stopListening(); // Ensure stopListening is awaited
         } catch (e) {
           log("Failed to stop measure: $e");
         }
@@ -627,9 +612,10 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0.0), // Remove horizontal padding
+                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
                             child: PersonalInfoCard(
                               isSessionActive: _isMeasureOngoing,
+                              isCountingInZone: _isCountingInZone,
                               logoPath: _isMeasureOngoing
                                   ? 'assets/pictures/LogoSimpleAnimated.gif'
                                   : 'assets/pictures/LogoSimple.png',
@@ -641,6 +627,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                               totalTime: _totalTimePerso != null || _isMeasureOngoing
                                   ? '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s'
                                   : '',
+                              geoStream: _geolocation.stream, // Pass the geolocation stream
                             ),
                           ),
                           const DynamicMapCard(), // Add the DynamicMapCard widget here
@@ -657,7 +644,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                                 ),
                               ),
                             ),
-                          const SizedBox(height: 32), // Add margin before the text
+                          const SizedBox(height: 32),
                         ],
                       ),
                     ),
@@ -668,9 +655,8 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                         padding: const EdgeInsets.symmetric(horizontal: 0.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            // Use the new component
                             Container(
                               child: EventProgressCard(
                                 objectif: _metersGoal != null && _metersGoal != -1
@@ -714,13 +700,13 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                     _animateToPage(page);
                   });
                 },
-                isMeasureActive: _isMeasureOngoing, // Pass the active state
-                canStartNewSession: !_isEventOver, // Disable start button if event is over
+                isMeasureActive: _isMeasureOngoing,
+                canStartNewSession: !_isEventOver,
                 onStartStopPressed: () {
                   if (_isMeasureOngoing) {
-                    _confirmStopMeasure(context); // Stop the measure
+                    _confirmStopMeasure(context);
                   } else {
-                    _navigateToScreen(const SetupPosScreen()); // Start a new measure
+                    _startSetupPosScreen();
                   }
                 },
               ),

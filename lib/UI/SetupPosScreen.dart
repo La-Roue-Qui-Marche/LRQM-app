@@ -19,7 +19,9 @@ import '../API/NewMeasureController.dart';
 import '../Data/MeasureData.dart';
 
 class SetupPosScreen extends StatefulWidget {
-  const SetupPosScreen({super.key});
+  final Geolocation geolocation;
+
+  const SetupPosScreen({super.key, required this.geolocation});
 
   @override
   _SetupPosScreenState createState() => _SetupPosScreenState();
@@ -84,12 +86,12 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         }
       }
 
-      if (await Geolocation().isInZone()) {
+      if (await widget.geolocation.isInZone()) {
         if (canStartNewMeasure) {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const SetupTeamScreen()));
         }
       } else {
-        final distance = await Geolocation().distanceToZone();
+        final distance = await widget.geolocation.distanceToZone();
         showTextModal(
           context,
           "Hors zone",
