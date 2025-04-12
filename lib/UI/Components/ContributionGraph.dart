@@ -149,11 +149,12 @@ class ContributionGraphState extends State<ContributionGraph> {
           ),
           SizedBox(height: hasEnoughData ? 6 : 12),
           if (!hasEnoughData)
-            const Center(
+            const Padding(
+              padding: EdgeInsets.only(left: 8.0),
               child: Text(
-                "Continue à marcher pour voir ta progression !",
+                "Continue à d'avancer pour voir ta progression !",
                 style: TextStyle(fontSize: 13, color: Colors.black45),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
               ),
             ),
         ],

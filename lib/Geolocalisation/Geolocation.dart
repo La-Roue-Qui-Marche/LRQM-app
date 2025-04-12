@@ -69,7 +69,6 @@ class Geolocation with WidgetsBindingObserver {
   late geo.LocationSettings _settings;
   geo.Position? _oldPos;
   StreamSubscription<geo.Position>? _positionStream;
-  Timer? _timeTimer;
   Timer? _apiTimer;
   final StreamController<Map<String, int>> _streamController = StreamController<Map<String, int>>.broadcast();
 
@@ -108,6 +107,8 @@ class Geolocation with WidgetsBindingObserver {
     }
   }
 
+  int get _elapsedTimeInSeconds => DateTime.now().difference(_startTime).inSeconds;
+
   Future<void> startListening() async {
     LogHelper.logInfo("[GEO] Starting geolocation...");
     if (_positionStreamStarted || !(await PermissionHelper.checkPermissionAlways())) {
@@ -126,23 +127,24 @@ class Geolocation with WidgetsBindingObserver {
     _oldPos = await geo.Geolocator.getCurrentPosition();
     _resetPosition = false;
 
-    _timeTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!_streamController.isClosed) {
-        _streamController.sink.add({
-          "time": _elapsedTimeInSeconds,
-          "distance": _distance,
-          "isCountingInZone": _isCountingInZone ? 1 : 0,
-        });
-      }
-    });
-
+    // Start listening to location updates.
     _startPositionStream();
 
+    // Timer used for API calls to send the distance diff.
     _apiTimer = Timer.periodic(config.apiInterval, (_) {
       _attemptToSendDiff();
     });
 
     LogHelper.logInfo("[GEO] Geolocation started in foreground.");
+
+    // Optionally, you can send an initial update to the stream here:
+    if (!_streamController.isClosed) {
+      _streamController.sink.add({
+        "time": _elapsedTimeInSeconds,
+        "distance": _distance,
+        "isCountingInZone": _isCountingInZone ? 1 : 0,
+      });
+    }
   }
 
   void _startPositionStream() {
@@ -151,8 +153,6 @@ class Geolocation with WidgetsBindingObserver {
       LogHelper.logError("[GEO] Position stream error: $error");
     });
   }
-
-  int get _elapsedTimeInSeconds => DateTime.now().difference(_startTime).inSeconds;
 
   void _handleForegroundUpdate(geo.Position position) {
     LogHelper.logInfo("[GEO] Handling foreground update...");
@@ -177,10 +177,17 @@ class Geolocation with WidgetsBindingObserver {
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
     LogHelper.logInfo("[GEO] Update: Lat=$lat, Lng=$lng, Acc=${acc.toStringAsFixed(1)}m");
 
-    // On first update or when a reset is needed, record the new position.
+    // On first update or when a reset is needed, record the new position and send an update.
     if (_resetPosition || _oldPos == null) {
       _saveOldPos(lat, lng, acc, timestamp);
       _resetPosition = false;
+      if (!_streamController.isClosed) {
+        _streamController.sink.add({
+          "time": _elapsedTimeInSeconds,
+          "distance": _distance,
+          "isCountingInZone": _isCountingInZone ? 1 : 0,
+        });
+      }
       return;
     }
 
@@ -231,6 +238,15 @@ class Geolocation with WidgetsBindingObserver {
 
     // Update baseline regardless.
     _saveOldPos(lat, lng, acc, timestamp);
+
+    // Emit update only when a new valid reading is processed.
+    if (!_streamController.isClosed) {
+      _streamController.sink.add({
+        "time": _elapsedTimeInSeconds,
+        "distance": _distance,
+        "isCountingInZone": _isCountingInZone ? 1 : 0,
+      });
+    }
   }
 
   void _saveOldPos(double lat, double lng, double acc, DateTime timestamp) {
@@ -300,7 +316,7 @@ class Geolocation with WidgetsBindingObserver {
       await _positionStream?.cancel();
       _positionStream = null;
 
-      _timeTimer?.cancel();
+      // Cancel API timer.
       _apiTimer?.cancel();
 
       await _sendFinalDiff();
