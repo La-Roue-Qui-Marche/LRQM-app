@@ -89,3 +89,11 @@ jobs:
         with:
           name: LRQM-app-iOS
           path: build/ios/ipa/*.ipa
+
+      - name: 📤 Upload IPA to App Store
+        run: |
+            xcrun altool --upload-app \
+              --type ios \
+              --file build/ios/ipa/Runner.ipa \
+              --username "${{ secrets.APP_STORE_CONNECT_USERNAME }}" \
+              --password "${{ secrets.APP_SPECIFIC_PASSWORD }}"
