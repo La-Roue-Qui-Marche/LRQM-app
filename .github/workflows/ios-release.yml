@@ -83,6 +83,7 @@ jobs:
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
             -exportOptionsPlist ios/ExportOptions.plist
+          mv build/ios/ipa/La\ RQM.ipa build/ios/ipa/LRQM.ipa
 
       - name: 📤 Upload IPA Artifact
         uses: actions/upload-artifact@v4
@@ -94,6 +95,6 @@ jobs:
         run: |
             xcrun altool --upload-app \
               --type ios \
-              --file build/ios/ipa/La RQM.ipa \
+              --file build/ios/ipa/LRQM.ipa \
               --username "${{ secrets.APP_STORE_CONNECT_USERNAME }}" \
               --password "${{ secrets.APP_SPECIFIC_PASSWORD }}"
