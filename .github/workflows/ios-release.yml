@@ -46,56 +46,10 @@ jobs:
           security unlock-keychain -p "" build.keychain
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-      - name: 🧾 Install Provisioning Profile
-        run: mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles && cp provisioning_profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: 🔎 Check Code Signing Identity
-        run: security find-identity -p codesigning build.keychain
-
-      - name: 📦 Validate Xcode
-        run: xcodebuild -version
-
-      - name: 🧰 Run Flutter Doctor
-        run: flutter doctor
-
-      - name: 🧹 Clean Flutter Project
-        run: flutter clean
-
-      - name: 📱 Build iOS App (No Code Signing)
-        run: flutter build ios --release --no-codesign
-
-      - name: 📦 Archive the App
-        timeout-minutes: 10
-        run: |
-          set -x
-          xcodebuild archive \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="ch.larouequimarche.app"
-
-      - name: 🔏 Sign and Export IPA
-        run: |
-          xcodebuild -exportArchive \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist ios/ExportOptions.plist
-
-      - name: 📤 Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: LRQM-app-iOS
-          path: build/ios/ipa/*.ipa
-
       - name: 📦 Install Fastlane
-        run: |
-          sudo gem install fastlane -NV
+        run: sudo gem install fastlane -NV
 
-      - name: 🚀 Upload to App Store
+      - name: 🚀 Build, Sign, and Upload to App Store
         run: |
           cd ios
-          set -x
-          fastlane ios upload_to_app_store
+          fastlane ios build_and_upload
