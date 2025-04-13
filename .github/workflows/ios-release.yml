@@ -95,6 +95,7 @@ jobs:
           sudo gem install fastlane -NV
 
       - name: 🚀 Upload to App Store
+        working-directory: ios
         run: |
           set -x
           fastlane ios upload_to_app_store
