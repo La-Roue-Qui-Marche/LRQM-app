@@ -89,3 +89,12 @@ jobs:
         with:
           name: LRQM-app-iOS
           path: build/ios/ipa/*.ipa
+
+      - name: 📦 Install Fastlane
+        run: |
+          sudo gem install fastlane -NV
+
+      - name: 🚀 Upload to App Store
+        run: |
+          set -x
+          fastlane ios upload_to_app_store

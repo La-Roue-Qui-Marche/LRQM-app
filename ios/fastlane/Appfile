@@ -1,0 +1,7 @@
+app_identifier("ch.larouequimarche.app") # The bundle identifier of your app
+apple_id("n@4fontaine.ch") # Your Apple Developer Portal username
+team_id("A62XTQWNJJ")
+
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile
