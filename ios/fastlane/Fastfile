@@ -11,7 +11,7 @@ platform :ios do
 
     # Archive the app
     build_app(
-      workspace: "ios/Runner.xcworkspace",
+      workspace: "Runner.xcworkspace",
       scheme: "Runner",
       configuration: "Release",
       export_options: {
