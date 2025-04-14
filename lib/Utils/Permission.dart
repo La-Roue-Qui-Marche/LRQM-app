@@ -1,46 +1,33 @@
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart'; // ADD THIS
+import 'package:permission_handler/permission_handler.dart';
 import '../Utils/LogHelper.dart';
 
 class PermissionHelper {
-  static Future<bool> handlePermission() async {
-    final GeolocatorPlatform geoPlatform = GeolocatorPlatform.instance;
-    if (!await geoPlatform.isLocationServiceEnabled()) {
-      LogHelper.logError("[PERMISSION] Location services are disabled.");
-      return false;
+  // ----------------------------
+  // LOCATION PERMISSION
+  // ----------------------------
+  static Future<bool> requestLocationPermission() async {
+    if (await Permission.locationAlways.status.isGranted) return true;
+
+    var status = await Permission.location.status;
+    if (status.isDenied) {
+      status = await Permission.locationWhenInUse.request();
     }
-    LocationPermission permission = await geoPlatform.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await geoPlatform.requestPermission();
-      if (permission == LocationPermission.denied) {
-        LogHelper.logError("[PERMISSION] Location permission denied by user.");
+
+    if (status.isGranted) {
+      LogHelper.logInfo("[PERMISSION] Location whileInUse permission granted: $status");
+      var alwaysStatus = await Permission.locationAlways.request();
+      if (alwaysStatus.isGranted) {
+        LogHelper.logInfo("[PERMISSION] Location always permission granted $alwaysStatus");
+        return true;
+      } else {
+        LogHelper.logInfo("[PERMISSION] Location always permission refuse $alwaysStatus");
         return false;
       }
     }
-    if (permission == LocationPermission.deniedForever) {
-      LogHelper.logError("[PERMISSION] Location permission permanently denied.");
-      return false;
-    }
 
-    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-      LogHelper.logWarn("[PERMISSION] Location permission granted: $permission");
-      return true;
-    }
-
-    LogHelper.logError("[PERMISSION] Unexpected permission state: $permission");
+    LogHelper.logError("[PERMISSION] Unexpected permission state: $status");
     return false;
-  }
-
-  static Future<bool> checkPermissionAlways() async {
-    final permission = await Geolocator.checkPermission();
-    return permission == LocationPermission.always;
-  }
-
-  static Future<LocationPermission> requestLocationPermission() async {
-    LogHelper.logInfo("[PERMISSION] Requesting location permission...");
-    final permission = await Geolocator.requestPermission();
-    LogHelper.logInfo("[PERMISSION] User responded with: $permission");
-    return permission;
   }
 
   static Future<void> openLocationSettings() async {
@@ -69,5 +56,13 @@ class PermissionHelper {
     }
     LogHelper.logError("[PERMISSION] Unknown camera permission status: $status");
     return false;
+  }
+
+  static Future<void> openCameraSettings() async {
+    LogHelper.logInfo("[PERMISSION] Opening settings...");
+    final success = await openAppSettings();
+    if (!success) {
+      LogHelper.logError("[PERMISSION] Failed to open settings.");
+    }
   }
 }

@@ -111,7 +111,7 @@ class Geolocation with WidgetsBindingObserver {
 
   Future<void> startListening() async {
     LogHelper.logInfo("[GEO] Starting geolocation...");
-    if (_positionStreamStarted || !(await PermissionHelper.checkPermissionAlways())) {
+    if (_positionStreamStarted || !(await PermissionHelper.requestLocationPermission())) {
       LogHelper.logError("Permission not granted or already started.");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
@@ -380,7 +380,7 @@ class Geolocation with WidgetsBindingObserver {
     await _positionStream?.cancel();
     await Future.delayed(config.backgroundSwitchDelay);
 
-    if (!await PermissionHelper.checkPermissionAlways()) {
+    if (!await PermissionHelper.requestLocationPermission()) {
       LogHelper.logError("[BG] Permission lost while switching to background!");
       return;
     }
@@ -402,7 +402,7 @@ class Geolocation with WidgetsBindingObserver {
     }
 
     _resetPosition = true;
-    if (!await PermissionHelper.checkPermissionAlways()) {
+    if (!await PermissionHelper.requestLocationPermission()) {
       LogHelper.logError("[FG] Permission lost while switching to foreground!");
       return;
     }
