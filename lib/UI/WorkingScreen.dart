@@ -599,7 +599,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           children: [
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 95.0), // Reserve space for NavBar and START/STOP button
+                padding: const EdgeInsets.only(bottom: 0.0), // Reserve space for NavBar and START/STOP button
                 child: PageView(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures

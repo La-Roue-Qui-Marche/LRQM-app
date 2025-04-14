@@ -22,10 +22,10 @@ class NavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // Removed SafeArea
-      padding: const EdgeInsets.only(top: 16, bottom: 24, left: 12, right: 12), // Adjusted top padding
+      padding: const EdgeInsets.only(top: 12, bottom: 24, left: 12, right: 12), // Adjusted top padding
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -86,7 +86,7 @@ class NavBar extends StatelessWidget {
           SvgPicture.asset(
             selected ? svgActive : svgInactive,
             color: selected ? Theme.of(context).primaryColor : Colors.black54,
-            width: 28,
+            width: 320,
             height: 28,
           ),
           const SizedBox(height: 4),
