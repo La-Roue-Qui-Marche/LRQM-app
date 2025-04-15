@@ -31,10 +31,11 @@ jobs:
       - name: 📊 Extract Version from pubspec.yaml
         id: extract_version
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | cut -d '+' -f1)
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Using version: $VERSION and build number: ${{ github.run_number }}"
 
-      - name: 🔢 Set Build Number
+      - name: 🔢 Set Build Number for iOS
         run: |
           cat >> ios/Flutter/Generated.xcconfig << EOF
           FLUTTER_BUILD_NUMBER=${{ github.run_number }}

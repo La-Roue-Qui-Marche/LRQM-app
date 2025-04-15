@@ -14,12 +14,11 @@ jobs:
   build-and-release:
     name: Build and Release Android App
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
-      - name: 📥 Checkout Code
+      - name: 🧾 Checkout Code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🔧 Set up Flutter
         uses: subosito/flutter-action@v2
@@ -43,10 +42,11 @@ jobs:
       - name: 🔍 Extract Version from pubspec.yaml
         id: extract_version
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | cut -d '+' -f1)
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Using version: $VERSION and build number: ${{ github.run_number }}"
 
-      - name: 🔢 Set Build Number
+      - name: 🔢 Configure Android Build Number
         run: |
           echo "flutter.versionCode=${{ github.run_number }}" >> android/local.properties
           echo "flutter.versionName=${{ env.VERSION }}+${{ github.run_number }}" >> android/local.properties
@@ -54,7 +54,7 @@ jobs:
       - name: 📱 Build Android APK
         run: flutter build apk --release
 
-      - name: 📦 Build Android App Bundle
+      - name: 📱 Build Android App Bundle
         run: flutter build appbundle --release
 
       - name: 🚀 Upload Artifact
