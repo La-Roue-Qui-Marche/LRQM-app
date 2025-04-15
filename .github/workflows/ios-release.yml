@@ -49,7 +49,7 @@ jobs:
       - name: 🧾 Install Provisioning Profile
         run: mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles && cp provisioning_profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      - name: 🔎 Check Code Signing Identity
+      - name: 🔎 Validate Code Signing
         run: security find-identity -p codesigning build.keychain
 
       - name: 📦 Validate Xcode
@@ -62,20 +62,28 @@ jobs:
         run: flutter clean
 
       - name: 📱 Build iOS App (No Code Signing)
-        run: flutter build ios --release --no-codesign
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_on: timeout
+          command: flutter build ios --release --no-codesign
 
       - name: 📦 Archive the App
-        timeout-minutes: 10
-        run: |
-          set -x
-          xcodebuild archive \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="ch.larouequimarche.app"
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_on: timeout
+          command: |
+            xcodebuild archive \
+              -workspace ios/Runner.xcworkspace \
+              -scheme Runner \
+              -configuration Release \
+              -archivePath build/ios/archive/Runner.xcarchive \
+              CODE_SIGN_STYLE=Manual \
+              CODE_SIGN_IDENTITY="iPhone Distribution" \
+              PROVISIONING_PROFILE_SPECIFIER="ch.larouequimarche.app"
 
       - name: 🔏 Sign and Export IPA
         run: |
@@ -83,9 +91,18 @@ jobs:
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
             -exportOptionsPlist ios/ExportOptions.plist
+          mv build/ios/ipa/La\ RQM.ipa build/ios/ipa/LRQM.ipa
 
       - name: 📤 Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: LRQM-app-iOS
           path: build/ios/ipa/*.ipa
+
+      - name: 📤 Upload IPA to App Store
+        run: |
+            xcrun altool --upload-app \
+              --type ios \
+              --file build/ios/ipa/LRQM.ipa \
+              --username "${{ secrets.APP_STORE_CONNECT_USERNAME }}" \
+              --password "${{ secrets.APP_SPECIFIC_PASSWORD }}"
