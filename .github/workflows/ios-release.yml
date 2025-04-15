@@ -39,14 +39,6 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Using version: $VERSION and build number: ${{ github.run_number }}"
 
-      - name: 🔢 Set Build Number for iOS
-        run: |
-          ls ios/Flutter
-          cat >> ios/Flutter/Generated.xcconfig << EOF
-          FLUTTER_BUILD_NUMBER=${{ github.run_number }}
-          FLUTTER_BUILD_NAME=${{ env.VERSION }}
-          EOF
-
       - name: 🔐 Decode Certificate and Provisioning Profile
         run: |
           echo "${{ secrets.IOS_SIGNING_CERTIFICATE }}" | base64 -d > certificate.p12
@@ -76,14 +68,6 @@ jobs:
       - name: 🧹 Clean Flutter Project
         run: flutter clean
 
-      - name: 🔍 Debug Version Variables
-        run: |
-          echo "FLUTTER_BUILD_NAME from env: ${{ env.VERSION }}"
-          echo "FLUTTER_BUILD_NUMBER from github: ${{ github.run_number }}"
-          ls ios
-          ls ios/Flutter
-          cat ios/Flutter/Generated.xcconfig
-
       - name: 📱 Build iOS App (No Code Signing)
         uses: nick-fields/retry@v3
         with:
@@ -92,12 +76,6 @@ jobs:
           retry_on: timeout
           command: flutter build ios --release --no-codesign
 
-      - name: 🔍 Debug Version Variables
-        run: |
-          echo "FLUTTER_BUILD_NAME from env: ${{ env.VERSION }}"
-          echo "FLUTTER_BUILD_NUMBER from github: ${{ github.run_number }}"
-          cat ios/Flutter/Generated.xcconfig
-  
       - name: 📦 Archive the App
         uses: nick-fields/retry@v3
         with:
