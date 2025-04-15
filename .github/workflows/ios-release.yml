@@ -32,12 +32,11 @@ jobs:
         run: pod install --repo-update
         working-directory: ios
 
-      - name: 📊 Extract Version from pubspec.yaml
-        id: extract_version
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Using version: $VERSION and build number: ${{ github.run_number }}"
+      - uses: yanamura/ios-bump-version@v1
+        with:
+          version: ''
+          build-number: ${{github.run_number}}
+          project-path: ios
 
       - name: 🔐 Decode Certificate and Provisioning Profile
         run: |
