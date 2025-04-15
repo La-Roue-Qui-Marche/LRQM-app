@@ -1,3 +1,6 @@
+[![iOS Release](https://github.com/La-Roue-Qui-Marche/LRQM-app/actions/workflows/ios-release.yml/badge.svg?branch=main)](https://github.com/La-Roue-Qui-Marche/LRQM-app/actions/workflows/ios-release.yml)
+[![Android Release](https://github.com/La-Roue-Qui-Marche/LRQM-app/actions/workflows/android-release.yml/badge.svg?branch=main)](https://github.com/La-Roue-Qui-Marche/LRQM-app/actions/workflows/android-release.yml)
+
 # LRQM Mobile Application
 
 Welcome to the **LRQM Mobile Application**, designed to support the "Objectif 2'000'000 m" project. This app is built with Flutter and works seamlessly with the [LRQM Server](https://github.com/chloefont/LRQM-server).
