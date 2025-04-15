@@ -119,25 +119,25 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
         children: [
           Row(
             children: [
-              const Icon(Icons.volunteer_activism_outlined, color: Colors.pinkAccent),
+              const Icon(Icons.volunteer_activism, color: Colors.pinkAccent),
               const SizedBox(width: 8),
               const Text(
                 'Ta contribution à l\'événement',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           _buildHeader(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           _buildInfoCards(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _buildFunMessage(),
-          const SizedBox(height: 12),
+          if (widget.isSessionActive) const SizedBox(height: 12),
+          if (widget.isSessionActive) Divider(color: Colors.grey.shade300, thickness: 1),
           if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
         ],
       ),
@@ -180,18 +180,26 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   Widget _buildInfoCards() {
     return Row(
       children: [
-        _infoCard(
-          label: 'Contribution',
-          value: widget.contribution.isNotEmpty
-              ? "${_formatDistance(_currentContribution)} m"
-              : null, // Pass null to trigger shimmer
-          color: const Color(Config.COLOR_APP_BAR),
+        Expanded(
+          child: _infoCard(
+            label: 'Contribution',
+            value: widget.contribution.isNotEmpty
+                ? "${_formatDistance(_currentContribution)} m"
+                : null, // Pass null to trigger shimmer
+            color: const Color(Config.COLOR_APP_BAR),
+          ),
         ),
-        const SizedBox(width: 12),
-        _infoCard(
-          label: 'Temps total',
-          value: widget.totalTime.isNotEmpty ? widget.totalTime : null,
-          color: const Color(Config.COLOR_BUTTON),
+        Container(
+          width: 1,
+          height: 40,
+          color: Colors.grey.shade300,
+        ),
+        Expanded(
+          child: _infoCard(
+            label: 'Temps total',
+            value: widget.totalTime.isNotEmpty ? widget.totalTime : null,
+            color: const Color(Config.COLOR_APP_BAR),
+          ),
         ),
       ],
     );
@@ -208,26 +216,20 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   Widget _infoCard({required String label, String? value, required Color color}) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 14, color: Colors.black54)),
-            const SizedBox(height: 4),
-            value != null && value.isNotEmpty
-                ? Text(
-                    value,
-                    style: const TextStyle(fontSize: 18, color: Color(Config.COLOR_APP_BAR)),
-                  )
-                : _buildShimmer(width: 60),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+          const SizedBox(height: 4),
+          value != null && value.isNotEmpty
+              ? Text(
+                  value,
+                  style: TextStyle(fontSize: 18, color: color),
+                )
+              : _buildShimmer(width: 60),
+        ],
       ),
     );
   }
@@ -253,7 +255,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
     if (!widget.isSessionActive) {
       statusText = 'En pause';
-      badgeColor = Colors.grey.shade600;
+      badgeColor = Colors.grey.shade400;
     } else if (!widget.isCountingInZone) {
       statusText = 'Hors Zone';
       badgeColor = Colors.red.shade400;

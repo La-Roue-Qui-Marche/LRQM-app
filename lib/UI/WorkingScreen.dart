@@ -597,95 +597,90 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         ),
         body: Stack(
           children: [
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 0.0), // Reserve space for NavBar and START/STOP button
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
-                  children: [
-                    // Page 1: Informations personnelles
-                    SingleChildScrollView(
-                      controller: _parentScrollController,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 0.0), // Reserve space for NavBar and START/STOP button
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
+                children: [
+                  // Page 1: Informations personnelles
+                  SingleChildScrollView(
+                    controller: _parentScrollController,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                          child: PersonalInfoCard(
+                            isSessionActive: _isMeasureOngoing,
+                            isCountingInZone: _isCountingInZone,
+                            logoPath: _isMeasureOngoing
+                                ? 'assets/pictures/LogoSimpleAnimated.gif'
+                                : 'assets/pictures/LogoSimple.png',
+                            bibNumber: _dossard.isNotEmpty ? _dossard : '',
+                            userName: _name.isNotEmpty ? _name : '',
+                            contribution: _distancePerso != null || _isMeasureOngoing
+                                ? '${_formatDistance(_isMeasureOngoing ? _distance : (_distancePerso ?? 0))} m'
+                                : '',
+                            totalTime: _totalTimePerso != null || _isMeasureOngoing
+                                ? '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s'
+                                : '',
+                            geoStream: _geolocation.stream, // Pass the geolocation stream
+                          ),
+                        ),
+                        const DynamicMapCard(), // Add the DynamicMapCard widget here
+                        if (!_isMeasureOngoing) // Show message only when no session is active
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            child: Center(
+                              child: Text(
+                                'Appuie sur le drapeau pour démarrer une session',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 120),
+                      ],
+                    ),
+                  ),
+                  // Page 2: Informations sur l'évènement
+                  SingleChildScrollView(
+                    controller: _parentScrollController,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                            child: PersonalInfoCard(
-                              isSessionActive: _isMeasureOngoing,
-                              isCountingInZone: _isCountingInZone,
-                              logoPath: _isMeasureOngoing
-                                  ? 'assets/pictures/LogoSimpleAnimated.gif'
-                                  : 'assets/pictures/LogoSimple.png',
-                              bibNumber: _dossard.isNotEmpty ? _dossard : '',
-                              userName: _name.isNotEmpty ? _name : '',
-                              contribution: _distancePerso != null || _isMeasureOngoing
-                                  ? '${_formatDistance(_isMeasureOngoing ? _distance : (_distancePerso ?? 0))} m'
-                                  : '',
-                              totalTime: _totalTimePerso != null || _isMeasureOngoing
-                                  ? '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s'
-                                  : '',
-                              geoStream: _geolocation.stream, // Pass the geolocation stream
+                          Container(
+                            child: EventProgressCard(
+                              objectif: _metersGoal != null && _metersGoal != -1
+                                  ? '${_formatDistance(_metersGoal!)} m'
+                                  : null, // Pass null to trigger shimmer
+                              currentValue: _distanceTotale != null
+                                  ? '${_formatDistance(_distanceTotale!)} m'
+                                  : null, // Pass null to trigger shimmer
+                              percentage: start != null && end != null
+                                  ? _calculateRemainingTimePercentage() // Calculate remaining time percentage
+                                  : null, // Pass null to trigger shimmer
+                              remainingTime:
+                                  start != null && end != null ? _remainingTime : null, // Pass null to trigger shimmer
+                              participants: _numberOfParticipants != null
+                                  ? '${_numberOfParticipants!}' // Pass max participants
+                                  : null, // Pass null to trigger shimmer
                             ),
                           ),
-                          const DynamicMapCard(), // Add the DynamicMapCard widget here
-                          if (!_isMeasureOngoing) // Show message only when no session is active
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12.0),
-                              child: Center(
-                                child: Text(
-                                  'Appuie sur le drapeau pour démarrer une session',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 32),
+                          const SupportCard(), // Add the DonationCard component
+                          const SizedBox(height: 120), // Add more margin at the bottom to allow more scrolling
                         ],
                       ),
                     ),
-                    // Page 2: Informations sur l'évènement
-                    SingleChildScrollView(
-                      controller: _parentScrollController,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
-                              child: EventProgressCard(
-                                objectif: _metersGoal != null && _metersGoal != -1
-                                    ? '${_formatDistance(_metersGoal!)} m'
-                                    : null, // Pass null to trigger shimmer
-                                currentValue: _distanceTotale != null
-                                    ? '${_formatDistance(_distanceTotale!)} m'
-                                    : null, // Pass null to trigger shimmer
-                                percentage: start != null && end != null
-                                    ? _calculateRemainingTimePercentage() // Calculate remaining time percentage
-                                    : null, // Pass null to trigger shimmer
-                                remainingTime: start != null && end != null
-                                    ? _remainingTime
-                                    : null, // Pass null to trigger shimmer
-                                participants: _numberOfParticipants != null
-                                    ? '${_numberOfParticipants!}' // Pass max participants
-                                    : null, // Pass null to trigger shimmer
-                              ),
-                            ),
-
-                            const SizedBox(height: 0),
-                            const SupportCard(), // Add the DonationCard component
-                            const SizedBox(height: 120), // Add more margin at the bottom to allow more scrolling
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             Positioned(
