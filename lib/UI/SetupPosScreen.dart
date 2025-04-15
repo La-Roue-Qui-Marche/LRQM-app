@@ -34,35 +34,13 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAndRequestPermissions();
-  }
-
-  Future<void> _checkAndRequestPermissions() async {
-    setState(() => _isLoading = true);
-
-    bool granted = await PermissionHelper.handlePermission();
-
-    if (!granted) {
-      showTextModal(
-        context,
-        "Autorisation requise",
-        "Pour utiliser cette fonctionnalité, l'accès à la localisation est nécessaire.\n\nVeux-tu ouvrir les paramètres de l'application ?",
-        showConfirmButton: true,
-        onConfirm: () async {
-          await PermissionHelper.openLocationSettings();
-        },
-      );
-    }
-
-    setState(() => _isLoading = false);
   }
 
   void _navigateToSetupTeamScreen() async {
     setState(() => _isLoading = true);
 
     try {
-      bool hasPermission = await PermissionHelper.checkPermissionAlways();
-
+      bool hasPermission = await PermissionHelper.requestLocationPermission();
       if (!hasPermission) {
         showTextModal(
           context,

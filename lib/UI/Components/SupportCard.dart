@@ -34,14 +34,13 @@ class SupportCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.favorite_outline, color: Colors.redAccent),
+              const Icon(Icons.favorite, color: Colors.redAccent),
               const SizedBox(width: 8),
               Text(
                 'Nous soutenir',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
             ],

@@ -44,14 +44,13 @@ class EventProgressCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.flag_outlined, color: Colors.blueAccent),
+                  const Icon(Icons.flag, color: Colors.blueAccent),
                   const SizedBox(width: 8),
                   Text(
                     'Progression de l\'événement',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -61,10 +60,10 @@ class EventProgressCard extends StatelessWidget {
                 eventName,
                 style: const TextStyle(
                   fontSize: 14,
-                  color: Colors.black87,
+                  color: Colors.black54,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Objectif Info
               Row(
@@ -72,7 +71,7 @@ class EventProgressCard extends StatelessWidget {
                 children: [
                   const Text(
                     'Objectif',
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                    style: TextStyle(fontSize: 14, color: Colors.black54),
                   ),
                   currentValue != null && objectif != null && objectif != '-1'
                       ? Row(
@@ -123,23 +122,22 @@ class EventProgressCard extends StatelessWidget {
                     ),
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
                         value: currentValue != null && objectif != null && objectif != '-1'
                             ? _sanitizeValue(currentValue!) / _sanitizeValue(objectif!)
                             : 0.0,
-                        backgroundColor: const Color(Config.COLOR_BACKGROUND).withOpacity(0.2),
+                        backgroundColor: Colors.grey[200],
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           Color(Config.COLOR_APP_BAR),
                         ),
-                        minHeight: 8,
+                        minHeight: 6,
                       ),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 6),
 
               // Time + Participants (stacked vertically)
               Column(
@@ -151,7 +149,10 @@ class EventProgressCard extends StatelessWidget {
                     color: const Color(Config.COLOR_APP_BAR),
                     showProgress: true,
                   ),
-                  const SizedBox(height: 12),
+                  Divider(
+                    color: Colors.grey.shade300,
+                    thickness: 1,
+                  ),
                   _infoCard(
                     label: 'Participants ou groupes sur le parcours',
                     value: participants,
@@ -177,10 +178,6 @@ class EventProgressCard extends StatelessWidget {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-      ),
       child: Row(
         children: [
           if (showProgress)

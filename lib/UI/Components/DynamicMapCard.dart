@@ -27,9 +27,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   }
 
   Future<void> _initLocation() async {
-    bool permissionGranted = await PermissionHelper.handlePermission();
-    if (!mounted) return;
-
+    bool permissionGranted = await PermissionHelper.requestLocationPermission();
     if (permissionGranted) {
       await _fetchUserPosition();
       _positionSubscription = Geolocator.getPositionStream(

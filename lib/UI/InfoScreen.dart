@@ -16,90 +16,88 @@ class InfoScreen extends StatelessWidget {
         showInfoButton: false,
         showLogoutButton: false,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildCard(
-                context,
-                title: "La petite histoire",
-                content:
-                    "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
-                image: 'assets/pictures/HEIG_VD.jpg',
-                secondaryContent:
-                    "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement.",
-                child: const Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    "- Nicolas Fontaine",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.black54,
-                    ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildCard(
+              context,
+              title: "La petite histoire",
+              content:
+                  "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
+              image: 'assets/pictures/HEIG_VD.jpg',
+              secondaryContent:
+                  "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement.",
+              child: const Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  "- Nicolas Fontaine",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.black54,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildCard(
-                context,
-                title: "L'équipe de développement bénévole",
-                content: null,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildContributorsSection(context),
-                    const SizedBox(height: 24),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Product Owner",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
+            ),
+            const SizedBox(height: 16),
+            _buildCard(
+              context,
+              title: "L'équipe de développement bénévole",
+              content: null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildContributorsSection(context),
+                  const SizedBox(height: 24),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Product Owner",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
                               ),
-                              const SizedBox(height: 8),
-                              _buildContributorProfile(context, null, null, 'Nicolas Fontaine'),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildContributorProfile(context, null, null, 'Nicolas Fontaine'),
+                          ],
                         ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "GitHub Repo",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "GitHub Repo",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
                               ),
-                              const SizedBox(height: 8),
-                              _buildContributorProfile(
-                                context,
-                                'https://github.com/La-Roue-Qui-Marche/LRQM-app',
-                                'https://avatars.githubusercontent.com/u/205062865?s=200&v=4',
-                                'La RQM',
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildContributorProfile(
+                              context,
+                              'https://github.com/La-Roue-Qui-Marche/LRQM-app',
+                              'https://avatars.githubusercontent.com/u/205062865?s=200&v=4',
+                              'La RQM',
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -133,8 +131,7 @@ class InfoScreen extends StatelessWidget {
             title,
             style: const TextStyle(
               fontSize: 16,
-              color: Colors.black54,
-              fontWeight: FontWeight.w600,
+              color: Colors.black87,
             ),
           ),
           if (content != null) ...[
