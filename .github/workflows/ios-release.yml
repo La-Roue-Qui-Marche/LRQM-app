@@ -41,6 +41,7 @@ jobs:
 
       - name: 🔢 Set Build Number for iOS
         run: |
+          ls ios/Flutter
           cat >> ios/Flutter/Generated.xcconfig << EOF
           FLUTTER_BUILD_NUMBER=${{ github.run_number }}
           FLUTTER_BUILD_NAME=${{ env.VERSION }}
@@ -79,6 +80,8 @@ jobs:
         run: |
           echo "FLUTTER_BUILD_NAME from env: ${{ env.VERSION }}"
           echo "FLUTTER_BUILD_NUMBER from github: ${{ github.run_number }}"
+          ls ios
+          ls ios/Flutter
           cat ios/Flutter/Generated.xcconfig
 
       - name: 📱 Build iOS App (No Code Signing)
