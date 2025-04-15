@@ -28,9 +28,6 @@ class GeolocationConfig {
   final int distanceThreshold; // meters threshold
   final double speedThreshold; // m/s threshold
 
-  /// Delay used when switching between foreground and background location services.
-  final Duration backgroundSwitchDelay;
-
   /// Number of consecutive updates outside the zone before pausing counting.
   final int outsideCounterMax;
 
@@ -49,7 +46,6 @@ class GeolocationConfig {
     this.accuracyThreshold = 20, // meters
     this.distanceThreshold = 50, // meters
     this.speedThreshold = 10, // m/s
-    this.backgroundSwitchDelay = const Duration(milliseconds: 500),
     this.outsideCounterMax = 10,
     this.notificationTitle = "La RQM Background Tracking",
     this.notificationText = "Tracking in progress...",
@@ -70,6 +66,7 @@ class Geolocation with WidgetsBindingObserver {
   geo.Position? _oldPos;
   StreamSubscription<geo.Position>? _positionStream;
   Timer? _apiTimer;
+  Timer? _streamTimer; // Timer for periodic stream updates
   final StreamController<Map<String, int>> _streamController = StreamController<Map<String, int>>.broadcast();
 
   bool _positionStreamStarted = false;
@@ -135,16 +132,18 @@ class Geolocation with WidgetsBindingObserver {
       _attemptToSendDiff();
     });
 
-    LogHelper.logInfo("[GEO] Geolocation started in foreground.");
+    // Timer to periodically send stream updates.
+    _streamTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!_streamController.isClosed) {
+        _streamController.sink.add({
+          "time": _elapsedTimeInSeconds,
+          "distance": _distance,
+          "isCountingInZone": _isCountingInZone ? 1 : 0,
+        });
+      }
+    });
 
-    // Optionally, you can send an initial update to the stream here:
-    if (!_streamController.isClosed) {
-      _streamController.sink.add({
-        "time": _elapsedTimeInSeconds,
-        "distance": _distance,
-        "isCountingInZone": _isCountingInZone ? 1 : 0,
-      });
-    }
+    LogHelper.logInfo("[GEO] Geolocation started in foreground.");
   }
 
   void _startPositionStream() {
@@ -238,15 +237,6 @@ class Geolocation with WidgetsBindingObserver {
 
     // Update baseline regardless.
     _saveOldPos(lat, lng, acc, timestamp);
-
-    // Emit update only when a new valid reading is processed.
-    if (!_streamController.isClosed) {
-      _streamController.sink.add({
-        "time": _elapsedTimeInSeconds,
-        "distance": _distance,
-        "isCountingInZone": _isCountingInZone ? 1 : 0,
-      });
-    }
   }
 
   void _saveOldPos(double lat, double lng, double acc, DateTime timestamp) {
@@ -316,8 +306,9 @@ class Geolocation with WidgetsBindingObserver {
       await _positionStream?.cancel();
       _positionStream = null;
 
-      // Cancel API timer.
       _apiTimer?.cancel();
+
+      _streamTimer?.cancel();
 
       await _sendFinalDiff();
 
@@ -378,8 +369,6 @@ class Geolocation with WidgetsBindingObserver {
   Future<void> _switchToBackgroundLocation() async {
     LogHelper.logInfo("[BG] Switching to background tracking...");
     await _positionStream?.cancel();
-    await Future.delayed(config.backgroundSwitchDelay);
-
     if (!await PermissionHelper.requestLocationPermission()) {
       LogHelper.logError("[BG] Permission lost while switching to background!");
       return;
@@ -396,7 +385,6 @@ class Geolocation with WidgetsBindingObserver {
     LogHelper.logInfo("[FG] Switching to foreground tracking...");
     try {
       await bg.BackgroundLocation.stopLocationService();
-      await Future.delayed(config.backgroundSwitchDelay);
     } catch (e) {
       LogHelper.logError("[FG] Failed to stop background service: $e");
     }
