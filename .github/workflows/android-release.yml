@@ -14,50 +14,50 @@ jobs:
   build-and-release:
     name: Build and Release Android App
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
-      - name: Checkout Code
+      - name: 🧾 Checkout Code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Flutter
+      - name: 🔧 Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.3'
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: flutter pub get
 
-      - name: Decode Keystore
+      - name: 🔐 Decode Keystore
         run: |
           echo "${{ secrets.ANDROID_SIGNING_KEY_B64 }}" | base64 -d > android/key.jks
 
-      - name: Configure Key Properties
+      - name: 🗝️ Configure Key Properties
         run: |
           echo "storeFile=../key.jks" > android/key.properties
           echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
 
-      - name: Extract Version from pubspec.yaml
+      - name: 🔍 Extract Version from pubspec.yaml
         id: extract_version
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | cut -d '+' -f1)
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Using version: $VERSION and build number: ${{ github.run_number }}"
 
-      - name: Set Build Number
+      - name: 🔢 Configure Android Build Number
         run: |
           echo "flutter.versionCode=${{ github.run_number }}" >> android/local.properties
           echo "flutter.versionName=${{ env.VERSION }}+${{ github.run_number }}" >> android/local.properties
 
-      - name: Build Android App
+      - name: 📱 Build Android APK
         run: flutter build apk --release
 
-      - name: Build Android App
+      - name: 📱 Build Android App Bundle
         run: flutter build appbundle --release
 
-      - name: Upload Artifact
+      - name: 🚀 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: LRQM-app-Android

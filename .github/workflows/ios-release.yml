@@ -32,6 +32,12 @@ jobs:
         run: pod install --repo-update
         working-directory: ios
 
+      - uses: yanamura/ios-bump-version@v1
+        with:
+          version: ''
+          build-number: ${{github.run_number}}
+          project-path: ios
+
       - name: 🔐 Decode Certificate and Provisioning Profile
         run: |
           echo "${{ secrets.IOS_SIGNING_CERTIFICATE }}" | base64 -d > certificate.p12
