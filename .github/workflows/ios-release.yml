@@ -89,9 +89,7 @@ jobs:
               -archivePath build/ios/archive/Runner.xcarchive \
               CODE_SIGN_STYLE=Manual \
               CODE_SIGN_IDENTITY="iPhone Distribution" \
-              PROVISIONING_PROFILE_SPECIFIER="ch.larouequimarche.app" \
-              MARKETING_VERSION=${{ env.VERSION }} \
-              CURRENT_PROJECT_VERSION=${{ github.run_number }}
+              PROVISIONING_PROFILE_SPECIFIER="ch.larouequimarche.app"
 
       - name: 🔏 Sign and Export IPA
         run: |
