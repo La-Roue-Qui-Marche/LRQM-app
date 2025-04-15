@@ -27,6 +27,19 @@ jobs:
 
       - name: 📦 Install Dependencies
         run: flutter pub get
+        
+      - name: 📊 Extract Version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | cut -d '+' -f1)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: 🔢 Set Build Number
+        run: |
+          cat >> ios/Flutter/Generated.xcconfig << EOF
+          FLUTTER_BUILD_NUMBER=${{ github.run_number }}
+          FLUTTER_BUILD_NAME=${{ env.VERSION }}
+          EOF
 
       - name: 📦 Install CocoaPods
         run: pod install --repo-update
@@ -60,7 +73,7 @@ jobs:
 
       - name: 🧹 Clean Flutter Project
         run: flutter clean
-
+      
       - name: 📱 Build iOS App (No Code Signing)
         uses: nick-fields/retry@v3
         with:
