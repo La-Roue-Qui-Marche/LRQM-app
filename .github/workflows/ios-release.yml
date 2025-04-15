@@ -27,7 +27,7 @@ jobs:
 
       - name: 📦 Install Dependencies
         run: flutter pub get
-        
+
       - name: 📦 Install CocoaPods
         run: pod install --repo-update
         working-directory: ios
