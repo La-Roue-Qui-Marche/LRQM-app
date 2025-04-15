@@ -246,12 +246,12 @@ class _LoginState extends State<Login> {
           ),
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(24.0),
               child: Card(
                 elevation: 10,
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -323,9 +323,8 @@ class _LoginState extends State<Login> {
                         future: Config.getAppVersion(),
                         builder: (context, snapshot) {
                           final version = snapshot.data ?? '...';
-                          final eventName = _eventName ?? '...';
                           return Text(
-                            'v$version  /  $eventName',
+                            'v$version',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 12,
