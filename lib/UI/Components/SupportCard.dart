@@ -15,89 +15,100 @@ class SupportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.favorite, color: Colors.redAccent),
-              const SizedBox(width: 8),
-              Text(
-                'Nous soutenir',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'La Roue qui Marche tisse des liens entre les personnes en situation de handicap et les personnes sans handicap. En devenant membre, bénévole ou simplement en parlant de nous, vous contribuez à bâtir des ponts entre deux mondes.',
-            style: TextStyle(
-              fontSize: 14,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 6.0, top: 6.0),
+          child: Text(
+            'Informations sur l\'événement',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 20),
-          Center(
-            child: ElevatedButton.icon(
-              onPressed: () => _launchUrl('https://larouequimarche.ch/nous-soutenir/'),
-              icon: const Icon(Icons.open_in_browser, color: Colors.white),
-              label: const Text(
-                'Découvrir comment aider',
-                style: TextStyle(color: Colors.white),
+        ),
+        Container(
+          margin: const EdgeInsets.only(bottom: 12.0, right: 12.0, left: 12.0),
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(Config.COLOR_APP_BAR),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Divider(color: Colors.grey.shade200),
-          const SizedBox(height: 12),
-          Text(
-            'Suis-nous sur les réseaux sociaux :',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _socialIcon('assets/icons/facebook.svg', () {
-                _launchUrl('https://www.facebook.com/larouequimarche');
-              }),
-              _socialIcon('assets/icons/linkedin.svg', () {
-                _launchUrl('https://www.linkedin.com/company/la-roue-qui-marche');
-              }),
-              _socialIcon('assets/icons/instagram.svg', () {
-                _launchUrl('https://www.instagram.com/larouequimarche/');
-              }),
             ],
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'À propos de l\'événement',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Découvrez les détails de l\'événement, les objectifs, et comment vous pouvez participer pour faire une différence.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () => _launchUrl('https://larouequimarche.ch/'),
+                  icon: const Icon(Icons.open_in_browser, color: Colors.white),
+                  label: const Text(
+                    'Découvrir comment aider',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(Config.COLOR_APP_BAR),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Divider(color: Color(Config.COLOR_BACKGROUND)),
+              const SizedBox(height: 12),
+              Text(
+                'Suis-nous sur les réseaux sociaux :',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _socialIcon('assets/icons/facebook.svg', () {
+                    _launchUrl('https://www.facebook.com/larouequimarche');
+                  }),
+                  _socialIcon('assets/icons/linkedin.svg', () {
+                    _launchUrl('https://www.linkedin.com/company/la-roue-qui-marche');
+                  }),
+                  _socialIcon('assets/icons/instagram.svg', () {
+                    _launchUrl('https://www.instagram.com/larouequimarche/');
+                  }),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -107,7 +118,7 @@ class SupportCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: Color(Config.COLOR_BACKGROUND),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(

@@ -629,8 +629,10 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             geoStream: _geolocation.stream, // Pass the geolocation stream
                           ),
                         ),
-                        const DynamicMapCard(), // Add the DynamicMapCard widget here
-                        if (!_isMeasureOngoing) // Show message only when no session is active
+                        const DynamicMapCard(
+                          title: 'Ta position en temps réel',
+                        ),
+                        if (!_isMeasureOngoing)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12.0),
                             child: Center(

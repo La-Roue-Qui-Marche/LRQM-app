@@ -1,5 +1,6 @@
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
 import 'package:package_info_plus/package_info_plus.dart'; // Ensure this import is present
+import 'package:latlong2/latlong.dart'; // <-- Add this import
 
 /// Class to manage the configuration of the application.
 class Config {
@@ -30,6 +31,14 @@ class Config {
     mp.LatLng(LAT1, LON2),
   ];
 
+  /// Rassemblement point (point de rassemblement) of the event zone (raw values)
+  static const double RASSEMBLEMENT_LAT = 46.625; // example: center of the zone, adjust as needed
+  static const double RASSEMBLEMENT_LON = 6.65; // example: center of the zone, adjust as needed
+  static final mp.LatLng RASSEMBLEMENT_POINT = mp.LatLng(RASSEMBLEMENT_LAT, RASSEMBLEMENT_LON);
+
+  // For flutter_map convenience
+  static final LatLng RASSEMBLEMENT_POINT_FLUTTER = LatLng(RASSEMBLEMENT_LAT, RASSEMBLEMENT_LON);
+
   // ----------------- Geolocation Config -----------------
   static const Duration LOCATION_UPDATE_INTERVAL = Duration(seconds: 5);
   static const int LOCATION_DISTANCE_FILTER = 5;
@@ -44,7 +53,7 @@ class Config {
   static const int COLOR_APP_BAR = 0xFF403c74;
   static const int COLOR_BUTTON = 0xFFFF9900;
   static const int COLOR_TITRE = 0xFFFFFFFF;
-  static const int COLOR_BACKGROUND = 0xFFF0F0F0;
+  static const int COLOR_BACKGROUND = 0xFFF2F2F7;
   // ----------------- Constantes -----------------
 
   /// Function to get the application version.

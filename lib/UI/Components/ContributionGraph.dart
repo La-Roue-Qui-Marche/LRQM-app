@@ -84,8 +84,7 @@ class ContributionGraphState extends State<ContributionGraph> {
             "Contribution moyenne",
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black54,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 8),

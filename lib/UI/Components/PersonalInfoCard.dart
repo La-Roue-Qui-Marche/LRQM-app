@@ -91,88 +91,122 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildCard(),
-        ..._particles,
-      ],
-    );
-  }
-
-  Widget _buildCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 6.0, top: 12.0),
+          child: Row(
             children: [
-              const Icon(Icons.volunteer_activism, color: Colors.pinkAccent),
-              const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Ta contribution à l\'événement',
-                style: TextStyle(
-                  fontSize: 16,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildHeader(),
-          const SizedBox(height: 8),
-          _buildInfoCards(),
-          const SizedBox(height: 8),
-          _buildFunMessage(),
-          if (widget.isSessionActive) const SizedBox(height: 12),
-          if (widget.isSessionActive) Divider(color: Colors.grey.shade300, thickness: 1),
-          if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
-        ],
-      ),
+        ),
+        Stack(
+          children: [
+            _buildCard(),
+            ..._particles,
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard() {
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 12.0, right: 12.0, left: 12.0),
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 6),
+              Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
+              const SizedBox(height: 6),
+              _buildInfoCards(),
+              Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
+              if (widget.isSessionActive) const SizedBox(height: 6),
+              if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
+              const SizedBox(height: 6),
+              _buildFunMessage(), // Moved back inside the card at the very end
+            ],
+          ),
+        ),
+        Positioned(
+          top: 16,
+          right: 28,
+          child: _statusBadge(),
+        ),
+      ],
     );
   }
 
   Widget _buildHeader() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(12.0),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            shape: BoxShape.circle,
-          ),
-          child: Image.asset(
-            widget.logoPath,
-            width: 32,
-            height: 32,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '№ de dossard: ',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                      ),
+                      Text(
+                        widget.bibNumber,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        child: Image.asset(
+                          widget.logoPath,
+                          width: 22,
+                          height: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (widget.userName.isNotEmpty)
+                        Text(
+                          widget.userName,
+                          style: const TextStyle(fontSize: 18, color: Colors.black87),
+                        ),
+                    ],
+                  ),
+                  if (widget.userName.isEmpty) _buildShimmer(width: 100),
+                ],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('№ de dossard: ${widget.bibNumber}', style: const TextStyle(fontSize: 16, color: Colors.black87)),
-              const SizedBox(height: 4),
-              widget.userName.isNotEmpty
-                  ? Text(widget.userName, style: const TextStyle(fontSize: 16, color: Colors.black54))
-                  : _buildShimmer(width: 100),
-            ],
-          ),
-        ),
-        _statusBadge(),
       ],
     );
   }
@@ -188,11 +222,6 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                 : null, // Pass null to trigger shimmer
             color: const Color(Config.COLOR_APP_BAR),
           ),
-        ),
-        Container(
-          width: 1,
-          height: 40,
-          color: Colors.grey.shade300,
         ),
         Expanded(
           child: _infoCard(
@@ -217,16 +246,16 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
   Widget _infoCard({required String label, String? value, required Color color}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+          Text(label, style: const TextStyle(fontSize: 14, color: Colors.black87)),
           const SizedBox(height: 4),
           value != null && value.isNotEmpty
               ? Text(
                   value,
-                  style: TextStyle(fontSize: 18, color: color),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: color),
                 )
               : _buildShimmer(width: 60),
         ],
@@ -252,10 +281,12 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   Widget _statusBadge() {
     String statusText;
     Color badgeColor;
+    Color textColor = Colors.white;
 
     if (!widget.isSessionActive) {
       statusText = 'En pause';
-      badgeColor = Colors.grey.shade400;
+      badgeColor = Color(Config.COLOR_BACKGROUND);
+      textColor = Colors.black87;
     } else if (!widget.isCountingInZone) {
       statusText = 'Hors Zone';
       badgeColor = Colors.red.shade400;
@@ -268,16 +299,20 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: badgeColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.circle, size: 10, color: Colors.white),
+          Icon(
+            Icons.circle,
+            size: 10,
+            color: !widget.isSessionActive ? Colors.black87 : Colors.white, // Change to black if "En pause"
+          ),
           const SizedBox(width: 6),
           Text(
             statusText,
-            style: const TextStyle(fontSize: 12, color: Colors.white),
+            style: TextStyle(fontSize: 12, color: textColor),
           ),
         ],
       ),

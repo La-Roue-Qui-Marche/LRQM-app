@@ -17,38 +17,103 @@ class InfoScreen extends StatelessWidget {
         showLogoutButton: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0).copyWith(bottom: 60.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCard(
-              context,
-              title: "La petite histoire",
-              content:
-                  "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
-              image: 'assets/pictures/HEIG_VD.jpg',
-              secondaryContent:
-                  "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement.",
-              child: const Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  "- Nicolas Fontaine",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.black54,
-                  ),
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0, left: 0.0, bottom: 6.0, top: 0.0),
+              child: Text(
+                'La petite histoire',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
             _buildCard(
               context,
-              title: "L'équipe de développement bénévole",
+              title: null, // Title moved outside
+              content: null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Text(
+                      'Origines et évolution',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 16),
+                  Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
+                  const SizedBox(height: 16),
+                  Text(
+                    "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement. \n",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "- Nicolas Fontaine",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0, left: 0.0, bottom: 6.0, top: 6.0),
+              child: Text(
+                'L\'équipe de développement bénévole',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            _buildCard(
+              context,
+              title: null, // Title moved outside
               content: null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Text(
+                      'Les Developpeurs',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
                   _buildContributorsSection(context),
                   const SizedBox(height: 24),
                   Row(
@@ -61,7 +126,8 @@ class InfoScreen extends StatelessWidget {
                             const Text(
                               "Product Owner",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
                             ),
@@ -78,7 +144,8 @@ class InfoScreen extends StatelessWidget {
                             const Text(
                               "GitHub Repo",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
                             ),
@@ -105,7 +172,7 @@ class InfoScreen extends StatelessWidget {
 
   Widget _buildCard(
     BuildContext context, {
-    required String title,
+    required String? title,
     String? content,
     String? image,
     String? secondaryContent,
@@ -127,22 +194,22 @@ class InfoScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
+          if (title != null)
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
             ),
-          ),
           if (content != null) ...[
-            const SizedBox(height: 12),
             Text(
               content,
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.black87,
               ),
-              textAlign: TextAlign.justify,
+              textAlign: TextAlign.left,
             ),
           ],
           if (image != null) ...[
@@ -150,7 +217,6 @@ class InfoScreen extends StatelessWidget {
             Center(child: Image.asset(image, height: 60)),
           ],
           if (secondaryContent != null) ...[
-            const SizedBox(height: 16),
             Text(
               secondaryContent,
               style: const TextStyle(
@@ -158,11 +224,10 @@ class InfoScreen extends StatelessWidget {
                 color: Colors.black87,
                 height: 1.4,
               ),
-              textAlign: TextAlign.justify,
+              textAlign: TextAlign.left,
             ),
           ],
           if (child != null) ...[
-            const SizedBox(height: 16),
             child,
           ],
         ],

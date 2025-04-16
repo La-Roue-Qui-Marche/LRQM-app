@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 
 # build is incremented automatically by the CI/CD pipeline
-version: 2.4.1
+version: 2.5.0
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -112,6 +112,7 @@ flutter:
     - assets/icons/map.svg
     - assets/icons/copy.svg
     - assets/icons/diamond-turn-right.svg
+    - assets/icons/dot-circle.svg
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -135,6 +136,11 @@ flutter:
         - asset: assets/fonts/Poppins-Regular.ttf
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
+    - family: SfPro
+      fonts:
+        - asset: assets/fonts/SFPRODISPLAYREGULAR.OTF
+        - asset: assets/fonts/SFPRODISPLAYBOLD.OTF
+          weight: 600
   # fonts:
   #   - family: Schyler
   #     fonts:
