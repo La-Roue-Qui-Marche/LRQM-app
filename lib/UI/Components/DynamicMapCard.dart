@@ -402,7 +402,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
       children: [
         if (widget.title != null)
           Padding(
-            padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 6.0, top: 6.0),
+            padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
             child: Text(
               widget.title!,
               style: const TextStyle(
@@ -422,13 +422,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16.0),

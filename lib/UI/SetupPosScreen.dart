@@ -111,17 +111,17 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.only(top: 12.0, bottom: 12.0),
                 child: Column(
                   children: [
                     _buildInfoCard(context),
                     const SizedBox(height: 12),
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: EdgeInsets.symmetric(horizontal: 12.0),
                       child: Text(
                         "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
                         textAlign: TextAlign.left,
-                        style: TextStyle(fontSize: 14, color: Colors.black54),
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
                       ),
                     ),
                   ],
@@ -150,7 +150,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(0.0),
       ),
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -165,7 +165,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
           ),
           InfoCard(
-            title: "Préparez-vous",
+            title: "Préparez-vous !",
             data: "Rendez-vous au point de départ de l'évènement.",
             actionItems: [
               ActionItem(

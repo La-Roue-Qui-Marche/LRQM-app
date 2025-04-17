@@ -60,7 +60,7 @@ class _TopAppBarState extends State<TopAppBar> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
+              blurRadius: 20,
               offset: const Offset(0, 4),
             ),
           ],

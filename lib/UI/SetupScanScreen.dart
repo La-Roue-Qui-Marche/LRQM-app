@@ -130,11 +130,11 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
+                padding: const EdgeInsets.only(top: 12.0, left: 0.0, right: 0.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.0), // Add rounded border
+                    borderRadius: BorderRadius.circular(0.0), // Add rounded border
                   ),
                   padding: const EdgeInsets.all(16.0),
                   child: Column(

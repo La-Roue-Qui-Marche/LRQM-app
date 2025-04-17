@@ -248,10 +248,10 @@ class _LoginState extends State<Login> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Card(
-                elevation: 10,
+                elevation: 0,
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),

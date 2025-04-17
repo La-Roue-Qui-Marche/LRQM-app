@@ -95,7 +95,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 6.0, top: 12.0),
+          padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
           child: Row(
             children: [
               Text(
@@ -123,32 +123,26 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     return Stack(
       children: [
         Container(
-          margin: const EdgeInsets.only(bottom: 12.0, right: 12.0, left: 12.0),
+          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               _buildInfoCards(),
-              Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
-              if (widget.isSessionActive) const SizedBox(height: 6),
+              const SizedBox(height: 8),
+              if (widget.isSessionActive) Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
+              if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
-              const SizedBox(height: 6),
-              _buildFunMessage(), // Moved back inside the card at the very end
+              const SizedBox(height: 8),
+              _buildFunMessage(),
             ],
           ),
         ),
@@ -238,7 +232,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     if (widget.contribution.isNotEmpty) {
       return Text(
         _getDistanceMessage(_currentContribution),
-        style: const TextStyle(fontSize: 14, color: Colors.black87),
+        style: const TextStyle(fontSize: 16, color: Colors.black87),
       );
     }
     return _buildShimmer(width: double.infinity, height: 16);
@@ -250,7 +244,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+          Text(label, style: const TextStyle(fontSize: 16, color: Colors.black87)),
           const SizedBox(height: 4),
           value != null && value.isNotEmpty
               ? Text(
@@ -299,7 +293,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: badgeColor,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -312,7 +306,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           const SizedBox(width: 6),
           Text(
             statusText,
-            style: TextStyle(fontSize: 12, color: textColor),
+            style: TextStyle(fontSize: 14, color: textColor),
           ),
         ],
       ),

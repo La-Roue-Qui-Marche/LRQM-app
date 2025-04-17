@@ -31,11 +31,10 @@ class TapCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                IconTheme(
-                  data: IconThemeData(
-                    size: 32,
-                    color: isSelected ? Colors.white : Color(Config.COLOR_APP_BAR),
-                  ),
+                ColorFiltered(
+                  colorFilter: isSelected
+                      ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
+                      : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
                   child: logo,
                 ),
                 const SizedBox(width: 16),
@@ -45,6 +44,7 @@ class TapCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ),

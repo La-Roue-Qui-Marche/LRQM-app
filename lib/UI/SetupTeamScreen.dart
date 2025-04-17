@@ -60,7 +60,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 120.0), // Add bottom padding
+                padding: const EdgeInsets.only(top: 12.0, left: 0.0, right: 0.0, bottom: 120.0), // Add bottom padding
                 child: Column(
                   children: [
                     SingleChildScrollView(
@@ -68,7 +68,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16.0), // Add rounded border
+                          borderRadius: BorderRadius.circular(0.0), // Add rounded border
                         ),
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -89,9 +89,13 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                               data: "Pour combien de personnes comptes-tu les mètres ?",
                               actionItems: [],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 0),
                             TapCard(
-                              logo: const Icon(Icons.looks_one, size: 32),
+                              logo: SvgPicture.asset(
+                                'assets/icons/square-1.svg',
+                                width: 32,
+                                height: 32,
+                              ),
                               text: "Je pars en solo",
                               onTap: () => _selectParticipants(1),
                               isSelected: _selectedContributors == 1,
@@ -101,7 +105,11 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                               color: Color(Config.COLOR_BACKGROUND), // Separator color
                             ),
                             TapCard(
-                              logo: const Icon(Icons.looks_two, size: 32),
+                              logo: SvgPicture.asset(
+                                'assets/icons/square-2.svg',
+                                width: 32,
+                                height: 32,
+                              ),
                               text: "On fait la paire",
                               onTap: () => _selectParticipants(2),
                               isSelected: _selectedContributors == 2,
@@ -111,7 +119,11 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                               color: Color(Config.COLOR_BACKGROUND), // Separator color
                             ),
                             TapCard(
-                              logo: const Icon(Icons.looks_3, size: 32),
+                              logo: SvgPicture.asset(
+                                'assets/icons/square-3.svg',
+                                width: 32,
+                                height: 32,
+                              ),
                               text: "On se lance en triplettte",
                               onTap: () => _selectParticipants(3),
                               isSelected: _selectedContributors == 3,
@@ -121,7 +133,11 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                               color: Color(Config.COLOR_BACKGROUND), // Separator color
                             ),
                             TapCard(
-                              logo: const Icon(Icons.looks_4, size: 32),
+                              logo: SvgPicture.asset(
+                                'assets/icons/square-4.svg',
+                                width: 32,
+                                height: 32,
+                              ),
                               text: "La monstre équipe",
                               onTap: () => _selectParticipants(4),
                               isSelected: _selectedContributors == 4,

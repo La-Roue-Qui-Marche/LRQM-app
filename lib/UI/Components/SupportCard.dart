@@ -19,7 +19,7 @@ class SupportCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 6.0, top: 6.0),
+          padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
           child: Text(
             'Informations sur l\'événement',
             style: const TextStyle(
@@ -35,13 +35,6 @@ class SupportCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,15 +47,15 @@ class SupportCard extends StatelessWidget {
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(
                 'Découvrez les détails de l\'événement, les objectifs, et comment vous pouvez participer pour faire une différence.',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Center(
                 child: ElevatedButton.icon(
                   onPressed: () => _launchUrl('https://larouequimarche.ch/'),
@@ -80,17 +73,18 @@ class SupportCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Divider(color: Color(Config.COLOR_BACKGROUND)),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(
                 'Suis-nous sur les réseaux sociaux :',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [

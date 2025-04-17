@@ -637,15 +637,15 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             padding: const EdgeInsets.symmetric(vertical: 12.0),
                             child: Center(
                               child: Text(
-                                'Appuie sur le drapeau pour démarrer une session',
+                                'Appuie sur le bouton orange pour démarrer une mesure !',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.black54,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
                           ),
-                        const SizedBox(height: 120),
+                        const SizedBox(height: 160),
                       ],
                     ),
                   ),
@@ -677,7 +677,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                             ),
                           ),
                           const SupportCard(), // Add the DonationCard component
-                          const SizedBox(height: 120), // Add more margin at the bottom to allow more scrolling
+                          const SizedBox(height: 160), // Add more margin at the bottom to allow more scrolling
                         ],
                       ),
                     ),

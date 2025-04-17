@@ -17,12 +17,12 @@ class InfoScreen extends StatelessWidget {
         showLogoutButton: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0).copyWith(bottom: 60.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0).copyWith(bottom: 120.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 12.0, left: 0.0, bottom: 6.0, top: 0.0),
+              padding: const EdgeInsets.only(right: 12.0, left: 4.0, bottom: 8.0, top: 0.0),
               child: Text(
                 'La petite histoire',
                 style: const TextStyle(
@@ -53,20 +53,19 @@ class InfoScreen extends StatelessWidget {
                   Text(
                     "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       color: Colors.black87,
                     ),
                     textAlign: TextAlign.left,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 6),
                   Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 6),
                   Text(
                     "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement. \n",
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       color: Colors.black87,
-                      height: 1.4,
                     ),
                     textAlign: TextAlign.left,
                   ),
@@ -75,7 +74,7 @@ class InfoScreen extends StatelessWidget {
                     child: Text(
                       "- Nicolas Fontaine",
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 16,
                         fontStyle: FontStyle.italic,
                         color: Colors.black54,
                       ),
@@ -84,9 +83,9 @@ class InfoScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Padding(
-              padding: const EdgeInsets.only(right: 16.0, left: 0.0, bottom: 6.0, top: 6.0),
+              padding: const EdgeInsets.only(right: 16.0, left: 4.0, bottom: 8.0, top: 0.0),
               child: Text(
                 'L\'équipe de développement bénévole',
                 style: const TextStyle(
@@ -183,13 +182,6 @@ class InfoScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,7 +198,7 @@ class InfoScreen extends StatelessWidget {
             Text(
               content,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 color: Colors.black87,
               ),
               textAlign: TextAlign.left,
@@ -220,9 +212,8 @@ class InfoScreen extends StatelessWidget {
             Text(
               secondaryContent,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 color: Colors.black87,
-                height: 1.4,
               ),
               textAlign: TextAlign.left,
             ),
@@ -265,14 +256,6 @@ class InfoScreen extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: CircleAvatar(
               backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,

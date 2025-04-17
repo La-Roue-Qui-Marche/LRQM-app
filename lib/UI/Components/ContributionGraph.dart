@@ -84,78 +84,84 @@ class ContributionGraphState extends State<ContributionGraph> {
             "Contribution moyenne",
             style: TextStyle(
               fontSize: 14,
-              color: Colors.black87,
+              color: Colors.black54,
             ),
           ),
           const SizedBox(height: 8),
           SizedBox(
             height: 120,
-            child: LineChart(
-              LineChartData(
-                lineTouchData: LineTouchData(enabled: false),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 1,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withOpacity(0.1),
-                    strokeWidth: 1,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                LineChart(
+                  LineChartData(
+                    lineTouchData: LineTouchData(enabled: false),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: 1,
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.grey.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 28,
+                          interval: 1,
+                          getTitlesWidget: (value, meta) {
+                            if (value % 1 != 0) return const Text('');
+                            return Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(
+                                color: Colors.black38,
+                                fontSize: 10,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: hasEnoughData ? visibleData : _placeholderGraph(),
+                        isCurved: true,
+                        color:
+                            hasEnoughData ? Color(Config.COLOR_BUTTON).withOpacity(1) : Colors.black54.withOpacity(0.1),
+                        barWidth: 3,
+                        isStrokeCapRound: true,
+                        dotData: FlDotData(show: false),
+                        belowBarData: BarAreaData(
+                          show: hasEnoughData,
+                          color: hasEnoughData ? Color(Config.COLOR_BUTTON).withOpacity(0.15) : Colors.transparent,
+                        ),
+                      ),
+                    ],
+                    minX: 0,
+                    maxX: hasEnoughData ? (_graphData.length.toDouble()) : 10,
+                    minY: 0,
+                    maxY: maxY,
                   ),
                 ),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      interval: 1,
-                      getTitlesWidget: (value, meta) {
-                        if (value % 1 != 0) return const Text('');
-                        return Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(
-                            color: Colors.black38,
-                            fontSize: 10,
-                          ),
-                        );
-                      },
+                if (!hasEnoughData)
+                  const Align(
+                    alignment: Alignment(-0.4, -0.4),
+                    child: Text(
+                      "Continue d'avancer pour voir ta progression !",
+                      style: TextStyle(fontSize: 13, color: Colors.black45),
+                      textAlign: TextAlign.left,
                     ),
                   ),
-                ),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: hasEnoughData ? visibleData : _placeholderGraph(),
-                    isCurved: true,
-                    color: hasEnoughData ? Color(Config.COLOR_BUTTON).withOpacity(1) : Colors.black54.withOpacity(0.1),
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: hasEnoughData,
-                      color: hasEnoughData ? Color(Config.COLOR_BUTTON).withOpacity(0.15) : Colors.transparent,
-                    ),
-                  ),
-                ],
-                minX: 0,
-                maxX: hasEnoughData ? (_graphData.length.toDouble()) : 10,
-                minY: 0,
-                maxY: maxY,
-              ),
+              ],
             ),
           ),
           SizedBox(height: hasEnoughData ? 6 : 12),
-          if (!hasEnoughData)
-            const Padding(
-              padding: EdgeInsets.only(left: 8.0),
-              child: Text(
-                "Continue à d'avancer pour voir ta progression !",
-                style: TextStyle(fontSize: 13, color: Colors.black45),
-                textAlign: TextAlign.left,
-              ),
-            ),
         ],
       ),
     );

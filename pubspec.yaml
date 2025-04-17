@@ -97,6 +97,7 @@ flutter:
     - assets/pictures/DrawTeam-AI.png
     - assets/pictures/DrawScan-AI.png
     - assets/pictures/DrawPos-AI.png
+    - assets/pictures/Cup-AI.png
 
     - assets/icons/calendar.svg
     - assets/icons/user.svg
@@ -113,6 +114,10 @@ flutter:
     - assets/icons/copy.svg
     - assets/icons/diamond-turn-right.svg
     - assets/icons/dot-circle.svg
+    - assets/icons/square-1.svg
+    - assets/icons/square-2.svg
+    - assets/icons/square-3.svg
+    - assets/icons/square-4.svg
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

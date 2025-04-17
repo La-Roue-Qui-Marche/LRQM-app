@@ -36,7 +36,7 @@ class NavBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center, // Ensures vertical centering
         children: [
           Expanded(
             child: Padding(
@@ -82,15 +82,16 @@ class NavBar extends StatelessWidget {
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center, // Center vertically
         children: [
-          const SizedBox(height: 5),
+          // Removed extra vertical spacing for better alignment
           SvgPicture.asset(
             selected ? svgActive : svgInactive,
             color: selected ? Theme.of(context).primaryColor : Colors.black87,
-            width: 320,
+            width: 24, // Consistent icon size
             height: 24,
           ),
-          const SizedBox(height: 0),
+          const SizedBox(height: 2), // Small spacing between icon and text
           Text(
             label,
             style: TextStyle(
@@ -108,8 +109,8 @@ class NavBar extends StatelessWidget {
       onTap: canStartNewSession ? onStartStopPressed : null, // Disable tap if not allowed
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        width: 48,
-        height: 48,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: canStartNewSession
