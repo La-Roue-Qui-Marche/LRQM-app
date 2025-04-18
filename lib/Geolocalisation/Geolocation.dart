@@ -9,6 +9,7 @@ import 'package:lrqm/API/NewMeasureController.dart';
 import 'package:lrqm/Utils/config.dart';
 import 'package:lrqm/Utils/LogHelper.dart';
 import '../Utils/Permission.dart';
+import '../Data/EventData.dart';
 
 /// Configuration parameters for geolocation tracking.
 class GeolocationConfig {
@@ -60,6 +61,11 @@ class Geolocation with WidgetsBindingObserver {
   Geolocation({required this.config}) {
     _settings = _getSettings();
     WidgetsBinding.instance.addObserver(this);
+    _initZone(); // Called here, not in initState
+  }
+
+  Future<void> _initZone() async {
+    _zonePoints = await EventData.getSiteCoordLatLngList();
   }
 
   late geo.LocationSettings _settings;
@@ -79,7 +85,18 @@ class Geolocation with WidgetsBindingObserver {
   bool _isSending = false;
   bool _isCountingInZone = true;
 
+  List<mp.LatLng>? _zonePoints;
+
   Stream<Map<String, int>> get stream => _streamController.stream;
+
+  Future<geo.Position?> get currentPosition async {
+    try {
+      return await geo.Geolocator.getCurrentPosition();
+    } catch (e) {
+      LogHelper.logError("[GEO] Failed to get current position: $e");
+      return null;
+    }
+  }
 
   geo.LocationSettings _getSettings() {
     if (defaultTargetPlatform == TargetPlatform.android) {
@@ -108,7 +125,7 @@ class Geolocation with WidgetsBindingObserver {
 
   Future<void> startListening() async {
     LogHelper.logInfo("[GEO] Starting geolocation...");
-    if (_positionStreamStarted || !(await PermissionHelper.requestLocationPermission())) {
+    if (_positionStreamStarted || !(await PermissionHelper.isLocationAlwaysGranted())) {
       LogHelper.logError("Permission not granted or already started.");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
@@ -208,7 +225,7 @@ class Geolocation with WidgetsBindingObserver {
       return;
     }
 
-    final inZone = isLocationInZone(lat, lng);
+    final inZone = await isLocationInZone(lat, lng);
     if (inZone) {
       // If the user was previously paused for being outside, log the re-entry.
       if (!_isCountingInZone) {
@@ -332,24 +349,28 @@ class Geolocation with WidgetsBindingObserver {
     }
   }
 
-  bool isLocationInZone(double lat, double lng) {
+  Future<bool> isLocationInZone(double lat, double lng) async {
     final pos = mp.LatLng(lat, lng);
-    return mp.PolygonUtil.containsLocation(pos, Config.ZONE_EVENT, false);
+    final zone = _zonePoints;
+    if (zone == null) return false;
+    return mp.PolygonUtil.containsLocation(pos, zone, false);
   }
 
   Future<bool> isInZone() async {
     final pos = await geo.Geolocator.getCurrentPosition();
-    return isLocationInZone(pos.latitude, pos.longitude);
+    return await isLocationInZone(pos.latitude, pos.longitude);
   }
 
   Future<double> distanceToZone() async {
     final pos = await geo.Geolocator.getCurrentPosition();
-    if (isLocationInZone(pos.latitude, pos.longitude)) return -1;
+    final zone = _zonePoints;
+    if (zone == null) return -1;
+    if (await isLocationInZone(pos.latitude, pos.longitude)) return -1;
     final currentPoint = mp.LatLng(pos.latitude, pos.longitude);
     double minDistance = double.infinity;
-    for (int i = 0; i < Config.ZONE_EVENT.length; i++) {
-      final p1 = Config.ZONE_EVENT[i];
-      final p2 = Config.ZONE_EVENT[(i + 1) % Config.ZONE_EVENT.length];
+    for (int i = 0; i < zone.length; i++) {
+      final p1 = zone[i];
+      final p2 = zone[(i + 1) % zone.length];
       final dist = mp.PolygonUtil.distanceToLine(currentPoint, p1, p2).toDouble();
       if (dist < minDistance) minDistance = dist;
     }
@@ -369,8 +390,9 @@ class Geolocation with WidgetsBindingObserver {
   Future<void> _switchToBackgroundLocation() async {
     LogHelper.logInfo("[BG] Switching to background tracking...");
     await _positionStream?.cancel();
-    if (!await PermissionHelper.requestLocationPermission()) {
+    if (!await PermissionHelper.isLocationAlwaysGranted()) {
       LogHelper.logError("[BG] Permission lost while switching to background!");
+      _streamController.sink.add({"time": -1, "distance": -1});
       return;
     }
 
@@ -390,8 +412,9 @@ class Geolocation with WidgetsBindingObserver {
     }
 
     _resetPosition = true;
-    if (!await PermissionHelper.requestLocationPermission()) {
+    if (!await PermissionHelper.isLocationAlwaysGranted()) {
       LogHelper.logError("[FG] Permission lost while switching to foreground!");
+      _streamController.sink.add({"time": -1, "distance": -1});
       return;
     }
 

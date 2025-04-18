@@ -25,7 +25,7 @@ class EventProgressCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
+          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
           child: Text(
             'Progression de l\'événement',
             style: const TextStyle(
@@ -72,14 +72,7 @@ class EventProgressCard extends StatelessWidget {
                   currentValue != null && objectif != null && objectif != '-1'
                       ? Row(
                           children: [
-                            Text(
-                              currentValue!,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Color(Config.COLOR_APP_BAR),
-                              ),
-                            ),
+                            _styledValue(currentValue!, color: const Color(Config.COLOR_APP_BAR)),
                             const Text(
                               ' / ',
                               style: TextStyle(
@@ -88,14 +81,7 @@ class EventProgressCard extends StatelessWidget {
                                 color: Colors.black87,
                               ),
                             ),
-                            Text(
-                              objectif!,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal,
-                                color: Colors.black54,
-                              ),
-                            ),
+                            _styledValue(objectif!, color: Colors.black54),
                           ],
                         )
                       : _buildShimmer(width: 100),
@@ -111,7 +97,7 @@ class EventProgressCard extends StatelessWidget {
                       child: Text(
                         '${(_sanitizeValue(currentValue!) / _sanitizeValue(objectif!) * 100).toStringAsFixed(1)}%',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -141,7 +127,7 @@ class EventProgressCard extends StatelessWidget {
                 children: [
                   _infoCard(
                     label: 'Temps restant',
-                    value: remainingTime,
+                    value: _formatRemainingTime(remainingTime),
                     percentage: percentage,
                     color: const Color(Config.COLOR_APP_BAR),
                     showProgress: true,
@@ -156,7 +142,7 @@ class EventProgressCard extends StatelessWidget {
                     label: 'Participants ou groupes sur le parcours',
                     value: participants,
                     percentage: null,
-                    color: const Color(Config.COLOR_BUTTON),
+                    color: const Color(Config.COLOR_APP_BAR),
                     showProgress: false,
                   ),
                 ],
@@ -166,6 +152,23 @@ class EventProgressCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String? _formatRemainingTime(String? value) {
+    if (value == null) return null;
+    // If value is already in hh:mm:ss or contains letters, return as is
+    if (RegExp(r'[a-zA-Z]').hasMatch(value) || value.contains(':')) return value;
+    // Try to parse as int (seconds)
+    final seconds = int.tryParse(value);
+    if (seconds == null) return value;
+    return _formatModernTime(seconds);
+  }
+
+  String _formatModernTime(int seconds) {
+    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
+    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return "$h:$m:$s";
   }
 
   Widget _infoCard({
@@ -209,21 +212,51 @@ class EventProgressCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                value != null
-                    ? Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Color(Config.COLOR_APP_BAR),
-                        ),
-                      )
-                    : _buildShimmer(width: 60),
+                value != null ? _styledValue(value, color: color) : _buildShimmer(width: 60),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _styledValue(String value, {required Color color}) {
+    // Extract value and unit if possible
+    String mainValue = '';
+    String unit = '';
+    final match = RegExp(r"^([\d\s'.,]+)\s*([a-zA-Z]*)$").firstMatch(value);
+    if (match != null) {
+      mainValue = match.group(1)?.trim() ?? value;
+      unit = match.group(2)?.trim() ?? '';
+    } else {
+      mainValue = value;
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          mainValue,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+            letterSpacing: 0.5,
+          ),
+        ),
+        if (unit.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 4.0, bottom: 2.0),
+            child: Text(
+              unit,
+              style: TextStyle(
+                fontSize: 14,
+                color: color.withOpacity(0.85),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

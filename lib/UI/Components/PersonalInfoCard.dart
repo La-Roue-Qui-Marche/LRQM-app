@@ -95,7 +95,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
+          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
           child: Row(
             children: [
               Text(
@@ -137,12 +137,12 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
               const SizedBox(height: 8),
               _buildInfoCards(),
+              const SizedBox(height: 16),
+              _buildFunMessage(),
               const SizedBox(height: 8),
               if (widget.isSessionActive) Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
               if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
-              const SizedBox(height: 8),
-              _buildFunMessage(),
             ],
           ),
         ),
@@ -210,7 +210,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       children: [
         Expanded(
           child: _infoCard(
-            label: 'Contribution',
+            label: 'Distance',
             value: widget.contribution.isNotEmpty
                 ? "${_formatDistance(_currentContribution)} m"
                 : null, // Pass null to trigger shimmer
@@ -239,19 +239,58 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   Widget _infoCard({required String label, String? value, required Color color}) {
+    // Extract value and unit if possible
+    String mainValue = '';
+    String unit = '';
+    if (value != null && value.isNotEmpty) {
+      final match = RegExp(r"^([\d\s'.,]+)\s*([a-zA-Z]*)$").firstMatch(value);
+      if (match != null) {
+        mainValue = match.group(1)?.trim() ?? value;
+        unit = match.group(2)?.trim() ?? '';
+      } else {
+        mainValue = value;
+      }
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Color(Config.COLOR_BACKGROUND),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: const TextStyle(fontSize: 16, color: Colors.black87)),
           const SizedBox(height: 4),
           value != null && value.isNotEmpty
-              ? Text(
-                  value,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: color),
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      mainValue,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    if (unit.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4.0, bottom: 2.0),
+                        child: Text(
+                          unit,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: color.withOpacity(0.85),
+                          ),
+                        ),
+                      ),
+                  ],
                 )
-              : _buildShimmer(width: 60),
+              : _buildShimmer(width: 60, height: 26),
         ],
       ),
     );

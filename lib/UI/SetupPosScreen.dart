@@ -40,16 +40,19 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     setState(() => _isLoading = true);
 
     try {
-      bool hasPermission = await PermissionHelper.requestLocationPermission();
+      bool hasPermission = await PermissionHelper.isLocationAlwaysGranted();
       if (!hasPermission) {
         showTextModal(
           context,
           "Positon en arrière-plan",
-          "Pour cet évènement, l'application nécessite l'autorisation 'Toujours' pour suivre votre position en arrière-plan.\n\n"
-              "Cela garantit que vous resterez toujours connecté à la zone de l'évènement, même si l'application est minimisée ou fermée.\n\n"
-              "Clique sur OK pour être redirigé vers les paramètres.",
+          "Pouvez-vous sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer votre distance parcourue, même si votre téléphone est inactif, dans votre poche par exemple ?",
           showConfirmButton: true,
-          onConfirm: () async => await PermissionHelper.openLocationSettings(),
+          onConfirm: () async {
+            bool granted = await PermissionHelper.requestLocationAlwaysPermission();
+            if (!granted) {
+              await PermissionHelper.openLocationSettings();
+            }
+          },
         );
         setState(() => _isLoading = false);
         return;
@@ -229,7 +232,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.only(bottom: 32.0),
-                child: DynamicMapCard(),
+                //child: DynamicMapCard(),
               ),
               Positioned(
                 top: 10,

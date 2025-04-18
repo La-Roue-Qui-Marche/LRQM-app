@@ -263,7 +263,7 @@ class _LoginState extends State<Login> {
                       const Center(
                         child: Image(
                           image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
-                          height: 90,
+                          height: 100,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -283,9 +283,10 @@ class _LoginState extends State<Login> {
                         inputFormatters: [LengthLimitingTextInputFormatter(4)],
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w600,
                           color: Color(Config.COLOR_APP_BAR),
-                          letterSpacing: 4.0,
+                          letterSpacing: 5.0,
                         ),
                         decoration: const InputDecoration(
                           hintStyle: TextStyle(
@@ -298,7 +299,7 @@ class _LoginState extends State<Login> {
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 2),
                           ),
-                          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                          contentPadding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                         ),
                       ),
                       const SizedBox(height: 8),

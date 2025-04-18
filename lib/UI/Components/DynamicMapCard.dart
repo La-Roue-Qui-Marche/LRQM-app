@@ -3,15 +3,19 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
+// Remove Geolocator import
+// import 'package:geolocator/geolocator.dart';
 
 import '../../Utils/config.dart';
 import '../../Utils/Permission.dart';
+import '../../Geolocalisation/Geolocation.dart';
+import '../../Data/EventData.dart';
 
 class DynamicMapCard extends StatefulWidget {
-  final String? title; // Made title optional (nullable)
+  // Remove title parameter
+  final Geolocation geolocation;
 
-  const DynamicMapCard({Key? key, this.title}) : super(key: key);
+  const DynamicMapCard({Key? key, required this.geolocation}) : super(key: key);
 
   @override
   _DynamicMapCardState createState() => _DynamicMapCardState();
@@ -55,41 +59,62 @@ class _MapStyles {
 
 class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAliveClientMixin {
   final MapController _mapController = MapController();
-  Position? _currentPosition;
+  // Remove Position? _currentPosition;
+  LatLng? _currentLatLng;
   bool _isFetchingPosition = true;
   bool _isMapReady = false;
-  StreamSubscription<Position>? _positionSubscription;
+  // Remove StreamSubscription<Position>? _positionSubscription;
+  Timer? _positionTimer;
   bool _showLegend = false;
+  bool _mapInteractive = false; // Add: controls map interactivity
+  List<LatLng> _zonePoints = [];
+  LatLng? _meetingPoint;
 
   bool isValidCoordinate(double? value) {
     return value != null && value.isFinite;
   }
 
-  Future<void> _initLocation() async {
-    bool permissionGranted = await PermissionHelper.requestLocationPermission();
-    if (permissionGranted) {
-      await _fetchUserPosition();
-      _positionSubscription = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 5,
-        ),
-      ).listen((position) {
-        if (mounted) {
-          setState(() {
-            _currentPosition = position;
-            _isFetchingPosition = false;
-            _fitMapBounds();
-          });
-        }
+  @override
+  void initState() {
+    super.initState();
+    _initZone();
+    _initMeetingPoint();
+    _initLocation();
+  }
+
+  Future<void> _initZone() async {
+    final zone = await EventData.getSiteCoordLatLngList();
+    if (zone != null) {
+      setState(() {
+        _zonePoints = zone.map((p) => LatLng(p.latitude, p.longitude)).toList();
+      });
+    } else {
+      // fallback to config if needed
+      setState(() {
+        _zonePoints = Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude)).toList();
+      });
+    }
+  }
+
+  Future<void> _initMeetingPoint() async {
+    final points = await EventData.getMeetingPointLatLngList();
+    if (points != null && points.isNotEmpty) {
+      setState(() {
+        _meetingPoint = LatLng(points[0].latitude, points[0].longitude);
       });
     } else {
       setState(() {
-        _isFetchingPosition = false;
+        _meetingPoint = null;
       });
     }
+  }
 
-    Future.delayed(const Duration(seconds: 6), () {
+  Future<void> _initLocation() async {
+    // No permission or Geolocator logic here, just poll from Geolocation
+    _fetchUserPosition();
+    _positionTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchUserPosition());
+
+    Future.delayed(const Duration(seconds: 2), () {
       if (mounted && !_isMapReady) {
         setState(() {
           _isMapReady = true;
@@ -99,18 +124,20 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   }
 
   Future<void> _fetchUserPosition() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+    final pos = await widget.geolocation.currentPosition;
+    // Debug print for current user position
+    // ignore: avoid_print
+    print('[DynamicMapCard] Current user position: $pos');
+    if (mounted) {
       setState(() {
-        _currentPosition = position;
+        if (pos != null && isValidCoordinate(pos.latitude) && isValidCoordinate(pos.longitude)) {
+          _currentLatLng = LatLng(pos.latitude, pos.longitude);
+        } else {
+          _currentLatLng = null;
+        }
         _isFetchingPosition = false;
-      });
-    } catch (e) {
-      debugPrint("Error fetching user position: $e");
-      setState(() {
-        _isFetchingPosition = false;
+        // Only fit bounds if map is locked (not interactive)
+        if (_isMapReady && !_mapInteractive) _fitMapBounds();
       });
     }
   }
@@ -129,17 +156,10 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
     final double defaultLat = Config.LAT1;
     final double defaultLon = Config.LON1;
-    double userLat = defaultLat;
-    double userLon = defaultLon;
+    double userLat = _currentLatLng?.latitude ?? defaultLat;
+    double userLon = _currentLatLng?.longitude ?? defaultLon;
 
-    if (_currentPosition != null &&
-        isValidCoordinate(_currentPosition!.latitude) &&
-        isValidCoordinate(_currentPosition!.longitude)) {
-      userLat = _currentPosition!.latitude;
-      userLon = _currentPosition!.longitude;
-    }
-
-    List<LatLng> points = [LatLng(userLat, userLon), ...Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude))];
+    List<LatLng> points = [LatLng(userLat, userLon), ..._zonePoints];
 
     double minLat = points.map((p) => p.latitude).reduce(min);
     double maxLat = points.map((p) => p.latitude).reduce(max);
@@ -283,103 +303,9 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     );
   }
 
-  void _showFullScreenMap(BuildContext context) {
-    // Get current center and zoom from the main map controller
-    final center = _mapController.camera.center;
-    final zoom = _mapController.camera.zoom;
-
-    // Save the actual user position for the marker
-    final double defaultLat = Config.LAT1;
-    final double defaultLon = Config.LON1;
-    double userLat = _currentPosition?.latitude ?? defaultLat;
-    double userLon = _currentPosition?.longitude ?? defaultLon;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        final MapController fullScreenController = MapController();
-        return Dialog(
-          insetPadding: EdgeInsets.zero,
-          backgroundColor: Colors.transparent,
-          child: Stack(
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
-                color: Colors.black,
-                child: FlutterMap(
-                  mapController: fullScreenController,
-                  options: MapOptions(
-                    initialCenter: center,
-                    initialZoom: zoom,
-                    interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.all,
-                    ),
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: const ['a', 'b', 'c'],
-                    ),
-                    PolygonLayer(
-                      polygons: [
-                        Polygon(
-                          points: Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude)).toList(),
-                          color: _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity),
-                          borderColor: _MapStyles.zoneBorderColor,
-                          borderStrokeWidth: 2,
-                        ),
-                      ],
-                    ),
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          point: LatLng(userLat, userLon),
-                          width: _MapStyles.userIconSize,
-                          height: _MapStyles.userIconSize,
-                          child: _userPositionMarker(),
-                        ),
-                        Marker(
-                          point: Config.RASSEMBLEMENT_POINT_FLUTTER,
-                          width: _MapStyles.rassemblementIconSize,
-                          height: _MapStyles.rassemblementIconSize,
-                          child: _gatheringPointMarker(),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 32,
-                right: 32,
-                child: Material(
-                  color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.black87),
-                    tooltip: "Fermer la carte",
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initLocation();
-  }
-
   @override
   void dispose() {
-    _positionSubscription?.cancel();
+    _positionTimer?.cancel();
     super.dispose();
   }
 
@@ -392,30 +318,30 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
     final double defaultLat = Config.LAT1;
     final double defaultLon = Config.LON1;
-    double userLat = _currentPosition?.latitude ?? defaultLat;
-    double userLon = _currentPosition?.longitude ?? defaultLon;
+    double userLat = _currentLatLng?.latitude ?? defaultLat;
+    double userLon = _currentLatLng?.longitude ?? defaultLon;
 
     final mapHeight = 400.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.title != null)
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
-            child: Text(
-              widget.title!,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+        // Hardcode the title here
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
+          child: Text(
+            'Ta position en temps réel',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
+        ),
         Stack(
           children: [
             AbsorbPointer(
-              absorbing: true,
+              absorbing: !_mapInteractive, // Change: allow interaction if _mapInteractive
               child: Container(
                 height: mapHeight,
                 margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
@@ -462,6 +388,9 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                               });
                               WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
                             },
+                            interactionOptions: _mapInteractive
+                                ? const InteractionOptions(flags: InteractiveFlag.all)
+                                : const InteractionOptions(flags: InteractiveFlag.none),
                           ),
                           children: [
                             TileLayer(
@@ -471,7 +400,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             PolygonLayer(
                               polygons: [
                                 Polygon(
-                                  points: Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude)).toList(),
+                                  points: _zonePoints,
                                   color: _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity),
                                   borderColor: _MapStyles.zoneBorderColor,
                                   borderStrokeWidth: 2,
@@ -486,12 +415,13 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                                   height: _MapStyles.userIconSize,
                                   child: _userPositionMarker(),
                                 ),
-                                Marker(
-                                  point: Config.RASSEMBLEMENT_POINT_FLUTTER,
-                                  width: _MapStyles.rassemblementIconSize,
-                                  height: _MapStyles.rassemblementIconSize,
-                                  child: _gatheringPointMarker(),
-                                ),
+                                if (_meetingPoint != null)
+                                  Marker(
+                                    point: _meetingPoint!,
+                                    width: _MapStyles.rassemblementIconSize,
+                                    height: _MapStyles.rassemblementIconSize,
+                                    child: _gatheringPointMarker(),
+                                  ),
                               ],
                             ),
                           ],
@@ -523,14 +453,28 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             ),
                     ),
                     const SizedBox(height: 14),
+                    // Remove fullscreen button, add map interaction toggle button
                     Material(
                       color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
                       shape: const CircleBorder(),
                       elevation: 2,
                       child: IconButton(
-                        icon: const Icon(Icons.fullscreen, color: Colors.black87),
-                        tooltip: "Afficher la carte en plein écran",
-                        onPressed: () => _showFullScreenMap(context),
+                        icon: Icon(
+                          _mapInteractive ? Icons.lock_open : Icons.lock,
+                          color: Colors.black87,
+                        ),
+                        tooltip:
+                            _mapInteractive ? "Désactiver le contrôle de la carte" : "Activer le contrôle de la carte",
+                        onPressed: () {
+                          setState(() {
+                            _mapInteractive = !_mapInteractive;
+                            // If just locked, recenter the map and reset rotation to north
+                            if (!_mapInteractive) {
+                              _fitMapBounds();
+                              _mapController.rotate(0); // Reset map direction to north
+                            }
+                          });
+                        },
                       ),
                     ),
                   ],

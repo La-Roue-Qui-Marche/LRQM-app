@@ -7,14 +7,34 @@ class NewEventController {
   static final http.Client _client = http.Client(); // Reusable HTTP client
 
   /// Create a new event with the provided details.
-  static Future<Result<bool>> createEvent(String name, String startDate, String endDate, int metersGoal) async {
+  static Future<Result<bool>> createEvent(
+    String name,
+    String startDate,
+    String endDate,
+    int metersGoal, {
+    double? meetingPointLat,
+    double? meetingPointLng,
+    double? siteLeftUpLat,
+    double? siteLeftUpLng,
+    double? siteRightDownLat,
+    double? siteRightDownLng,
+  }) async {
     final uri = Uri.https(Config.API_URL, '/events');
     final body = {
       "name": name,
       "start_date": startDate,
       "end_date": endDate,
       "meters_goal": metersGoal,
+      "meeting_point_lat": meetingPointLat,
+      "meeting_point_lng": meetingPointLng,
+      "site_left_up_lat": siteLeftUpLat,
+      "site_left_up_lng": siteLeftUpLng,
+      "site_right_down_lat": siteRightDownLat,
+      "site_right_down_lng": siteRightDownLng,
     };
+
+    // Remove nulls as API expects absent fields for nulls
+    body.removeWhere((key, value) => value == null);
 
     return _client.post(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"}).then((response) {
       if (response.statusCode == 200) {

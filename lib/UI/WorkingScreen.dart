@@ -36,169 +36,32 @@ class WorkingScreen extends StatefulWidget {
   State<WorkingScreen> createState() => _WorkingScreenState();
 }
 
-/// State of the WorkingScreen class.
 class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProviderStateMixin {
-  /// Timer to update the remaining time every second
+  // --- State variables ---
   Timer? _timer;
-
-  /// Start time of the event
-  DateTime? start;
-
-  /// End time of the event
-  DateTime? end;
-
-  /// Remaining time before the end of the event
+  Timer? _eventRefreshTimer;
+  DateTime? start, end;
   String _remainingTime = "";
-
-  /// Total distance traveled by all participants
-  int? _distanceTotale;
-
-  /// Distance traveled by the current participant
-  int? _distancePerso;
-
-  /// Dossard number of the user
-  String _dossard = "";
-
-  /// Name of the user
-  String _name = "";
-
-  /// Number of participants
-  int? _numberOfParticipants;
-
-  /// Number of participants
-  int? _contributors;
-
+  int? _distanceTotale,
+      _distancePerso,
+      _numberOfParticipants,
+      _contributors,
+      _sessionTimePerso,
+      _totalTimePerso,
+      _metersGoal;
+  int _distance = 0;
+  String _dossard = "", _name = "";
   int _currentPage = 0;
-  final PageController _pageController = PageController();
-
+  bool _isEventOver = false, _isMeasureOngoing = false, _isCountingInZone = true;
   final GlobalKey iconKey = GlobalKey();
-
-  int? _sessionTimePerso;
-  int? _totalTimePerso;
-
   final ScrollController _parentScrollController = ScrollController();
-
   late GeolocationConfig _geoConfig;
   late Geolocation _geolocation;
 
-  int _distance = 0;
-
-  int? _metersGoal;
-  Timer? _eventRefreshTimer;
-  bool _isEventOver = false;
-  bool _isMeasureOngoing = false;
-  bool _isCountingInZone = true;
-
-  /// Function to check if a measure is ongoing and update the state
-  Future<void> _updateMeasureStatus() async {
-    final isOngoing = await MeasureData.isMeasureOngoing();
-    if (mounted) {
-      setState(() {
-        _isMeasureOngoing = isOngoing;
-      });
-    }
-  }
-
-  /// Function to show a snackbar with the message [value]
-  void showInSnackBar(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
-  }
-
-  /// Function to display the event completion modal
-  void _showEventCompletionModal() {
-    showTextModal(
-      context,
-      'L\'Évènement est Terminé !',
-      "Merci d'avoir participé à cet évènement !\n\n"
-          "N'hésite pas à prendre une capture d'écran de ton résultat.",
-      showConfirmButton: true,
-    );
-  }
-
-  /// Function to update the remaining time every second
-  void countDown() async {
-    if (start == null || end == null) return;
-
-    DateTime now = DateTime.now();
-    Duration remaining = end!.difference(now);
-    if (remaining.isNegative) {
-      _timer?.cancel();
-
-      // Stop the measure directly
-      if (await MeasureData.isMeasureOngoing()) {
-        try {
-          _geolocation.stopListening();
-        } catch (e) {
-          log("Failed to stop measure: $e");
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _isEventOver = true; // Set the event over flag
-          _remainingTime = "L'évènement est terminé !";
-        });
-        _showEventCompletionModal(); // Show modal for event completion
-      }
-      return;
-    } else if (now.isBefore(start!)) {
-      if (mounted) {
-        setState(() {
-          _remainingTime = "L'évènement n'a pas encore commencé !";
-        });
-      }
-      return;
-    }
-
-    if (mounted) {
-      setState(() {
-        _remainingTime =
-            '${remaining.inHours.toString().padLeft(2, '0')}h ${(remaining.inMinutes % 60).toString().padLeft(2, '0')}m ${(remaining.inSeconds % 60).toString().padLeft(2, '0')}s';
-      });
-    }
-  }
-
-  /// Function to get the value from the API [fetchVal]
-  /// and if it fails, get the value from the shared preferences [getVal]
-  /// Returns the value
-  /// If the value is not found, returns -1
-  Future<int> _getValue(Future<Result<int>> Function() fetchVal, Future<int?> Function() getVal) {
-    return fetchVal().then((value) {
-      if (value.hasError) {
-        throw Exception("Could not fetch value because : ${value.error}");
-      } else {
-        return value.value!;
-      }
-    }).onError((error, stackTrace) {
-      log('Error here: $error');
-      return getVal().then((value) {
-        if (value == null) {
-          log("No value");
-          return -1;
-        } else {
-          return value;
-        }
-      });
-    });
-  }
-
-  /// Function to calculate the percentage of remaining time
-  double _calculateRemainingTimePercentage() {
-    if (start == null || end == null) return 0.0;
-
-    Duration totalDuration = end!.difference(start!);
-    Duration elapsed = DateTime.now().difference(start!);
-    return elapsed.inSeconds / totalDuration.inSeconds * 100;
-  }
-
-  String _formatDistance(int distance) {
-    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}\'');
-  }
-
+  // --- Lifecycle ---
   @override
   void initState() {
     super.initState();
-
     _geoConfig = GeolocationConfig(
       locationUpdateInterval: Config.LOCATION_UPDATE_INTERVAL,
       locationDistanceFilter: Config.LOCATION_DISTANCE_FILTER,
@@ -210,7 +73,33 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       outsideCounterMax: Config.OUTSIDE_COUNTER_MAX,
     );
     _geolocation = Geolocation(config: _geoConfig);
+    _initializeData();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => countDown());
+    _startEventRefreshTimer();
+  }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _stopEventRefreshTimer();
+    _geolocation.stopListening();
+    super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _stopEventRefreshTimer();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _startEventRefreshTimer();
+  }
+
+  // --- Initialization ---
+  void _initializeData() {
     // Retrieve the event start and end times
     EventData.getStartDate().then((startDate) {
       if (startDate != null && mounted) {
@@ -306,13 +195,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       }
     });
 
-    // Check if the event has started or ended
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      if (start != null && end != null) {
-        countDown();
-      }
-    });
-
     // Get the event ID
     EventData.getEventId().then((eventId) {
       if (eventId != null && mounted) {
@@ -355,17 +237,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         });
       }
     });
-
-    _startEventRefreshTimer();
   }
 
+  // --- Timer and Refresh ---
   void _startEventRefreshTimer() {
-    _eventRefreshTimer?.cancel(); // Cancel any existing timer
-    _eventRefreshTimer = Timer.periodic(const Duration(seconds: 5), (Timer t) {
-      if (mounted) {
-        _refreshEventValues();
-      }
-    });
+    _eventRefreshTimer?.cancel();
+    _eventRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) => _refreshEventValues());
   }
 
   void _stopEventRefreshTimer() {
@@ -373,39 +250,45 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     _eventRefreshTimer = null;
   }
 
-  @override
-  void deactivate() {
-    super.deactivate();
-    _stopEventRefreshTimer();
-  }
+  void countDown() async {
+    if (start == null || end == null) return;
 
-  @override
-  void activate() {
-    super.activate();
-    _startEventRefreshTimer();
-  }
+    DateTime now = DateTime.now();
+    Duration remaining = end!.difference(now);
+    if (remaining.isNegative) {
+      _timer?.cancel();
 
-  void _navigateToScreen(Widget screen) {
-    _stopEventRefreshTimer();
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => screen),
-    ).then((_) {
-      _startEventRefreshTimer();
-    });
-  }
+      // Stop the measure directly
+      if (await MeasureData.isMeasureOngoing()) {
+        try {
+          _geolocation.stopListening();
+        } catch (e) {
+          log("Failed to stop measure: $e");
+        }
+      }
 
-  void _startSetupPosScreen() {
-    _navigateToScreen(SetupPosScreen(geolocation: _geolocation));
-  }
+      if (mounted) {
+        setState(() {
+          _isEventOver = true; // Set the event over flag
+          _remainingTime = "L'évènement est terminé !";
+        });
+        _showEventCompletionModal(); // Show modal for event completion
+      }
+      return;
+    } else if (now.isBefore(start!)) {
+      if (mounted) {
+        setState(() {
+          _remainingTime = "L'évènement n'a pas encore commencé !";
+        });
+      }
+      return;
+    }
 
-  @override
-  void dispose() {
-    log("Dispose");
-    _timer?.cancel();
-    _stopEventRefreshTimer();
-    _geolocation.stopListening();
-    super.dispose();
+    if (mounted) {
+      setState(() {
+        _remainingTime = _formatModernTime(remaining.inSeconds);
+      });
+    }
   }
 
   void _refreshEventValues() {
@@ -453,7 +336,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     });
   }
 
-  /// Function to refresh all values
   void _refreshValues() {
     // Retrieve the bib_id from UserData
     UserData.getBibId().then((bibId) {
@@ -527,6 +409,183 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     });
   }
 
+  // --- Navigation ---
+  void _navigateToScreen(Widget screen) {
+    _stopEventRefreshTimer();
+    Navigator.push(context, MaterialPageRoute(builder: (context) => screen)).then((_) => _startEventRefreshTimer());
+  }
+
+  void _startSetupPosScreen() => _navigateToScreen(SetupPosScreen(geolocation: _geolocation));
+
+  // --- UI Helper Methods ---
+  Widget _buildPersonalInfoContent(int displayedTime) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 0.0),
+          child: PersonalInfoCard(
+            isSessionActive: _isMeasureOngoing,
+            isCountingInZone: _isCountingInZone,
+            logoPath: _isMeasureOngoing ? 'assets/pictures/LogoSimpleAnimated.gif' : 'assets/pictures/LogoSimple.png',
+            bibNumber: _dossard.isNotEmpty ? _dossard : '',
+            userName: _name.isNotEmpty ? _name : '',
+            contribution: _distancePerso != null || _isMeasureOngoing
+                ? '${_formatDistance(_isMeasureOngoing ? _distance : (_distancePerso ?? 0))} m'
+                : '',
+            totalTime: _totalTimePerso != null || _isMeasureOngoing ? _formatModernTime(displayedTime) : '',
+            geoStream: _geolocation.stream,
+          ),
+        ),
+        DynamicMapCard(geolocation: _geolocation),
+        if (!_isMeasureOngoing)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Center(
+              child: Text(
+                'Appuie sur le bouton orange pour démarrer une mesure !',
+                style: TextStyle(fontSize: 14, color: Colors.black87),
+              ),
+            ),
+          ),
+        const SizedBox(height: 160),
+      ],
+    );
+  }
+
+  Widget _buildEventInfoContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          EventProgressCard(
+            objectif: _metersGoal != null && _metersGoal != -1 ? '${_formatDistance(_metersGoal!)} m' : null,
+            currentValue: _distanceTotale != null ? '${_formatDistance(_distanceTotale!)} m' : null,
+            percentage: start != null && end != null ? _calculateRemainingTimePercentage() : null,
+            remainingTime: start != null && end != null ? _remainingTime : null,
+            participants: _numberOfParticipants != null ? '${_numberOfParticipants!}' : null,
+          ),
+          const SupportCard(),
+          const SizedBox(height: 160),
+        ],
+      ),
+    );
+  }
+
+  // --- Main Build ---
+  @override
+  Widget build(BuildContext context) {
+    int displayedTime = _isMeasureOngoing ? (_sessionTimePerso ?? 0) : (_totalTimePerso ?? 0);
+
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {},
+      child: Scaffold(
+        backgroundColor: const Color(Config.COLOR_BACKGROUND),
+        appBar: TopAppBar(
+          title: 'Accueil',
+          showInfoButton: true,
+          showLogoutButton: true,
+        ),
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 0.0),
+              child: SingleChildScrollView(
+                controller: _parentScrollController,
+                child: _currentPage == 0 ? _buildPersonalInfoContent(displayedTime) : _buildEventInfoContent(),
+              ),
+            ),
+            Positioned(
+              bottom: 0.0,
+              left: 0.0,
+              right: 0.0,
+              child: NavBar(
+                currentPage: _currentPage,
+                onPageSelected: (int page) => setState(() => _currentPage = page),
+                isMeasureActive: _isMeasureOngoing,
+                canStartNewSession: !_isEventOver,
+                onStartStopPressed: () {
+                  if (_isMeasureOngoing) {
+                    _confirmStopMeasure(context);
+                  } else {
+                    _startSetupPosScreen();
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Utility methods ---
+  Future<void> _updateMeasureStatus() async {
+    final isOngoing = await MeasureData.isMeasureOngoing();
+    if (mounted) {
+      setState(() {
+        _isMeasureOngoing = isOngoing;
+      });
+    }
+  }
+
+  void showInSnackBar(String value) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+  }
+
+  void _showEventCompletionModal() {
+    showTextModal(
+      context,
+      'L\'Évènement est Terminé !',
+      "Merci d'avoir participé à cet évènement !\n\n"
+          "N'hésite pas à prendre une capture d'écran de ton résultat.",
+      showConfirmButton: true,
+    );
+  }
+
+  Future<int> _getValue(Future<Result<int>> Function() fetchVal, Future<int?> Function() getVal) {
+    return fetchVal().then((value) {
+      if (value.hasError) {
+        throw Exception("Could not fetch value because : ${value.error}");
+      } else {
+        return value.value!;
+      }
+    }).onError((error, stackTrace) {
+      log('Error here: $error');
+      return getVal().then((value) {
+        if (value == null) {
+          log("No value");
+          return -1;
+        } else {
+          return value;
+        }
+      });
+    });
+  }
+
+  double _calculateRemainingTimePercentage() {
+    if (start == null || end == null) return 0.0;
+
+    Duration totalDuration = end!.difference(start!);
+    Duration elapsed = DateTime.now().difference(start!);
+    return elapsed.inSeconds / totalDuration.inSeconds * 100;
+  }
+
+  String _formatDistance(int distance) {
+    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}\'');
+  }
+
+  String _formatModernTime(int seconds) {
+    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
+    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return "$h:$m:$s";
+  }
+
   void _confirmStopMeasure(BuildContext context) {
     showTextModal(
       context,
@@ -568,149 +627,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         );
       },
       showDiscardButton: true,
-    );
-  }
-
-  void _animateToPage(int page) {
-    _pageController.animateToPage(
-      page,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    int displayedTime = _isMeasureOngoing ? (_sessionTimePerso ?? 0) : (_totalTimePerso ?? 0);
-
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (bool didPop) async {
-        log("Trying to pop");
-      },
-      child: Scaffold(
-        backgroundColor: const Color(Config.COLOR_BACKGROUND), // Set background color
-        appBar: TopAppBar(
-          title: 'Accueil',
-          showInfoButton: true, // Ensure the info button is enabled
-          showLogoutButton: true,
-        ),
-        body: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 0.0), // Reserve space for NavBar and START/STOP button
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
-                children: [
-                  // Page 1: Informations personnelles
-                  SingleChildScrollView(
-                    controller: _parentScrollController,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                          child: PersonalInfoCard(
-                            isSessionActive: _isMeasureOngoing,
-                            isCountingInZone: _isCountingInZone,
-                            logoPath: _isMeasureOngoing
-                                ? 'assets/pictures/LogoSimpleAnimated.gif'
-                                : 'assets/pictures/LogoSimple.png',
-                            bibNumber: _dossard.isNotEmpty ? _dossard : '',
-                            userName: _name.isNotEmpty ? _name : '',
-                            contribution: _distancePerso != null || _isMeasureOngoing
-                                ? '${_formatDistance(_isMeasureOngoing ? _distance : (_distancePerso ?? 0))} m'
-                                : '',
-                            totalTime: _totalTimePerso != null || _isMeasureOngoing
-                                ? '${(displayedTime ~/ 3600).toString().padLeft(2, '0')}h ${((displayedTime % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(displayedTime % 60).toString().padLeft(2, '0')}s'
-                                : '',
-                            geoStream: _geolocation.stream, // Pass the geolocation stream
-                          ),
-                        ),
-                        const DynamicMapCard(
-                          title: 'Ta position en temps réel',
-                        ),
-                        if (!_isMeasureOngoing)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            child: Center(
-                              child: Text(
-                                'Appuie sur le bouton orange pour démarrer une mesure !',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 160),
-                      ],
-                    ),
-                  ),
-                  // Page 2: Informations sur l'évènement
-                  SingleChildScrollView(
-                    controller: _parentScrollController,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Container(
-                            child: EventProgressCard(
-                              objectif: _metersGoal != null && _metersGoal != -1
-                                  ? '${_formatDistance(_metersGoal!)} m'
-                                  : null, // Pass null to trigger shimmer
-                              currentValue: _distanceTotale != null
-                                  ? '${_formatDistance(_distanceTotale!)} m'
-                                  : null, // Pass null to trigger shimmer
-                              percentage: start != null && end != null
-                                  ? _calculateRemainingTimePercentage() // Calculate remaining time percentage
-                                  : null, // Pass null to trigger shimmer
-                              remainingTime:
-                                  start != null && end != null ? _remainingTime : null, // Pass null to trigger shimmer
-                              participants: _numberOfParticipants != null
-                                  ? '${_numberOfParticipants!}' // Pass max participants
-                                  : null, // Pass null to trigger shimmer
-                            ),
-                          ),
-                          const SupportCard(), // Add the DonationCard component
-                          const SizedBox(height: 160), // Add more margin at the bottom to allow more scrolling
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 0.0,
-              left: 0.0,
-              right: 0.0,
-              child: NavBar(
-                currentPage: _currentPage,
-                onPageSelected: (int page) {
-                  setState(() {
-                    _currentPage = page;
-                    _animateToPage(page);
-                  });
-                },
-                isMeasureActive: _isMeasureOngoing,
-                canStartNewSession: !_isEventOver,
-                onStartStopPressed: () {
-                  if (_isMeasureOngoing) {
-                    _confirmStopMeasure(context);
-                  } else {
-                    _startSetupPosScreen();
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

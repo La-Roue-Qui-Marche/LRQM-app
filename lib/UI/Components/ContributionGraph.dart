@@ -83,8 +83,8 @@ class ContributionGraphState extends State<ContributionGraph> {
           const Text(
             "Contribution moyenne",
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
+              fontSize: 16,
+              color: Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
@@ -149,19 +149,19 @@ class ContributionGraphState extends State<ContributionGraph> {
                     maxY: maxY,
                   ),
                 ),
-                if (!hasEnoughData)
-                  const Align(
-                    alignment: Alignment(-0.4, -0.4),
-                    child: Text(
-                      "Continue d'avancer pour voir ta progression !",
-                      style: TextStyle(fontSize: 13, color: Colors.black45),
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
               ],
             ),
           ),
-          SizedBox(height: hasEnoughData ? 6 : 12),
+          if (!hasEnoughData)
+            const Padding(
+              padding: EdgeInsets.only(top: 6.0),
+              child: Text(
+                "Continue d'avancer pour voir ta progression !",
+                style: TextStyle(fontSize: 13, color: Colors.black45),
+                textAlign: TextAlign.left,
+              ),
+            ),
+          SizedBox(height: hasEnoughData ? 6 : 0),
         ],
       ),
     );

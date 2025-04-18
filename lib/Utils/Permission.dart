@@ -6,27 +6,47 @@ class PermissionHelper {
   // ----------------------------
   // LOCATION PERMISSION
   // ----------------------------
-  static Future<bool> requestLocationPermission() async {
-    if (await Permission.locationAlways.status.isGranted) return true;
 
-    var status = await Permission.location.status;
-    if (status.isDenied) {
-      status = await Permission.locationWhenInUse.request();
+  /// Check if location always permission is granted
+  static Future<bool> isLocationAlwaysGranted() async {
+    final status = await Permission.locationAlways.status;
+    return status.isGranted;
+  }
+
+  /// Request location permission when app is active (while in use)
+  static Future<bool> requestLocationWhenInUsePermission() async {
+    var status = await Permission.locationWhenInUse.status;
+    if (status.isGranted) {
+      LogHelper.logInfo("[PERMISSION] Location whileInUse permission already granted: $status");
+      return true;
     }
-
+    status = await Permission.locationWhenInUse.request();
     if (status.isGranted) {
       LogHelper.logInfo("[PERMISSION] Location whileInUse permission granted: $status");
-      var alwaysStatus = await Permission.locationAlways.request();
-      if (alwaysStatus.isGranted) {
-        LogHelper.logInfo("[PERMISSION] Location always permission granted $alwaysStatus");
-        return true;
-      } else {
-        LogHelper.logInfo("[PERMISSION] Location always permission refuse $alwaysStatus");
-        return false;
-      }
+      return true;
     }
+    LogHelper.logError("[PERMISSION] Location whileInUse permission not granted: $status");
+    return false;
+  }
 
-    LogHelper.logError("[PERMISSION] Unexpected permission state: $status");
+  /// Request location permission for always access
+  static Future<bool> requestLocationAlwaysPermission() async {
+    var status = await Permission.locationAlways.status;
+    if (status.isGranted) {
+      LogHelper.logInfo("[PERMISSION] Location always permission already granted: $status");
+      return true;
+    }
+    // First, ensure "when in use" is granted
+    if (!await PermissionHelper.requestLocationWhenInUsePermission()) {
+      LogHelper.logError("[PERMISSION] Cannot request always permission without whileInUse permission.");
+      return false;
+    }
+    status = await Permission.locationAlways.request();
+    if (status.isGranted) {
+      LogHelper.logInfo("[PERMISSION] Location always permission granted: $status");
+      return true;
+    }
+    LogHelper.logError("[PERMISSION] Location always permission not granted: $status");
     return false;
   }
 

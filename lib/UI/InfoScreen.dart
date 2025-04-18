@@ -9,7 +9,7 @@ class InfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND),
+      backgroundColor: Colors.white,
       appBar: const TopAppBar(
         title: "Informations",
         showBackButton: true,
@@ -17,12 +17,12 @@ class InfoScreen extends StatelessWidget {
         showLogoutButton: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0).copyWith(bottom: 120.0),
+        padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 16.0).copyWith(bottom: 120.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 12.0, left: 4.0, bottom: 8.0, top: 0.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Text(
                 'La petite histoire',
                 style: const TextStyle(
@@ -32,10 +32,8 @@ class InfoScreen extends StatelessWidget {
                 ),
               ),
             ),
-            _buildCard(
-              context,
-              title: null, // Title moved outside
-              content: null,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -58,9 +56,9 @@ class InfoScreen extends StatelessWidget {
                     ),
                     textAlign: TextAlign.left,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   Text(
                     "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement. \n",
                     style: const TextStyle(
@@ -83,9 +81,9 @@ class InfoScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.only(right: 16.0, left: 4.0, bottom: 8.0, top: 0.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Text(
                 'L\'équipe de développement bénévole',
                 style: const TextStyle(
@@ -95,17 +93,15 @@ class InfoScreen extends StatelessWidget {
                 ),
               ),
             ),
-            _buildCard(
-              context,
-              title: null, // Title moved outside
-              content: null,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: Text(
-                      'Les Developpeurs',
+                      'Les Développeurs',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -114,7 +110,7 @@ class InfoScreen extends StatelessWidget {
                     ),
                   ),
                   _buildContributorsSection(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -135,7 +131,7 @@ class InfoScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 32),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,77 +165,24 @@ class InfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCard(
-    BuildContext context, {
-    required String? title,
-    String? content,
-    String? image,
-    String? secondaryContent,
-    Widget? child,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildContributorsSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 32,
+        runSpacing: 24,
         children: [
-          if (title != null)
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-          if (content != null) ...[
-            Text(
-              content,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.left,
-            ),
-          ],
-          if (image != null) ...[
-            const SizedBox(height: 16),
-            Center(child: Image.asset(image, height: 60)),
-          ],
-          if (secondaryContent != null) ...[
-            Text(
-              secondaryContent,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.left,
-            ),
-          ],
-          if (child != null) ...[
-            child,
-          ],
+          _buildContributorProfile(context, 'https://github.com/therundmc',
+              'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine Cavallera'),
+          _buildContributorProfile(context, 'https://github.com/chloefont',
+              'https://avatars.githubusercontent.com/u/60699567?v=4', 'Chloé Fontaine'),
+          _buildContributorProfile(context, 'https://github.com/Maxime-Nicolet',
+              'https://avatars.githubusercontent.com/u/21175110?v=4', 'Maxime Nicolet'),
+          _buildContributorProfile(context, 'https://github.com/tchekoto',
+              'https://avatars.githubusercontent.com/u/16468108?v=4', 'William Fromont'),
         ],
       ),
-    );
-  }
-
-  Widget _buildContributorsSection(BuildContext context) {
-    return Wrap(
-      spacing: 20,
-      runSpacing: 20,
-      children: [
-        _buildContributorProfile(context, 'https://github.com/therundmc',
-            'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine Cavallera'),
-        _buildContributorProfile(context, 'https://github.com/chloefont',
-            'https://avatars.githubusercontent.com/u/60699567?v=4', 'Chloé Fontaine'),
-        _buildContributorProfile(context, 'https://github.com/Maxime-Nicolet',
-            'https://avatars.githubusercontent.com/u/21175110?v=4', 'Maxime Nicolet'),
-        _buildContributorProfile(context, 'https://github.com/tchekoto',
-            'https://avatars.githubusercontent.com/u/16468108?v=4', 'William Fromont'),
-      ],
     );
   }
 
@@ -252,6 +195,7 @@ class InfoScreen extends StatelessWidget {
             }
           : null,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             decoration: BoxDecoration(
@@ -265,15 +209,18 @@ class InfoScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
+          SizedBox(
+            width: 80,
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

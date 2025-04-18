@@ -19,7 +19,7 @@ class SupportCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
+          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
           child: Text(
             'Informations sur l\'événement',
             style: const TextStyle(
