@@ -90,6 +90,10 @@ class Geolocation with WidgetsBindingObserver {
   Stream<Map<String, int>> get stream => _streamController.stream;
 
   Future<geo.Position?> get currentPosition async {
+    if (!await PermissionHelper.requestLocationWhenInUsePermission()) {
+      LogHelper.logError("[GEO] Location permission not granted. Cannot get current position.");
+      return null;
+    }
     try {
       return await geo.Geolocator.getCurrentPosition();
     } catch (e) {

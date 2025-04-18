@@ -89,9 +89,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         _zonePoints = zone.map((p) => LatLng(p.latitude, p.longitude)).toList();
       });
     } else {
-      // fallback to config if needed
       setState(() {
-        _zonePoints = Config.ZONE_EVENT.map((p) => LatLng(p.latitude, p.longitude)).toList();
+        _zonePoints = [];
       });
     }
   }
@@ -125,8 +124,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
   Future<void> _fetchUserPosition() async {
     final pos = await widget.geolocation.currentPosition;
-    // Debug print for current user position
-    // ignore: avoid_print
     print('[DynamicMapCard] Current user position: $pos');
     if (mounted) {
       setState(() {
@@ -154,8 +151,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   void _fitMapBounds() {
     if (!_isMapReady) return;
 
-    final double defaultLat = Config.LAT1;
-    final double defaultLon = Config.LON1;
+    final double defaultLat = _meetingPoint?.latitude ?? Config.DEFAULT_LAT1;
+    final double defaultLon = _meetingPoint?.longitude ?? Config.DEFAULT_LON1;
     double userLat = _currentLatLng?.latitude ?? defaultLat;
     double userLon = _currentLatLng?.longitude ?? defaultLon;
 
@@ -316,8 +313,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   Widget build(BuildContext context) {
     super.build(context);
 
-    final double defaultLat = Config.LAT1;
-    final double defaultLon = Config.LON1;
+    final double defaultLat = _meetingPoint?.latitude ?? Config.DEFAULT_LAT1;
+    final double defaultLon = _meetingPoint?.longitude ?? Config.DEFAULT_LON1;
     double userLat = _currentLatLng?.latitude ?? defaultLat;
     double userLon = _currentLatLng?.longitude ?? defaultLon;
 
@@ -409,12 +406,13 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             ),
                             MarkerLayer(
                               markers: [
-                                Marker(
-                                  point: LatLng(userLat, userLon),
-                                  width: _MapStyles.userIconSize,
-                                  height: _MapStyles.userIconSize,
-                                  child: _userPositionMarker(),
-                                ),
+                                if (_currentLatLng != null)
+                                  Marker(
+                                    point: _currentLatLng!,
+                                    width: _MapStyles.userIconSize,
+                                    height: _MapStyles.userIconSize,
+                                    child: _userPositionMarker(),
+                                  ),
                                 if (_meetingPoint != null)
                                   Marker(
                                     point: _meetingPoint!,

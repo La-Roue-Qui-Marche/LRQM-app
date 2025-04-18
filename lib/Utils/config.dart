@@ -6,38 +6,18 @@ import 'package:latlong2/latlong.dart'; // <-- Add this import
 class Config {
   // ------------------- Version----------------
   static String _appVersion = 'Unknown';
+
   // ------------------- API -------------------
   static const String API_URL = 'api.la-rqm.dynv6.net';
   static const String API_COMMON_ADDRESS = '/app/measures/';
+
   // ----------------- QR code -----------------
   static const String QR_CODE_S_VALUE = 'Ready';
   static const String QR_CODE_F_VALUE = 'Stop';
-  // ------------- Zone Evènement --------------
-  // static const double LAT1 = 46.62094732231268;
-  // static const double LON1 = 6.71095185969227;
-  // static const double LAT2 = 46.60796048493062;
-  // static const double LON2 = 6.7304699219465105;
 
-  // ------------- Further Expanded Zone Lac Léman to Include Martigny --------------
-  static const double LAT1 = 46.8000; // North-East latitude (expanded)
-  static const double LON1 = 6.9000; // North-East longitude (expanded to include Martigny)
-  static const double LAT2 = 46.4500; // South-West latitude (unchanged)
-  static const double LON2 = 6.4000; // South-West longitude (unchanged)
-
-  static final List<mp.LatLng> ZONE_EVENT = [
-    mp.LatLng(LAT1, LON1),
-    mp.LatLng(LAT2, LON1),
-    mp.LatLng(LAT2, LON2),
-    mp.LatLng(LAT1, LON2),
-  ];
-
-  /// Rassemblement point (point de rassemblement) of the event zone (raw values)
-  static const double RASSEMBLEMENT_LAT = 46.625; // example: center of the zone, adjust as needed
-  static const double RASSEMBLEMENT_LON = 6.65; // example: center of the zone, adjust as needed
-  static final mp.LatLng RASSEMBLEMENT_POINT = mp.LatLng(RASSEMBLEMENT_LAT, RASSEMBLEMENT_LON);
-
-  // For flutter_map convenience
-  static final LatLng RASSEMBLEMENT_POINT_FLUTTER = LatLng(RASSEMBLEMENT_LAT, RASSEMBLEMENT_LON);
+  // ------------- POS FALLBACK --------------
+  static const double DEFAULT_LAT1 = 46.62094732231268;
+  static const double DEFAULT_LON1 = 6.71095185969227;
 
   // ----------------- Geolocation Config -----------------
   static const Duration LOCATION_UPDATE_INTERVAL = Duration(seconds: 5);

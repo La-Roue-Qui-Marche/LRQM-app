@@ -17,6 +17,7 @@ import 'SetupTeamScreen.dart';
 import '../Geolocalisation/Geolocation.dart';
 import '../API/NewMeasureController.dart';
 import '../Data/MeasureData.dart';
+import '../Data/EventData.dart';
 
 class SetupPosScreen extends StatefulWidget {
   final Geolocation geolocation;
@@ -31,9 +32,29 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   bool _isLoading = false;
   bool _isMapLoading = false;
 
+  double? _meetingLat;
+  double? _meetingLon;
+
   @override
   void initState() {
     super.initState();
+    _loadMeetingPoint();
+  }
+
+  Future<void> _loadMeetingPoint() async {
+    final points = await EventData.getMeetingPointLatLngList();
+    if (points != null && points.isNotEmpty) {
+      setState(() {
+        _meetingLat = points[0].latitude;
+        _meetingLon = points[0].longitude;
+      });
+    } else {
+      // fallback to center of Switzerland if not set
+      setState(() {
+        _meetingLat = 46.8182;
+        _meetingLon = 8.2275;
+      });
+    }
   }
 
   void _navigateToSetupTeamScreen() async {
@@ -195,25 +216,44 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   void _openInGoogleMaps() async {
-    final Uri fallbackUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Config.LAT1},${Config.LON1}');
-    final Uri geoUrl = Uri.parse('geo:0,0?q=${Config.LAT1},${Config.LON1}');
-    final Uri iosUrl = Uri.parse('maps:${Config.LAT1},${Config.LON1}');
+    if (_meetingLat == null || _meetingLon == null) {
+      showInSnackBar("Impossible d'ouvrir l'application de navigation.");
+      return;
+    }
+    double lat = _meetingLat!;
+    double lon = _meetingLon!;
+
+    Uri? uri;
+    if (Platform.isIOS) {
+      // Apple Maps with coordinates
+      uri = Uri.parse('http://maps.apple.com/?ll=$lat,$lon');
+    } else if (Platform.isAndroid) {
+      // Android geo URI
+      uri = Uri.parse('geo:$lat,$lon?q=$lat,$lon');
+    } else {
+      // Fallback to Google Maps web
+      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lon');
+    }
 
     try {
-      if (Platform.isAndroid && await canLaunchUrl(geoUrl)) {
-        await launchUrl(geoUrl);
-      } else if (Platform.isIOS && await canLaunchUrl(iosUrl)) {
-        await launchUrl(iosUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
       } else {
-        await launchUrl(fallbackUrl);
+        showInSnackBar("Impossible d'ouvrir l'application de navigation.");
       }
     } catch (e) {
-      showInSnackBar("Impossible d'ouvrir Maps.");
+      showInSnackBar("Impossible d'ouvrir l'application de navigation.");
     }
   }
 
   void _copyCoordinates() {
-    Clipboard.setData(ClipboardData(text: '${Config.LAT1},${Config.LON1}'));
+    if (_meetingLat == null || _meetingLon == null) {
+      showInSnackBar("Impossible de copier les coordonnées.");
+      return;
+    }
+    double lat = _meetingLat!;
+    double lon = _meetingLon!;
+    Clipboard.setData(ClipboardData(text: '$lat,$lon'));
     showInSnackBar('Coordonnées copiées.');
   }
 
@@ -230,9 +270,9 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           height: MediaQuery.of(context).size.height * 0.5,
           child: Stack(
             children: [
-              const Padding(
-                padding: EdgeInsets.only(bottom: 32.0),
-                //child: DynamicMapCard(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 32.0),
+                child: DynamicMapCard(geolocation: widget.geolocation),
               ),
               Positioned(
                 top: 10,
