@@ -49,10 +49,10 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         _meetingLon = points[0].longitude;
       });
     } else {
-      // fallback to center of Switzerland if not set
+      // no fallback
       setState(() {
-        _meetingLat = 46.8182;
-        _meetingLon = 8.2275;
+        _meetingLat = null;
+        _meetingLon = null;
       });
     }
   }
