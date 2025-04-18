@@ -39,6 +39,7 @@ class Config {
   // ----------------- Confirmation Code Secret Key & Prime -----------------
   static const int CONFIRMATION_SECRET_KEY = 21062025;
   static const int CONFIRMATION_PRIME = 7919;
+  static const String PREFIX_LETTER = 'C';
 
   /// Function to get the application version.
   static Future<String> getAppVersion() async {

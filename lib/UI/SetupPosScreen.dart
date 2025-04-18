@@ -266,23 +266,25 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (_) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.5,
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 32.0),
-                child: DynamicMapCard(geolocation: widget.geolocation),
+        return SafeArea(
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
+            child: SizedBox(
+              height: 480, // Fixed height for the modal
+              child: Stack(
+                children: [
+                  DynamicMapCard(geolocation: widget.geolocation),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
               ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.black),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },

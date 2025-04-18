@@ -182,35 +182,38 @@ class _LoginState extends State<Login> {
 
     try {
       int dossardNumber = int.parse(_controller.text);
-      Result dosNumResult = await NewUserController.getUser(dossardNumber);
+      Result<Map<String, dynamic>> loginResult = await NewUserController.login(_controller.text, _selectedEvent['id']);
 
-      if (dosNumResult.error != null) {
-        _showUserNotFoundModal();
+      final user = loginResult.value;
+      // Check if user object is valid
+      if (loginResult.error != null ||
+          user == null ||
+          user['id'] == null ||
+          user['username'] == null ||
+          user['bib_id'] == null ||
+          user['event_id'] == null) {
         Navigator.pop(context);
-      } else {
-        final user = dosNumResult.value;
-        if (user['event_id'] != _selectedEvent['id']) {
-          Navigator.pop(context);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            showTextModal(
-              context,
-              "Utilisateur non trouvé",
-              "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
-              showConfirmButton: true,
-            );
-          });
-          return;
-        }
-
-        setState(() {
-          _name = user['username'];
-          _dossard = dossardNumber;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showTextModal(
+            context,
+            "Utilisateur non trouvé",
+            "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
+            showConfirmButton: true,
+            externalUrl: "https://larouequimarche.ch/levenement/inscription/",
+            externalUrlLabel: "S'inscrire en ligne",
+          );
         });
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ConfirmScreen(name: _name, dossard: _dossard)),
-        );
+        return;
       }
+
+      setState(() {
+        _name = user['username'];
+        _dossard = dossardNumber;
+      });
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ConfirmScreen(name: _name, dossard: _dossard)),
+      );
     } catch (e) {
       showInSnackBar("Numéro de dossard invalide");
       Navigator.pop(context);

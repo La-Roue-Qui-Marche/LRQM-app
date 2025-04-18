@@ -19,19 +19,24 @@ class ConfirmScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
-  String generate4DigitKey(int input, int secretKey, int prime) {
-    int xored = input ^ secretKey;
+  String generate4DigitKey(dynamic input, int secretKey, int prime) {
+    // Ensure input is int
+    int bibInt = input is int ? input : int.tryParse(input.toString()) ?? 0;
+    int xored = bibInt ^ secretKey;
     int masked = xored * prime;
     int result = masked % 10000;
     return result.toString().padLeft(4, '0');
   }
 
-  void showConfirmationCodeModal(BuildContext context, int bibId) {
+  void showConfirmationCodeModal(BuildContext context, dynamic bibId) {
+    // Ensure bibId is int
+    int bibInt = bibId is int ? bibId : int.tryParse(bibId.toString()) ?? 0;
     final List<TextEditingController> digitControllers = List.generate(4, (_) => TextEditingController());
     final List<FocusNode> focusNodes = List.generate(4, (_) => FocusNode());
     String? errorText;
     final int secretKey = Config.CONFIRMATION_SECRET_KEY;
     final int prime = Config.CONFIRMATION_PRIME;
+    final String prefix = Config.PREFIX_LETTER;
 
     showModalBottomSheet(
       context: context,
@@ -79,70 +84,77 @@ class ConfirmScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      "Veuillez entrer le code de confirmation reçu.",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.left,
-                    ),
-                    const SizedBox(height: 16),
+                    // --- Show prefix with dash before input boxes ---
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(4, (idx) {
-                        return Container(
-                          width: 48,
-                          margin: EdgeInsets.symmetric(horizontal: 6),
-                          child: TextField(
-                            controller: digitControllers[idx],
-                            focusNode: focusNodes[idx],
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            maxLength: 1,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          child: Text(
+                            '$prefix-',
                             style: const TextStyle(
                               fontSize: 32,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                               color: Color(Config.COLOR_APP_BAR),
-                              letterSpacing: 2.0,
+                              letterSpacing: 2,
                             ),
-                            decoration: InputDecoration(
-                              counterText: "",
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color(Config.COLOR_APP_BAR),
-                                  width: 1.5,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color(Config.COLOR_APP_BAR),
-                                  width: 2,
-                                ),
-                              ),
-                              errorText: idx == 0 ? errorText : null,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                            ),
-                            onChanged: (value) {
-                              if (value.length > 1) {
-                                digitControllers[idx].text = value.substring(0, 1);
-                                digitControllers[idx].selection = TextSelection.fromPosition(
-                                  TextPosition(offset: 1),
-                                );
-                              }
-                              handleInput(idx, value);
-                              setState(() {
-                                errorText = null;
-                              });
-                            },
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
                           ),
-                        );
-                      }),
+                        ),
+                        // The 4 input boxes
+                        ...List.generate(4, (idx) {
+                          return Container(
+                            width: 48,
+                            margin: EdgeInsets.symmetric(horizontal: 3),
+                            child: TextField(
+                              controller: digitControllers[idx],
+                              focusNode: focusNodes[idx],
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              maxLength: 1,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w600,
+                                color: Color(Config.COLOR_APP_BAR),
+                                letterSpacing: 2.0,
+                              ),
+                              decoration: InputDecoration(
+                                counterText: "",
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(Config.COLOR_APP_BAR),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(Config.COLOR_APP_BAR),
+                                    width: 2,
+                                  ),
+                                ),
+                                errorText: idx == 0 ? errorText : null,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
+                              ),
+                              onChanged: (value) {
+                                if (value.length > 1) {
+                                  digitControllers[idx].text = value.substring(0, 1);
+                                  digitControllers[idx].selection = TextSelection.fromPosition(
+                                    TextPosition(offset: 1),
+                                  );
+                                }
+                                handleInput(idx, value);
+                                setState(() {
+                                  errorText = null;
+                                });
+                              },
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     const Align(
@@ -172,7 +184,7 @@ class ConfirmScreen extends StatelessWidget {
                             text: "OK",
                             onPressed: () async {
                               String code = getCode();
-                              String expectedCode = generate4DigitKey(bibId, secretKey, prime);
+                              String expectedCode = generate4DigitKey(bibInt, secretKey, prime);
                               if (code.length == 4 && code == expectedCode) {
                                 Navigator.of(context).pop(); // Close modal
                                 Navigator.pushReplacement(

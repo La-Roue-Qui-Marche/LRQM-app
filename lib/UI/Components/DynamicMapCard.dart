@@ -3,8 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-// Remove Geolocator import
-// import 'package:geolocator/geolocator.dart';
 
 import '../../Utils/config.dart';
 import '../../Utils/Permission.dart';
@@ -12,7 +10,6 @@ import '../../Geolocalisation/Geolocation.dart';
 import '../../Data/EventData.dart';
 
 class DynamicMapCard extends StatefulWidget {
-  // Remove title parameter
   final Geolocation geolocation;
 
   const DynamicMapCard({Key? key, required this.geolocation}) : super(key: key);
@@ -59,11 +56,9 @@ class _MapStyles {
 
 class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAliveClientMixin {
   final MapController _mapController = MapController();
-  // Remove Position? _currentPosition;
   LatLng? _currentLatLng;
   bool _isFetchingPosition = true;
   bool _isMapReady = false;
-  // Remove StreamSubscription<Position>? _positionSubscription;
   Timer? _positionTimer;
   bool _showLegend = false;
   bool _mapInteractive = false; // Add: controls map interactivity
@@ -109,7 +104,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   }
 
   Future<void> _initLocation() async {
-    // No permission or Geolocator logic here, just poll from Geolocation
     _fetchUserPosition();
     _positionTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchUserPosition());
 
@@ -133,7 +127,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
           _currentLatLng = null;
         }
         _isFetchingPosition = false;
-        // Only fit bounds if map is locked (not interactive)
         if (_isMapReady && !_mapInteractive) _fitMapBounds();
       });
     }
@@ -149,7 +142,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   }
 
   void _fitMapBounds() {
-    if (!_isMapReady) return;
+    if (!_isMapReady || !mounted) return;
 
     final double defaultLat = _meetingPoint?.latitude ?? Config.DEFAULT_LAT1;
     final double defaultLon = _meetingPoint?.longitude ?? Config.DEFAULT_LON1;
@@ -179,7 +172,15 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     zoom -= 0.3;
     if (zoom < 0.8) zoom = 0.8;
 
-    _mapController.move(center, zoom);
+    // Schedule move after frame to ensure controller is attached
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        _mapController.move(center, zoom);
+      } catch (e) {
+        // Ignore if controller is not ready
+      }
+    });
   }
 
   Widget _userPositionMarker() {
@@ -323,7 +324,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Hardcode the title here
         Padding(
           padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
           child: Text(
@@ -338,7 +338,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         Stack(
           children: [
             AbsorbPointer(
-              absorbing: !_mapInteractive, // Change: allow interaction if _mapInteractive
+              absorbing: !_mapInteractive,
               child: Container(
                 height: mapHeight,
                 margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
@@ -427,7 +427,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                 ),
               ),
             ),
-            // Only show floating buttons if map is ready and not fetching position
             if (!_isFetchingPosition && _isMapReady)
               Positioned(
                 top: 20,
@@ -451,7 +450,6 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             ),
                     ),
                     const SizedBox(height: 14),
-                    // Remove fullscreen button, add map interaction toggle button
                     Material(
                       color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
                       shape: const CircleBorder(),
@@ -466,10 +464,9 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                         onPressed: () {
                           setState(() {
                             _mapInteractive = !_mapInteractive;
-                            // If just locked, recenter the map and reset rotation to north
                             if (!_mapInteractive) {
                               _fitMapBounds();
-                              _mapController.rotate(0); // Reset map direction to north
+                              _mapController.rotate(0);
                             }
                           });
                         },

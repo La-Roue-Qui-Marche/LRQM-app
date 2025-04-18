@@ -4,7 +4,7 @@ import 'dart:async';
 import '../../Utils/config.dart';
 
 class ContributionGraph extends StatefulWidget {
-  final Stream<Map<String, int>> geoStream; // Stream passed as a parameter
+  final Stream<Map<String, int>> geoStream;
 
   const ContributionGraph({super.key, required this.geoStream});
 
@@ -15,36 +15,32 @@ class ContributionGraph extends StatefulWidget {
 class ContributionGraphState extends State<ContributionGraph> {
   final List<FlSpot> _graphData = [];
   static const int maxGraphPoints = 150;
-  static const int updateIntervalSeconds = 10; // Interval for calculating the diff
-  int _lastDistance = 0; // Track the last distance value
-  int _accumulatedDistance = 0; // Accumulate distance over the interval
-  Timer? _updateTimer; // Timer to trigger updates every 10 seconds
+  static const int updateIntervalSeconds = 10;
+  int _lastDistance = 0;
+  int _accumulatedDistance = 0;
+  Timer? _updateTimer;
 
   @override
   void initState() {
     super.initState();
-
-    // Listen to the stream and accumulate distance
     widget.geoStream.listen((event) {
       final currentDistance = event["distance"] ?? 0;
-      final diff = currentDistance - _lastDistance; // Calculate the difference
-      _lastDistance = currentDistance; // Update the last distance
-      _accumulatedDistance += diff; // Accumulate the difference
+      final diff = currentDistance - _lastDistance;
+      _lastDistance = currentDistance;
+      _accumulatedDistance += diff;
     });
-
-    // Set up a timer to update the graph every 10 seconds
     _updateTimer = Timer.periodic(
       const Duration(seconds: updateIntervalSeconds),
       (_) {
         _addContributionValue(_accumulatedDistance.toDouble() / 10);
-        _accumulatedDistance = 0; // Reset the accumulated distance
+        _accumulatedDistance = 0;
       },
     );
   }
 
   @override
   void dispose() {
-    _updateTimer?.cancel(); // Cancel the timer when the widget is disposed
+    _updateTimer?.cancel();
     super.dispose();
   }
 
@@ -52,12 +48,11 @@ class ContributionGraphState extends State<ContributionGraph> {
     setState(() {
       if (_graphData.length >= maxGraphPoints) {
         _graphData.removeAt(0);
-        // Shift all X values back to keep the graph clean
         for (int i = 0; i < _graphData.length; i++) {
           _graphData[i] = FlSpot(i.toDouble(), _graphData[i].y);
         }
       }
-      _graphData.add(FlSpot(_graphData.length.toDouble(), contribution));
+      _graphData.add(FlSpot(_graphData.length.toDouble(), contribution / 10));
     });
   }
 
@@ -85,6 +80,7 @@ class ContributionGraphState extends State<ContributionGraph> {
             style: TextStyle(
               fontSize: 16,
               color: Colors.black87,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
@@ -154,7 +150,7 @@ class ContributionGraphState extends State<ContributionGraph> {
           ),
           if (!hasEnoughData)
             const Padding(
-              padding: EdgeInsets.only(top: 6.0),
+              padding: EdgeInsets.only(top: 12.0),
               child: Text(
                 "Continue d'avancer pour voir ta progression !",
                 style: TextStyle(fontSize: 13, color: Colors.black45),

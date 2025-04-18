@@ -103,4 +103,25 @@ class NewUserController {
       return Result<int>(error: error.toString());
     });
   }
+
+  /// Login a user by bib_id and event_id.
+  static Future<Result<Map<String, dynamic>>> login(String bibId, int eventId) async {
+    final uri = Uri.https(Config.API_URL, '/login');
+    final body = {
+      "bib_id": bibId,
+      "event_id": eventId,
+    };
+
+    return _client.post(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"}).then((response) {
+      if (response.statusCode == 200) {
+        return Result<Map<String, dynamic>>(value: jsonDecode(response.body));
+      } else if (response.statusCode == 404) {
+        return Result<Map<String, dynamic>>(error: "User not found");
+      } else {
+        throw Exception('Failed to login: ${response.statusCode}');
+      }
+    }).onError((error, stackTrace) {
+      return Result<Map<String, dynamic>>(error: error.toString());
+    });
+  }
 }

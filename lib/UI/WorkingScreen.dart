@@ -55,12 +55,14 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   bool _isEventOver = false, _isMeasureOngoing = false, _isCountingInZone = true;
   final GlobalKey iconKey = GlobalKey();
   final ScrollController _parentScrollController = ScrollController();
+  late PageController _pageController; // Add PageController
   late GeolocationConfig _geoConfig;
   late Geolocation _geolocation;
 
   // --- Lifecycle ---
   @override
   void initState() {
+    _pageController = PageController(initialPage: _currentPage); // Initialize first!
     super.initState();
     _geoConfig = GeolocationConfig(
       locationUpdateInterval: Config.LOCATION_UPDATE_INTERVAL,
@@ -83,6 +85,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     _timer?.cancel();
     _stopEventRefreshTimer();
     _geolocation.stopListening();
+    _pageController.dispose(); // Dispose PageController
     super.dispose();
   }
 
@@ -475,6 +478,14 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     );
   }
 
+  void _animateToPage(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.ease,
+    );
+  }
+
   // --- Main Build ---
   @override
   Widget build(BuildContext context) {
@@ -494,9 +505,21 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 0.0),
-              child: SingleChildScrollView(
-                controller: _parentScrollController,
-                child: _currentPage == 0 ? _buildPersonalInfoContent(displayedTime) : _buildEventInfoContent(),
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
+                children: [
+                  // Page 1: Informations personnelles
+                  SingleChildScrollView(
+                    controller: _parentScrollController,
+                    child: _buildPersonalInfoContent(displayedTime),
+                  ),
+                  // Page 2: Informations sur l'évènement
+                  SingleChildScrollView(
+                    controller: _parentScrollController,
+                    child: _buildEventInfoContent(),
+                  ),
+                ],
               ),
             ),
             Positioned(
@@ -505,7 +528,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
               right: 0.0,
               child: NavBar(
                 currentPage: _currentPage,
-                onPageSelected: (int page) => setState(() => _currentPage = page),
+                onPageSelected: (int page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                  _animateToPage(page);
+                },
                 isMeasureActive: _isMeasureOngoing,
                 canStartNewSession: !_isEventOver,
                 onStartStopPressed: () {

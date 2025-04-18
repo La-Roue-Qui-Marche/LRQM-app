@@ -405,7 +405,7 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
       animation: _controller,
       builder: (_, child) {
         return Positioned(
-          top: 200 - widget.offsetY * _controller.value,
+          top: 150 - widget.offsetY * _controller.value,
           left: MediaQuery.of(context).size.width / 3.5 + widget.offsetX * _controller.value,
           child: Opacity(
             opacity: 1 - _controller.value,
