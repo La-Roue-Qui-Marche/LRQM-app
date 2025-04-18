@@ -22,7 +22,7 @@ class Config {
   // ----------------- Geolocation Config -----------------
   static const Duration LOCATION_UPDATE_INTERVAL = Duration(seconds: 5);
   static const int LOCATION_DISTANCE_FILTER = 5;
-  static const int MAX_CHUNK_SIZE = 40;
+  static const int MAX_CHUNK_SIZE = 200;
   static const double ACCURACY_THRESHOLD = 20;
   static const int DISTANCE_THRESHOLD = 40;
   static const double SPEED_THRESHOLD = 10;
