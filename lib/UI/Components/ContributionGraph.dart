@@ -52,7 +52,7 @@ class ContributionGraphState extends State<ContributionGraph> {
           _graphData[i] = FlSpot(i.toDouble(), _graphData[i].y);
         }
       }
-      _graphData.add(FlSpot(_graphData.length.toDouble(), contribution / 10));
+      _graphData.add(FlSpot(_graphData.length.toDouble(), contribution));
     });
   }
 
