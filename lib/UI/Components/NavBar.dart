@@ -67,9 +67,9 @@ class NavBar extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? Color(Config.COLOR_BUTTON).withOpacity(0.1) : Colors.white,
+          color: selected ? Color(Config.COLOR_BUTTON).withOpacity(0) : Colors.white,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -81,7 +81,7 @@ class NavBar extends StatelessWidget {
               width: 28,
               height: 28,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
