@@ -206,7 +206,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
           ),
           InfoCard(
-            title: "Prépare-toi !",
+            title: "Prépares-toi !",
             data: "Rends-toi au point de départ de l'évènement.",
             actionItems: [
               ActionItem(

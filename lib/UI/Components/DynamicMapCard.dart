@@ -130,7 +130,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     _fetchUserPosition();
     _positionTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchUserPosition());
 
-    Future.delayed(const Duration(seconds: 4), () {
+    Future.delayed(const Duration(seconds: 2), () {
       if (mounted && !_isMapReady) {
         setState(() {
           _isMapReady = true;
@@ -369,7 +369,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
     final mapHeight = 450.0;
 
-    // Map tile selection logic (only voyager and satellite)
+    // Map tile selection logic (voyager and satellite)
     String urlTemplate;
     List<String> subdomains;
     String tooltip;
@@ -389,9 +389,9 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         break;
       case _MapBaseType.satellite:
       default:
-        urlTemplate = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+        urlTemplate = "https://wmts10.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg";
         subdomains = [];
-        tooltip = "Vue moderne";
+        tooltip = "Vue Swisstopo";
         icon = Icons.terrain;
         polygonColor = Colors.white.withOpacity(0.25);
         polygonBorderColor = Colors.white;
@@ -471,6 +471,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                               urlTemplate: urlTemplate,
                               subdomains: subdomains,
                               retinaMode: urlTemplate.contains('{r}') ? RetinaMode.isHighDensity(context) : false,
+                              // attributionBuilder removed for flutter_map 7.x
                             ),
                             PolygonLayer(
                               polygons: [
@@ -507,6 +508,21 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                 ),
               ),
             ),
+            // Attribution overlay for map provider
+            if ((!_isFetchingPosition && _isMapReady) &&
+                (_mapBaseType == _MapBaseType.satellite || _mapBaseType == _MapBaseType.voyager))
+              Positioned(
+                bottom: 18,
+                right: 24,
+                child: Container(
+                  color: Colors.white.withOpacity(0.7),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Text(
+                    _mapBaseType == _MapBaseType.voyager ? "© OpenStreetMap contributors © CARTO" : "© swisstopo",
+                    style: const TextStyle(fontSize: 10, color: Colors.black87),
+                  ),
+                ),
+              ),
             if (!_isFetchingPosition && _isMapReady)
               Positioned(
                 top: 20,

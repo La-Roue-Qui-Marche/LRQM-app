@@ -154,8 +154,8 @@ class NavBar extends StatelessWidget {
             SvgPicture.asset(
               selected ? svgActive : svgInactive,
               color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
-              width: 24,
-              height: 24,
+              width: 26,
+              height: 26,
             ),
             const SizedBox(height: 3),
             Text(
