@@ -39,6 +39,26 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   void initState() {
     super.initState();
     _loadMeetingPoint();
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    bool hasPermission = await PermissionHelper.isLocationAlwaysGranted();
+    if (!hasPermission) {
+      _showLocationPermissionModal();
+    }
+  }
+
+  void _showLocationPermissionModal() {
+    showTextModal(
+      context,
+      "Position en arrière-plan",
+      "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?",
+      showConfirmButton: true,
+      onConfirm: () async {
+        await PermissionHelper.requestLocationAlwaysPermission();
+      },
+    );
   }
 
   Future<void> _loadMeetingPoint() async {
@@ -65,14 +85,11 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       if (!hasPermission) {
         showTextModal(
           context,
-          "Positon en arrière-plan",
-          "Pouvez-vous sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer votre distance parcourue, même si votre téléphone est inactif, dans votre poche par exemple ?",
+          "Position en arrière-plan",
+          "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer votre distance parcourue, même si votre téléphone est inactif, dans votre poche par exemple ?",
           showConfirmButton: true,
           onConfirm: () async {
-            bool granted = await PermissionHelper.requestLocationAlwaysPermission();
-            if (!granted) {
-              await PermissionHelper.openLocationSettings();
-            }
+            await PermissionHelper.openLocationSettings();
           },
         );
         setState(() => _isLoading = false);
@@ -189,8 +206,8 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
           ),
           InfoCard(
-            title: "Préparez-vous !",
-            data: "Rendez-vous au point de départ de l'évènement.",
+            title: "Prépare-toi !",
+            data: "Rends-toi au point de départ de l'évènement.",
             actionItems: [
               ActionItem(
                 icon: SvgPicture.asset('assets/icons/map.svg', color: Colors.black87, width: 28, height: 28),
@@ -225,8 +242,8 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
 
     Uri? uri;
     if (Platform.isIOS) {
-      // Apple Maps with coordinates
-      uri = Uri.parse('http://maps.apple.com/?ll=$lat,$lon');
+      // Use maps:// protocol to directly open the native Apple Maps app
+      uri = Uri.parse('maps://?ll=$lat,$lon&q=Point+de+départ');
     } else if (Platform.isAndroid) {
       // Android geo URI
       uri = Uri.parse('geo:$lat,$lon?q=$lat,$lon');
@@ -236,13 +253,11 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     }
 
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         showInSnackBar("Impossible d'ouvrir l'application de navigation.");
       }
     } catch (e) {
-      showInSnackBar("Impossible d'ouvrir l'application de navigation.");
+      showInSnackBar("Impossible d'ouvrir l'application de navigation: ${e.toString()}");
     }
   }
 

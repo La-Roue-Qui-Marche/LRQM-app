@@ -26,10 +26,10 @@ class _MapStyles {
   static const double zoneFillOpacity = 0.1;
   static const double legendBgOpacity = 0.95;
 
-  static const double userIconSize = 28;
-  static const double rassemblementIconSize = 28;
-  static const double legendUserIconSize = 22;
-  static const double legendRassemblementIconSize = 20;
+  static const double userIconSize = 36; // Increased from 28
+  static const double rassemblementIconSize = 34; // Increased from 28
+  static const double legendUserIconSize = 26; // Increased from 22
+  static const double legendRassemblementIconSize = 24; // Increased from 20
 
   static Icon userPositionIcon({double? size}) => Icon(
         Icons.my_location,
@@ -39,7 +39,7 @@ class _MapStyles {
 
   static Icon rassemblementIcon({double? size}) => Icon(
         Icons.location_pin,
-        color: zoneBorderColor,
+        color: Color(Config.COLOR_BUTTON), // Changed from zoneBorderColor to BUTTON_COLOR
         size: size ?? rassemblementIconSize,
       );
 
@@ -406,19 +406,21 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             ),
                             MarkerLayer(
                               markers: [
-                                if (_currentLatLng != null)
-                                  Marker(
-                                    point: _currentLatLng!,
-                                    width: _MapStyles.userIconSize,
-                                    height: _MapStyles.userIconSize,
-                                    child: _userPositionMarker(),
-                                  ),
+                                // Place meeting point first so it appears below user position
                                 if (_meetingPoint != null)
                                   Marker(
                                     point: _meetingPoint!,
                                     width: _MapStyles.rassemblementIconSize,
                                     height: _MapStyles.rassemblementIconSize,
                                     child: _gatheringPointMarker(),
+                                  ),
+                                // User position marker appears last (on top)
+                                if (_currentLatLng != null)
+                                  Marker(
+                                    point: _currentLatLng!,
+                                    width: _MapStyles.userIconSize,
+                                    height: _MapStyles.userIconSize,
+                                    child: _userPositionMarker(),
                                   ),
                               ],
                             ),

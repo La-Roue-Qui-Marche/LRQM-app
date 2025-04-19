@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../Utils/config.dart';
-import 'dart:ui';
 
 class NavBar extends StatelessWidget {
   final int currentPage;
@@ -21,34 +20,108 @@ class NavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.only(top: 8, bottom: 12), // Only top and bottom padding
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0x11000000), width: 1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      color: Colors.amber.withOpacity(0.2), // For debugging: visualize the area
+      child: Stack(
+        clipBehavior: Clip.none, // allows the button to overflow
+        alignment: Alignment.bottomCenter,
         children: [
-          _navBarButton(
-            context,
-            svgActive: 'assets/icons/user-fill.svg',
-            svgInactive: 'assets/icons/user.svg',
-            label: 'Personnel',
-            selected: currentPage == 0,
-            onTap: () => onPageSelected(0),
+          // Background bar
+          Container(
+            height: 72, // Slightly increased for better vertical balance
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: Color(0x11000000), width: 1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 6,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Even horizontal spacing
+              crossAxisAlignment: CrossAxisAlignment.center, // Vertically center items
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _navBarButton(
+                      context,
+                      svgActive: 'assets/icons/user-fill.svg',
+                      svgInactive: 'assets/icons/user.svg',
+                      label: 'Personnel',
+                      selected: currentPage == 0,
+                      onTap: () => onPageSelected(0),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 88), // Space for center button, matches floating button size
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _navBarButton(
+                      context,
+                      svgActive: 'assets/icons/calendar-fill.svg',
+                      svgInactive: 'assets/icons/calendar.svg',
+                      label: 'Événement',
+                      selected: currentPage == 1,
+                      onTap: () => onPageSelected(1),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          _startStopButton(context),
-          _navBarButton(
-            context,
-            svgActive: 'assets/icons/calendar-fill.svg',
-            svgInactive: 'assets/icons/calendar.svg',
-            label: 'Événement',
-            selected: currentPage == 1,
-            onTap: () => onPageSelected(1),
+
+          // Floating button
+          Positioned(
+            top: -12, // Adjusted for new button size to keep it centered
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: canStartNewSession ? onStartStopPressed : null,
+                child: Container(
+                  width: 66,
+                  height: 66,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: canStartNewSession
+                        ? LinearGradient(
+                            colors: isMeasureActive
+                                ? [Colors.redAccent, Colors.red]
+                                : [Color(Config.COLOR_BUTTON), Color(Config.COLOR_BUTTON)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : LinearGradient(
+                            colors: [Colors.grey.shade300, Colors.grey.shade400],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 4,
+                    ),
+                  ),
+                  child: Center(
+                    child: isMeasureActive
+                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 32)
+                        : SvgPicture.asset(
+                            'assets/icons/dot-circle.svg',
+                            color: Colors.white,
+                            width: 32,
+                            height: 32,
+                          ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -63,85 +136,36 @@ class NavBar extends StatelessWidget {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? Color(Config.COLOR_BUTTON).withOpacity(0) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
+        constraints: const BoxConstraints(
+          minWidth: 64,
+          minHeight: 64,
         ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+        alignment: Alignment.center,
+        color: Colors.transparent, // Remove debug color
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SvgPicture.asset(
               selected ? svgActive : svgInactive,
-              color: selected ? Color(Config.COLOR_BUTTON) : Colors.black87,
+              color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
               width: 28,
               height: 28,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: selected ? Color(Config.COLOR_BUTTON) : Colors.black54,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
                 fontSize: 13,
-                letterSpacing: 0.2,
+                fontWeight: FontWeight.w600,
+                color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _startStopButton(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: canStartNewSession ? onStartStopPressed : null,
-      child: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: canStartNewSession
-              ? LinearGradient(
-                  colors: isMeasureActive
-                      ? [Colors.redAccent, Colors.red]
-                      : [Color(Config.COLOR_BUTTON), Color(Config.COLOR_BUTTON)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : LinearGradient(
-                  colors: [Colors.grey.shade300, Colors.grey.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-          boxShadow: [
-            if (canStartNewSession)
-              BoxShadow(
-                color: (isMeasureActive ? Colors.red : Color(Config.COLOR_BUTTON)).withOpacity(0.25),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-          ],
-          border: Border.all(
-            color: Colors.white.withOpacity(0.7),
-            width: 2,
-          ),
-        ),
-        child: Center(
-          child: isMeasureActive
-              ? Icon(Icons.stop_rounded, key: const ValueKey('stop'), color: Colors.white, size: 36)
-              : SvgPicture.asset(
-                  'assets/icons/dot-circle.svg',
-                  key: const ValueKey('dot-circle'),
-                  color: Colors.white,
-                  width: 28,
-                  height: 28,
-                ),
         ),
       ),
     );
