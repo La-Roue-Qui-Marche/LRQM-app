@@ -285,6 +285,7 @@ class _LoginState extends State<Login> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [LengthLimitingTextInputFormatter(4)],
                         textAlign: TextAlign.center,
+                        showCursor: false, // Hide the caret
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pinput/pinput.dart';
 import '../API/NewUserController.dart';
 import '../Data/UserData.dart';
 import 'WorkingScreen.dart';
@@ -28,15 +29,51 @@ class ConfirmScreen extends StatelessWidget {
     return result.toString().padLeft(4, '0');
   }
 
-  void showConfirmationCodeModal(BuildContext context, dynamic bibId) {
-    // Ensure bibId is int
+  void showConfirmationCodeModal(BuildContext context, dynamic bibId, {Map<String, dynamic>? userData}) {
     int bibInt = bibId is int ? bibId : int.tryParse(bibId.toString()) ?? 0;
-    final List<TextEditingController> digitControllers = List.generate(4, (_) => TextEditingController());
-    final List<FocusNode> focusNodes = List.generate(4, (_) => FocusNode());
-    String? errorText;
     final int secretKey = Config.CONFIRMATION_SECRET_KEY;
     final int prime = Config.CONFIRMATION_PRIME;
     final String prefix = Config.PREFIX_LETTER;
+    final TextEditingController pinController = TextEditingController();
+    final FocusNode pinFocusNode = FocusNode();
+
+    String? errorText;
+    bool showRetry = false;
+
+    // Pin theme as in the provided style
+    final Color pinBorderColor = Color(Config.COLOR_BUTTON); // Use your app's button color
+
+    const errorColor = Color.fromRGBO(255, 234, 238, 1);
+    final Color fillColor = Color(Config.COLOR_BACKGROUND); // Use your app's background color
+    final defaultPinTheme = PinTheme(
+      width: 56,
+      height: 60,
+      textStyle: TextStyle(
+        fontSize: 32,
+        color: Color(Config.COLOR_APP_BAR),
+        fontWeight: FontWeight.w600,
+      ),
+      decoration: BoxDecoration(
+        color: fillColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.transparent),
+      ),
+    );
+
+    final focusedPinTheme = defaultPinTheme.copyWith(
+      height: 68,
+      width: 64,
+      decoration: defaultPinTheme.decoration!.copyWith(
+        border: Border.all(color: pinBorderColor),
+      ),
+    );
+
+    final errorPinTheme = defaultPinTheme.copyWith(
+      decoration: BoxDecoration(
+        color: errorColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
 
     showModalBottomSheet(
       context: context,
@@ -50,159 +87,156 @@ class ConfirmScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            // Helper to get the code from the 4 boxes
-            String getCode() => digitControllers.map((c) => c.text).join();
-
-            // Helper to move focus to next/previous box
-            void handleInput(int idx, String value) {
-              if (value.length == 1 && idx < 3) {
-                focusNodes[idx + 1].requestFocus();
-              } else if (value.isEmpty && idx > 0) {
-                focusNodes[idx - 1].requestFocus();
-              }
-            }
+            String expectedCode = generate4DigitKey(bibInt, secretKey, prime);
 
             return SafeArea(
               top: false,
               bottom: true,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24.0,
-                  right: 24.0,
-                  top: 32.0,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 32.0,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Confirmation requise",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(Config.COLOR_APP_BAR),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // --- Show prefix with dash before input boxes ---
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          child: Text(
-                            '$prefix-',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Color(Config.COLOR_APP_BAR),
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ),
-                        // The 4 input boxes
-                        ...List.generate(4, (idx) {
-                          return Container(
-                            width: 48,
-                            margin: EdgeInsets.symmetric(horizontal: 3),
-                            child: TextField(
-                              controller: digitControllers[idx],
-                              focusNode: focusNodes[idx],
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              maxLength: 1,
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w600,
-                                color: Color(Config.COLOR_APP_BAR),
-                                letterSpacing: 2.0,
-                              ),
-                              decoration: InputDecoration(
-                                counterText: "",
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: Color(Config.COLOR_APP_BAR),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: Color(Config.COLOR_APP_BAR),
-                                    width: 2,
-                                  ),
-                                ),
-                                errorText: idx == 0 ? errorText : null,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                              ),
-                              onChanged: (value) {
-                                if (value.length > 1) {
-                                  digitControllers[idx].text = value.substring(0, 1);
-                                  digitControllers[idx].selection = TextSelection.fromPosition(
-                                    TextPosition(offset: 1),
-                                  );
-                                }
-                                handleInput(idx, value);
-                                setState(() {
-                                  errorText = null;
-                                });
-                              },
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Code à 4 chiffres.',
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 24.0,
+                    right: 24.0,
+                    top: 32.0,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 32.0,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Code de confirmation",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                           color: Color(Config.COLOR_APP_BAR),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DiscardButton(
-                            text: "Annuler",
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Le code de confirmation commence par la lettre "$prefix-" suivie de 4 chiffres. Tu l\'as reçu par email lors de ton inscription.',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ActionButton(
-                            text: "OK",
-                            onPressed: () async {
-                              String code = getCode();
-                              String expectedCode = generate4DigitKey(bibInt, secretKey, prime);
-                              if (code.length == 4 && code == expectedCode) {
-                                Navigator.of(context).pop(); // Close modal
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const WorkingScreen()),
-                                );
-                              } else {
-                                setState(() {
-                                  errorText =
-                                      "Le code de confirmation n'est pas correct. Merci de vérifier dans vos mails, sinon rapprochez-vous des organisateurs pour en obtenir un.";
-                                });
-                              }
-                            },
+                        textAlign: TextAlign.left,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center, // Center vertically
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            width: 70, // Fixed width to reserve space for the prefix
+                            child: Text(
+                              '$prefix-',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Color(Config.COLOR_APP_BAR),
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 68,
+                            width: 260,
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Pinput(
+                                length: 4,
+                                controller: pinController,
+                                focusNode: pinFocusNode,
+                                defaultPinTheme: defaultPinTheme,
+                                focusedPinTheme: focusedPinTheme,
+                                errorPinTheme: errorPinTheme,
+                                separatorBuilder: (index) => const SizedBox(width: 6),
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  if (errorText != null || showRetry) {
+                                    setState(() {
+                                      errorText = null;
+                                      showRetry = false;
+                                    });
+                                  }
+                                },
+                                onCompleted: (code) async {
+                                  if (code == expectedCode) {
+                                    if (userData != null) {
+                                      await UserData.saveUser({
+                                        "id": userData['id'],
+                                        "username": userData['username'],
+                                        "bib_id": userData['bib_id'],
+                                        "event_id": userData['event_id'],
+                                      });
+                                    }
+                                    Navigator.of(context).pop();
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const WorkingScreen()),
+                                    );
+                                  } else {
+                                    setState(() {
+                                      errorText = "Le code de confirmation est incorrect. Merci de réessayer.";
+                                      showRetry = true;
+                                    });
+                                  }
+                                },
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (errorText != null) ...[
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            errorText!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.left,
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                      if (showRetry) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DiscardButton(
+                                text: "Annuler",
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ActionButton(
+                                icon: Icons.refresh,
+                                text: "Réessayer",
+                                onPressed: () {
+                                  pinController.clear();
+                                  setState(() {
+                                    errorText = null;
+                                    showRetry = false;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (!showRetry) ...[
+                        const SizedBox(height: 24),
+                        // No Annuler button here anymore
+                      ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -289,15 +323,8 @@ class ConfirmScreen extends StatelessWidget {
 
                           var tmp = await NewUserController.getUser(dossard);
                           if (!tmp.hasError && tmp.value != null) {
-                            await UserData.saveUser({
-                              "id": tmp.value!['id'],
-                              "username": tmp.value!['username'],
-                              "bib_id": tmp.value!['bib_id'],
-                              "event_id": tmp.value!['event_id'],
-                            });
-
                             // Use bib_id for code generation
-                            showConfirmationCodeModal(context, tmp.value!['bib_id']);
+                            showConfirmationCodeModal(context, tmp.value!['bib_id'], userData: tmp.value!);
                           } else {
                             showInSnackBar(context, tmp.error ?? "Une erreur inconnue est survenue.");
                           }
