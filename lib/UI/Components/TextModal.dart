@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../Utils/config.dart';
 import 'ActionButton.dart';
 import 'DiscardButton.dart';
@@ -15,7 +16,9 @@ void showTextModal(
   List<dynamic>? dropdownItems,
   Function(dynamic)? onDropdownChanged,
   dynamic selectedDropdownValue,
-  DateTime? countdownStartDate, // Added parameter for countdown
+  DateTime? countdownStartDate,
+  String? externalUrl,
+  String? externalUrlLabel,
 }) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     showModalBottomSheet(
@@ -44,6 +47,8 @@ void showTextModal(
               onDropdownChanged: onDropdownChanged,
               selectedDropdownValue: selectedDropdownValue,
               countdownStartDate: countdownStartDate,
+              externalUrl: externalUrl,
+              externalUrlLabel: externalUrlLabel,
             ),
           ),
         );
@@ -63,6 +68,8 @@ class _TextModalContent extends StatefulWidget {
   final Function(dynamic)? onDropdownChanged;
   final dynamic selectedDropdownValue;
   final DateTime? countdownStartDate;
+  final String? externalUrl;
+  final String? externalUrlLabel;
 
   const _TextModalContent({
     required this.title,
@@ -75,6 +82,8 @@ class _TextModalContent extends StatefulWidget {
     this.onDropdownChanged,
     this.selectedDropdownValue,
     this.countdownStartDate,
+    this.externalUrl,
+    this.externalUrlLabel,
     Key? key,
   }) : super(key: key);
 
@@ -119,6 +128,13 @@ class _TextModalContentState extends State<_TextModalContent> {
           "${difference.inMinutes.remainder(60).toString().padLeft(2, '0')} M : "
           "${difference.inSeconds.remainder(60).toString().padLeft(2, '0')} S";
     });
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Impossible d\'ouvrir $url');
+    }
   }
 
   @override
@@ -239,6 +255,39 @@ class _TextModalContentState extends State<_TextModalContent> {
                 color: Color(Config.COLOR_APP_BAR),
               ),
               textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+        if (widget.externalUrl != null) ...[
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: InkWell(
+              onTap: () => _launchUrl(widget.externalUrl!),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start, // Align left
+                  children: [
+                    Icon(Icons.open_in_new, color: Color(Config.COLOR_APP_BAR)),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        widget.externalUrlLabel ?? "S'inscrire sur le site web",
+                        style: const TextStyle(
+                          color: Color(Config.COLOR_APP_BAR),
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

@@ -182,35 +182,38 @@ class _LoginState extends State<Login> {
 
     try {
       int dossardNumber = int.parse(_controller.text);
-      Result dosNumResult = await NewUserController.getUser(dossardNumber);
+      Result<Map<String, dynamic>> loginResult = await NewUserController.login(_controller.text, _selectedEvent['id']);
 
-      if (dosNumResult.error != null) {
-        _showUserNotFoundModal();
+      final user = loginResult.value;
+      // Check if user object is valid
+      if (loginResult.error != null ||
+          user == null ||
+          user['id'] == null ||
+          user['username'] == null ||
+          user['bib_id'] == null ||
+          user['event_id'] == null) {
         Navigator.pop(context);
-      } else {
-        final user = dosNumResult.value;
-        if (user['event_id'] != _selectedEvent['id']) {
-          Navigator.pop(context);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            showTextModal(
-              context,
-              "Utilisateur non trouvé",
-              "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
-              showConfirmButton: true,
-            );
-          });
-          return;
-        }
-
-        setState(() {
-          _name = user['username'];
-          _dossard = dossardNumber;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showTextModal(
+            context,
+            "Utilisateur non trouvé",
+            "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
+            showConfirmButton: true,
+            externalUrl: "https://larouequimarche.ch/levenement/inscription/",
+            externalUrlLabel: "S'inscrire en ligne",
+          );
         });
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ConfirmScreen(name: _name, dossard: _dossard)),
-        );
+        return;
       }
+
+      setState(() {
+        _name = user['username'];
+        _dossard = dossardNumber;
+      });
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ConfirmScreen(name: _name, dossard: _dossard)),
+      );
     } catch (e) {
       showInSnackBar("Numéro de dossard invalide");
       Navigator.pop(context);
@@ -248,10 +251,10 @@ class _LoginState extends State<Login> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Card(
-                elevation: 10,
+                elevation: 0,
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -263,7 +266,7 @@ class _LoginState extends State<Login> {
                       const Center(
                         child: Image(
                           image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
-                          height: 90,
+                          height: 100,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -282,10 +285,12 @@ class _LoginState extends State<Login> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [LengthLimitingTextInputFormatter(4)],
                         textAlign: TextAlign.center,
+                        showCursor: false, // Hide the caret
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w600,
                           color: Color(Config.COLOR_APP_BAR),
-                          letterSpacing: 4.0,
+                          letterSpacing: 5.0,
                         ),
                         decoration: const InputDecoration(
                           hintStyle: TextStyle(
@@ -298,7 +303,7 @@ class _LoginState extends State<Login> {
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 2),
                           ),
-                          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                          contentPadding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                         ),
                       ),
                       const SizedBox(height: 8),

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lrqm/UI/WorkingScreen.dart';
 import 'package:lrqm/UI/LoginScreen.dart';
 
-import 'Data/UserData.dart'; 
+import 'Data/UserData.dart';
 
 void main() async {
   /// Ensure that the WidgetsBinding is initialized
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'La RQM APP',
       theme: ThemeData(
-        fontFamily: 'Roboto',
+        fontFamily: 'SfPro',
       ),
       home: isLoggedIn ? const WorkingScreen() : const Login(),
     );

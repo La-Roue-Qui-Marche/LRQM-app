@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 
 # build is incremented automatically by the CI/CD pipeline
-version: 2.4.1
+version: 2.5.0
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -49,6 +49,7 @@ dependencies:
   shimmer: ^3.0.0
   fl_chart: ^0.66.1 
   background_location: ^0.13.0
+  pinput: ^5.0.1
 
 # Removed path_provider and share dependencies
 
@@ -97,6 +98,7 @@ flutter:
     - assets/pictures/DrawTeam-AI.png
     - assets/pictures/DrawScan-AI.png
     - assets/pictures/DrawPos-AI.png
+    - assets/pictures/Cup-AI.png
 
     - assets/icons/calendar.svg
     - assets/icons/user.svg
@@ -112,6 +114,11 @@ flutter:
     - assets/icons/map.svg
     - assets/icons/copy.svg
     - assets/icons/diamond-turn-right.svg
+    - assets/icons/dot-circle.svg
+    - assets/icons/square-1.svg
+    - assets/icons/square-2.svg
+    - assets/icons/square-3.svg
+    - assets/icons/square-4.svg
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -135,6 +142,11 @@ flutter:
         - asset: assets/fonts/Poppins-Regular.ttf
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
+    - family: SfPro
+      fonts:
+        - asset: assets/fonts/SFPRODISPLAYREGULAR.OTF
+        - asset: assets/fonts/SFPRODISPLAYBOLD.OTF
+          weight: 600
   # fonts:
   #   - family: Schyler
   #     fonts:

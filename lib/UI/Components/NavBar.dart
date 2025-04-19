@@ -22,10 +22,10 @@ class NavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // Removed SafeArea
-      padding: const EdgeInsets.only(top: 12, bottom: 24, left: 12, right: 12), // Adjusted top padding
+      padding: const EdgeInsets.only(top: 10, bottom: 20, left: 12, right: 12), // Adjusted top padding
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -36,7 +36,7 @@ class NavBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center, // Ensures vertical centering
         children: [
           Expanded(
             child: Padding(
@@ -82,18 +82,20 @@ class NavBar extends StatelessWidget {
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center, // Center vertically
         children: [
+          // Removed extra vertical spacing for better alignment
           SvgPicture.asset(
             selected ? svgActive : svgInactive,
-            color: selected ? Theme.of(context).primaryColor : Colors.black54,
-            width: 320,
-            height: 28,
+            color: selected ? Theme.of(context).primaryColor : Colors.black87,
+            width: 24, // Consistent icon size
+            height: 24,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2), // Small spacing between icon and text
           Text(
             label,
             style: TextStyle(
-              color: selected ? Theme.of(context).primaryColor : Colors.black54,
+              color: selected ? Theme.of(context).primaryColor : Colors.black87,
               fontSize: 12,
             ),
           ),
@@ -107,8 +109,8 @@ class NavBar extends StatelessWidget {
       onTap: canStartNewSession ? onStartStopPressed : null, // Disable tap if not allowed
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        width: 60,
-        height: 60,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: canStartNewSession
@@ -138,11 +140,11 @@ class NavBar extends StatelessWidget {
             child: isMeasureActive
                 ? const Icon(Icons.stop, key: ValueKey('stop'), color: Colors.white, size: 30)
                 : SvgPicture.asset(
-                    'assets/icons/flag.svg',
+                    'assets/icons/dot-circle.svg',
                     key: const ValueKey('flag'),
                     color: Colors.white,
-                    width: 30,
-                    height: 30,
+                    width: 24,
+                    height: 24,
                   ),
           ),
         ),

@@ -21,49 +21,45 @@ class EventProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String?>(
-      future: EventData.getEventName(),
-      builder: (context, snapshot) {
-        final eventName = snapshot.data ?? 'Nom de l\'événement';
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
+          child: Text(
+            'Progression de l\'événement',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.flag, color: Colors.blueAccent),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Progression de l\'événement',
-                    style: TextStyle(
+              FutureBuilder<String?>(
+                future: EventData.getEventName(),
+                builder: (context, snapshot) {
+                  final eventName = snapshot.data ?? 'Nom de l\'événement';
+                  return Text(
+                    eventName,
+                    style: const TextStyle(
                       fontSize: 16,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-              const SizedBox(height: 0),
-              Text(
-                eventName,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Objectif Info
               Row(
@@ -71,40 +67,26 @@ class EventProgressCard extends StatelessWidget {
                 children: [
                   const Text(
                     'Objectif',
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
                   currentValue != null && objectif != null && objectif != '-1'
                       ? Row(
                           children: [
-                            Text(
-                              currentValue!,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: Color(Config.COLOR_APP_BAR),
-                              ),
-                            ),
+                            _styledValue(currentValue!, color: const Color(Config.COLOR_APP_BAR)),
                             const Text(
                               ' / ',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.normal,
-                                color: Colors.black54,
+                                color: Colors.black87,
                               ),
                             ),
-                            Text(
-                              objectif!,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal,
-                                color: Colors.black54,
-                              ),
-                            ),
+                            _styledValue(objectif!, color: Colors.black54),
                           ],
                         )
                       : _buildShimmer(width: 100),
                 ],
               ),
-              const SizedBox(height: 10),
 
               // Progress Bar
               Row(
@@ -115,7 +97,8 @@ class EventProgressCard extends StatelessWidget {
                       child: Text(
                         '${(_sanitizeValue(currentValue!) / _sanitizeValue(objectif!) * 100).toStringAsFixed(1)}%',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
                       ),
@@ -127,7 +110,7 @@ class EventProgressCard extends StatelessWidget {
                         value: currentValue != null && objectif != null && objectif != '-1'
                             ? _sanitizeValue(currentValue!) / _sanitizeValue(objectif!)
                             : 0.0,
-                        backgroundColor: Colors.grey[200],
+                        backgroundColor: Color(Config.COLOR_BACKGROUND),
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           Color(Config.COLOR_APP_BAR),
                         ),
@@ -137,36 +120,55 @@ class EventProgressCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
 
               // Time + Participants (stacked vertically)
               Column(
                 children: [
                   _infoCard(
                     label: 'Temps restant',
-                    value: remainingTime,
+                    value: _formatRemainingTime(remainingTime),
                     percentage: percentage,
                     color: const Color(Config.COLOR_APP_BAR),
                     showProgress: true,
                   ),
+                  const SizedBox(height: 8),
                   Divider(
-                    color: Colors.grey.shade300,
+                    color: Color(Config.COLOR_BACKGROUND),
                     thickness: 1,
                   ),
+                  const SizedBox(height: 8),
                   _infoCard(
                     label: 'Participants ou groupes sur le parcours',
                     value: participants,
                     percentage: null,
-                    color: const Color(Config.COLOR_BUTTON),
+                    color: const Color(Config.COLOR_APP_BAR),
                     showProgress: false,
                   ),
                 ],
               ),
             ],
           ),
-        );
-      },
+        ),
+      ],
     );
+  }
+
+  String? _formatRemainingTime(String? value) {
+    if (value == null) return null;
+    // If value is already in hh:mm:ss or contains letters, return as is
+    if (RegExp(r'[a-zA-Z]').hasMatch(value) || value.contains(':')) return value;
+    // Try to parse as int (seconds)
+    final seconds = int.tryParse(value);
+    if (seconds == null) return value;
+    return _formatModernTime(seconds);
+  }
+
+  String _formatModernTime(int seconds) {
+    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
+    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return "$h:$m:$s";
   }
 
   Widget _infoCard({
@@ -177,7 +179,7 @@ class EventProgressCard extends StatelessWidget {
     required bool showProgress,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Row(
         children: [
           if (showProgress)
@@ -185,12 +187,12 @@ class EventProgressCard extends StatelessWidget {
               width: 50,
               height: 50,
               child: Stack(
-                alignment: Alignment.center,
+                alignment: Alignment.bottomLeft,
                 children: [
                   CircularProgressIndicator(
                     value: (percentage ?? 0) / 100,
-                    strokeWidth: 4,
-                    backgroundColor: Colors.grey[300],
+                    strokeWidth: 6,
+                    backgroundColor: Color(Config.COLOR_BACKGROUND),
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                   ),
                 ],
@@ -198,7 +200,6 @@ class EventProgressCard extends StatelessWidget {
             )
           else
             const SizedBox(width: 0),
-          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,25 +207,56 @@ class EventProgressCard extends StatelessWidget {
                 Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
+                    fontSize: 16,
+                    color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 4),
-                value != null
-                    ? Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: Color(Config.COLOR_APP_BAR),
-                        ),
-                      )
-                    : _buildShimmer(width: 60),
+                value != null ? _styledValue(value, color: color) : _buildShimmer(width: 60),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _styledValue(String value, {required Color color}) {
+    // Extract value and unit if possible
+    String mainValue = '';
+    String unit = '';
+    final match = RegExp(r"^([\d\s'.,]+)\s*([a-zA-Z]*)$").firstMatch(value);
+    if (match != null) {
+      mainValue = match.group(1)?.trim() ?? value;
+      unit = match.group(2)?.trim() ?? '';
+    } else {
+      mainValue = value;
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          mainValue,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+            letterSpacing: 0.5,
+          ),
+        ),
+        if (unit.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 4.0, bottom: 2.0),
+            child: Text(
+              unit,
+              style: TextStyle(
+                fontSize: 14,
+                color: color.withOpacity(0.85),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

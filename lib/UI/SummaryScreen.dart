@@ -83,29 +83,27 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 10,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
                           ),
-                          child: const Icon(Icons.emoji_events, color: Color(Config.COLOR_APP_BAR), size: 48),
+                          // Replace Icon with Image.asset
+                          child: Image.asset(
+                            'assets/pictures/Cup-AI.png',
+                            width: 80,
+                            height: 80,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         const Text(
                           'Bravo !',
-                          style: TextStyle(fontSize: 22),
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.black87),
                         ),
                         const SizedBox(height: 8),
                         const Text(
                           'Voici le résumé de ta contribution',
-                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                          style: TextStyle(fontSize: 16, color: Colors.black87),
                         ),
                       ],
                     ),
@@ -164,7 +162,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       ),
       child: Column(
         children: [
-          _animatedItem(0, Icons.directions_walk, "Distance parcourue", widget.distanceAdded, isMeter: true),
+          _animatedItem(0, Icons.route, "Distance parcourue", widget.distanceAdded, isMeter: true),
           const Divider(height: 32),
           _animatedItem(1, Icons.group, "Participants", widget.contributors),
           const Divider(height: 32),
@@ -191,7 +189,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+                Text(title, style: const TextStyle(fontSize: 16, color: Colors.black87)),
                 const SizedBox(height: 4),
                 TweenAnimationBuilder<double>(
                   tween: Tween<double>(begin: 0, end: 1),
@@ -200,7 +198,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                     return Text(
                       _formatAnimatedValue(value, animationValue,
                           isTime: isTime, isPercentage: isPercentage, isMeter: isMeter),
-                      style: const TextStyle(fontSize: 18, color: Colors.black87),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
                     );
                   },
                 ),

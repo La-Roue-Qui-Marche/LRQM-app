@@ -60,7 +60,7 @@ class _TopAppBarState extends State<TopAppBar> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
+              blurRadius: 20,
               offset: const Offset(0, 4),
             ),
           ],
@@ -84,7 +84,7 @@ class _TopAppBarState extends State<TopAppBar> {
                         )
                       : Image.asset(
                           'assets/pictures/LogoText.png',
-                          height: 28,
+                          height: 26,
                           fit: BoxFit.contain,
                         ),
                 ),
@@ -98,7 +98,7 @@ class _TopAppBarState extends State<TopAppBar> {
                       style: const TextStyle(
                         color: Colors.black87,
                         fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         overflow: TextOverflow.ellipsis,
                       ),
                       maxLines: 1,

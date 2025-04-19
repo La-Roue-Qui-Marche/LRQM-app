@@ -49,7 +49,7 @@ class ActionButton extends StatelessWidget {
               style: const TextStyle(
                 color: Color(Config.COLOR_BACKGROUND),
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

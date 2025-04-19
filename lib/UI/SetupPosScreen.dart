@@ -17,6 +17,7 @@ import 'SetupTeamScreen.dart';
 import '../Geolocalisation/Geolocation.dart';
 import '../API/NewMeasureController.dart';
 import '../Data/MeasureData.dart';
+import '../Data/EventData.dart';
 
 class SetupPosScreen extends StatefulWidget {
   final Geolocation geolocation;
@@ -31,25 +32,48 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   bool _isLoading = false;
   bool _isMapLoading = false;
 
+  double? _meetingLat;
+  double? _meetingLon;
+
   @override
   void initState() {
     super.initState();
+    _loadMeetingPoint();
+  }
+
+  Future<void> _loadMeetingPoint() async {
+    final points = await EventData.getMeetingPointLatLngList();
+    if (points != null && points.isNotEmpty) {
+      setState(() {
+        _meetingLat = points[0].latitude;
+        _meetingLon = points[0].longitude;
+      });
+    } else {
+      // no fallback
+      setState(() {
+        _meetingLat = null;
+        _meetingLon = null;
+      });
+    }
   }
 
   void _navigateToSetupTeamScreen() async {
     setState(() => _isLoading = true);
 
     try {
-      bool hasPermission = await PermissionHelper.requestLocationPermission();
+      bool hasPermission = await PermissionHelper.isLocationAlwaysGranted();
       if (!hasPermission) {
         showTextModal(
           context,
           "Positon en arrière-plan",
-          "Pour cet évènement, l'application nécessite l'autorisation 'Toujours' pour suivre votre position en arrière-plan.\n\n"
-              "Cela garantit que vous resterez toujours connecté à la zone de l'évènement, même si l'application est minimisée ou fermée.\n\n"
-              "Clique sur OK pour être redirigé vers les paramètres.",
+          "Pouvez-vous sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer votre distance parcourue, même si votre téléphone est inactif, dans votre poche par exemple ?",
           showConfirmButton: true,
-          onConfirm: () async => await PermissionHelper.openLocationSettings(),
+          onConfirm: () async {
+            bool granted = await PermissionHelper.requestLocationAlwaysPermission();
+            if (!granted) {
+              await PermissionHelper.openLocationSettings();
+            }
+          },
         );
         setState(() => _isLoading = false);
         return;
@@ -111,17 +135,17 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.only(top: 12.0, bottom: 12.0),
                 child: Column(
                   children: [
                     _buildInfoCard(context),
                     const SizedBox(height: 12),
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: EdgeInsets.symmetric(horizontal: 12.0),
                       child: Text(
                         "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
                         textAlign: TextAlign.left,
-                        style: TextStyle(fontSize: 14, color: Colors.black54),
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
                       ),
                     ),
                   ],
@@ -150,7 +174,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(0.0),
       ),
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -165,7 +189,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             ),
           ),
           InfoCard(
-            title: "Préparez-vous",
+            title: "Préparez-vous !",
             data: "Rendez-vous au point de départ de l'évènement.",
             actionItems: [
               ActionItem(
@@ -192,25 +216,44 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   void _openInGoogleMaps() async {
-    final Uri fallbackUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Config.LAT1},${Config.LON1}');
-    final Uri geoUrl = Uri.parse('geo:0,0?q=${Config.LAT1},${Config.LON1}');
-    final Uri iosUrl = Uri.parse('maps:${Config.LAT1},${Config.LON1}');
+    if (_meetingLat == null || _meetingLon == null) {
+      showInSnackBar("Impossible d'ouvrir l'application de navigation.");
+      return;
+    }
+    double lat = _meetingLat!;
+    double lon = _meetingLon!;
+
+    Uri? uri;
+    if (Platform.isIOS) {
+      // Apple Maps with coordinates
+      uri = Uri.parse('http://maps.apple.com/?ll=$lat,$lon');
+    } else if (Platform.isAndroid) {
+      // Android geo URI
+      uri = Uri.parse('geo:$lat,$lon?q=$lat,$lon');
+    } else {
+      // Fallback to Google Maps web
+      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lon');
+    }
 
     try {
-      if (Platform.isAndroid && await canLaunchUrl(geoUrl)) {
-        await launchUrl(geoUrl);
-      } else if (Platform.isIOS && await canLaunchUrl(iosUrl)) {
-        await launchUrl(iosUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
       } else {
-        await launchUrl(fallbackUrl);
+        showInSnackBar("Impossible d'ouvrir l'application de navigation.");
       }
     } catch (e) {
-      showInSnackBar("Impossible d'ouvrir Maps.");
+      showInSnackBar("Impossible d'ouvrir l'application de navigation.");
     }
   }
 
   void _copyCoordinates() {
-    Clipboard.setData(ClipboardData(text: '${Config.LAT1},${Config.LON1}'));
+    if (_meetingLat == null || _meetingLon == null) {
+      showInSnackBar("Impossible de copier les coordonnées.");
+      return;
+    }
+    double lat = _meetingLat!;
+    double lon = _meetingLon!;
+    Clipboard.setData(ClipboardData(text: '$lat,$lon'));
     showInSnackBar('Coordonnées copiées.');
   }
 
@@ -223,23 +266,25 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (_) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.5,
-          child: Stack(
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(bottom: 32.0),
-                child: DynamicMapCard(),
+        return SafeArea(
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
+            child: SizedBox(
+              height: 480, // Fixed height for the modal
+              child: Stack(
+                children: [
+                  DynamicMapCard(geolocation: widget.geolocation),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
               ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.black),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },

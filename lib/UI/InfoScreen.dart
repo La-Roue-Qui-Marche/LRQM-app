@@ -9,7 +9,7 @@ class InfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND),
+      backgroundColor: Colors.white,
       appBar: const TopAppBar(
         title: "Informations",
         showBackButton: true,
@@ -17,40 +17,100 @@ class InfoScreen extends StatelessWidget {
         showLogoutButton: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 16.0).copyWith(bottom: 120.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildCard(
-              context,
-              title: "La petite histoire",
-              content:
-                  "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
-              image: 'assets/pictures/HEIG_VD.jpg',
-              secondaryContent:
-                  "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement.",
-              child: const Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  "- Nicolas Fontaine",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.black54,
-                  ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'La petite histoire',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Text(
+                      'Origines et évolution',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 12),
+                  Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
+                  const SizedBox(height: 12),
+                  Text(
+                    "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement. \n",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "- Nicolas Fontaine",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
-            _buildCard(
-              context,
-              title: "L'équipe de développement bénévole",
-              content: null,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'L\'équipe de développement bénévole',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Text(
+                      'Les Développeurs',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
                   _buildContributorsSection(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -61,7 +121,8 @@ class InfoScreen extends StatelessWidget {
                             const Text(
                               "Product Owner",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
                             ),
@@ -70,7 +131,7 @@ class InfoScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 32),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +139,8 @@ class InfoScreen extends StatelessWidget {
                             const Text(
                               "GitHub Repo",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
                             ),
@@ -103,87 +165,24 @@ class InfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCard(
-    BuildContext context, {
-    required String title,
-    String? content,
-    String? image,
-    String? secondaryContent,
-    Widget? child,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-          if (content != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              content,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.justify,
-            ),
-          ],
-          if (image != null) ...[
-            const SizedBox(height: 16),
-            Center(child: Image.asset(image, height: 60)),
-          ],
-          if (secondaryContent != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              secondaryContent,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-                height: 1.4,
-              ),
-              textAlign: TextAlign.justify,
-            ),
-          ],
-          if (child != null) ...[
-            const SizedBox(height: 16),
-            child,
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildContributorsSection(BuildContext context) {
-    return Wrap(
-      spacing: 20,
-      runSpacing: 20,
-      children: [
-        _buildContributorProfile(context, 'https://github.com/therundmc',
-            'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine Cavallera'),
-        _buildContributorProfile(context, 'https://github.com/chloefont',
-            'https://avatars.githubusercontent.com/u/60699567?v=4', 'Chloé Fontaine'),
-        _buildContributorProfile(context, 'https://github.com/Maxime-Nicolet',
-            'https://avatars.githubusercontent.com/u/21175110?v=4', 'Maxime Nicolet'),
-        _buildContributorProfile(context, 'https://github.com/tchekoto',
-            'https://avatars.githubusercontent.com/u/16468108?v=4', 'William Fromont'),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 32,
+        runSpacing: 24,
+        children: [
+          _buildContributorProfile(context, 'https://github.com/therundmc',
+              'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine Cavallera'),
+          _buildContributorProfile(context, 'https://github.com/chloefont',
+              'https://avatars.githubusercontent.com/u/60699567?v=4', 'Chloé Fontaine'),
+          _buildContributorProfile(context, 'https://github.com/Maxime-Nicolet',
+              'https://avatars.githubusercontent.com/u/21175110?v=4', 'Maxime Nicolet'),
+          _buildContributorProfile(context, 'https://github.com/tchekoto',
+              'https://avatars.githubusercontent.com/u/16468108?v=4', 'William Fromont'),
+        ],
+      ),
     );
   }
 
@@ -196,18 +195,11 @@ class InfoScreen extends StatelessWidget {
             }
           : null,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: CircleAvatar(
               backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
@@ -217,15 +209,18 @@ class InfoScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
+          SizedBox(
+            width: 80,
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
