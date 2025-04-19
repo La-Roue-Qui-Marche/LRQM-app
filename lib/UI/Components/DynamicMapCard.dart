@@ -55,7 +55,7 @@ class _MapStyles {
 // --- End global style definitions ---
 
 // Update: enum for map type (remove standard)
-enum _MapBaseType { satellite, topo }
+enum _MapBaseType { satellite, voyager }
 
 class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAliveClientMixin {
   final MapController _mapController = MapController();
@@ -68,8 +68,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   List<LatLng> _zonePoints = [];
   LatLng? _meetingPoint;
 
-  // Default to topographic
-  _MapBaseType _mapBaseType = _MapBaseType.topo;
+  // Default to voyager
+  _MapBaseType _mapBaseType = _MapBaseType.voyager;
 
   // Helper for marker color based on map type
   Color get _userMarkerColor {
@@ -369,7 +369,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
     final mapHeight = 400.0;
 
-    // Map tile selection logic (only topo and satellite)
+    // Map tile selection logic (only voyager and satellite)
     String urlTemplate;
     List<String> subdomains;
     String tooltip;
@@ -378,13 +378,12 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     Color polygonColor;
     Color polygonBorderColor;
     switch (_mapBaseType) {
-      case _MapBaseType.topo:
-        urlTemplate =
-            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}";
-        subdomains = [];
+      case _MapBaseType.voyager:
+        // Use CartoDB Voyager for a modern, light, and clean look
+        urlTemplate = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+        subdomains = ['a', 'b', 'c', 'd'];
         tooltip = "Vue satellite";
         icon = Icons.satellite_alt;
-        // Use app color for polygon
         polygonColor = _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity);
         polygonBorderColor = _MapStyles.zoneBorderColor;
         break;
@@ -392,9 +391,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
       default:
         urlTemplate = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
         subdomains = [];
-        tooltip = "Vue topographique";
+        tooltip = "Vue moderne";
         icon = Icons.terrain;
-        // Invert polygon color for satellite (white with opacity)
         polygonColor = Colors.white.withOpacity(0.25);
         polygonBorderColor = Colors.white;
         break;
@@ -472,6 +470,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             TileLayer(
                               urlTemplate: urlTemplate,
                               subdomains: subdomains,
+                              retinaMode: urlTemplate.contains('{r}') ? RetinaMode.isHighDensity(context) : false,
                             ),
                             PolygonLayer(
                               polygons: [
@@ -531,7 +530,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             ),
                     ),
                     const SizedBox(height: 14),
-                    // Replace: Satellite toggle button with topo/satellite toggle
+                    // Replace: Satellite toggle button with voyager/satellite toggle
                     Material(
                       color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
                       shape: const CircleBorder(),
@@ -542,7 +541,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                         onPressed: () {
                           setState(() {
                             _mapBaseType =
-                                _mapBaseType == _MapBaseType.satellite ? _MapBaseType.topo : _MapBaseType.satellite;
+                                _mapBaseType == _MapBaseType.satellite ? _MapBaseType.voyager : _MapBaseType.satellite;
                           });
                         },
                       ),

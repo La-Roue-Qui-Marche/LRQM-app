@@ -28,8 +28,9 @@ class NavBar extends StatelessWidget {
         children: [
           // Background bar
           Container(
-            height: 72, // Slightly increased for better vertical balance
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0),
+            height: 80, // Slightly increased for better vertical balance
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0)
+                .copyWith(bottom: 6.0), // Increased bottom padding
             decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(
@@ -80,15 +81,15 @@ class NavBar extends StatelessWidget {
 
           // Floating button
           Positioned(
-            top: -12, // Adjusted for new button size to keep it centered
+            top: -14, // Adjusted for new button size to keep it centered
             left: 0,
             right: 0,
             child: Center(
               child: GestureDetector(
                 onTap: canStartNewSession ? onStartStopPressed : null,
                 child: Container(
-                  width: 66,
-                  height: 66,
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: canStartNewSession
@@ -106,7 +107,7 @@ class NavBar extends StatelessWidget {
                           ),
                     border: Border.all(
                       color: Colors.white,
-                      width: 4,
+                      width: 6,
                     ),
                   ),
                   child: Center(
@@ -156,7 +157,7 @@ class NavBar extends StatelessWidget {
               width: 28,
               height: 28,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               label,
               style: TextStyle(
