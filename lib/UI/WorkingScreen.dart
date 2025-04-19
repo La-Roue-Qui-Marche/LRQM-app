@@ -127,20 +127,25 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           _dossard = bibId;
         });
 
-        // Get the personal distance
-        _getValue(() => NewUserController.getUserTotalMeters(int.parse(bibId)), () async => null).then((value) {
-          if (mounted) {
-            setState(() {
-              _distancePerso = value;
+        // Get the user id for meters and time
+        UserData.getUserId().then((userId) {
+          if (userId != null && mounted) {
+            // Get the personal distance
+            _getValue(() => NewUserController.getUserTotalMeters(userId), () async => null).then((value) {
+              if (mounted) {
+                setState(() {
+                  _distancePerso = value;
+                });
+              }
             });
-          }
-        });
 
-        // Get the total time
-        _getValue(() => NewUserController.getUserTotalTime(int.parse(bibId)), () async => null).then((value) {
-          if (mounted) {
-            setState(() {
-              _totalTimePerso = value;
+            // Get the total time
+            _getValue(() => NewUserController.getUserTotalTime(userId), () async => null).then((value) {
+              if (mounted) {
+                setState(() {
+                  _totalTimePerso = value;
+                });
+              }
             });
           }
         });
@@ -184,9 +189,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         _geolocation.startListening();
       } else {
         // Get the total time spent on the track
-        UserData.getBibId().then((bibId) {
-          if (bibId != null) {
-            NewUserController.getUserTotalTime(int.parse(bibId)).then((result) {
+        UserData.getUserId().then((userId) {
+          if (userId != null) {
+            NewUserController.getUserTotalTime(userId).then((result) {
               if (!result.hasError && mounted) {
                 setState(() {
                   _totalTimePerso = result.value;
@@ -349,11 +354,16 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           });
         }
 
-        // Get the personal distance
-        _getValue(() => NewUserController.getUserTotalMeters(int.parse(bibId)), () async => null).then((value) {
-          if (mounted) {
-            setState(() {
-              _distancePerso = value;
+        // Get the user id for meters
+        UserData.getUserId().then((userId) {
+          if (userId != null && mounted) {
+            // Get the personal distance
+            _getValue(() => NewUserController.getUserTotalMeters(userId), () async => null).then((value) {
+              if (mounted) {
+                setState(() {
+                  _distancePerso = value;
+                });
+              }
             });
           }
         });
@@ -399,9 +409,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     });
 
     // Get the time spent on the track
-    UserData.getBibId().then((bibId) {
-      if (bibId != null) {
-        NewUserController.getUserTotalTime(int.parse(bibId)).then((result) {
+    UserData.getUserId().then((userId) {
+      if (userId != null) {
+        NewUserController.getUserTotalTime(userId).then((result) {
           if (!result.hasError && mounted) {
             setState(() {
               _totalTimePerso = result.value;

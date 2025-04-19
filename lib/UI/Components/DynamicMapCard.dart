@@ -107,7 +107,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     _fetchUserPosition();
     _positionTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchUserPosition());
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 4), () {
       if (mounted && !_isMapReady) {
         setState(() {
           _isMapReady = true;

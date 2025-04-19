@@ -19,10 +19,14 @@ class NewMeasureController {
       if (contributorsNumber != null) "contributors_number": contributorsNumber,
     };
 
+    print('[startMeasure] POST $uri');
+    print('[startMeasure] Body: $body');
+
     return _client
         .post(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"})
         .timeout(const Duration(seconds: 10))
         .then((response) async {
+          print('[startMeasure] Response: ${response.statusCode} ${response.body}');
           if (response.statusCode == 200) {
             final responseData = jsonDecode(response.body);
             int? measureId = responseData['id'];
@@ -37,6 +41,7 @@ class NewMeasureController {
           }
         })
         .onError((error, stackTrace) {
+          print('[startMeasure] Error: $error');
           return Result<int>(error: error.toString());
         });
   }
@@ -52,13 +57,18 @@ class NewMeasureController {
     final uri = Uri.https(Config.API_URL, '/measures/$measureId');
     final body = {"meters": meters};
 
+    print('[editMeters] PUT $uri');
+    print('[editMeters] Body: $body');
+
     return _client.put(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"}).then((response) {
+      print('[editMeters] Response: ${response.statusCode} ${response.body}');
       if (response.statusCode == 200) {
         return Result<bool>(value: true);
       } else {
         throw Exception('Failed to edit meters: ${response.statusCode}');
       }
     }).onError((error, stackTrace) {
+      print('[editMeters] Error: $error');
       return Result<bool>(error: error.toString());
     });
   }
@@ -73,7 +83,10 @@ class NewMeasureController {
 
     final uri = Uri.https(Config.API_URL, '/measures/$measureId/stop');
 
+    print('[stopMeasure] PUT $uri');
+
     return _client.put(uri).then((response) async {
+      print('[stopMeasure] Response: ${response.statusCode} ${response.body}');
       if (response.statusCode == 200) {
         await MeasureData.clearMeasureData();
         return Result<bool>(value: true);
@@ -81,6 +94,7 @@ class NewMeasureController {
         throw Exception('Failed to stop measure: ${response.statusCode}');
       }
     }).onError((error, stackTrace) {
+      print('[stopMeasure] Error: $error');
       return Result<bool>(error: error.toString());
     });
   }
