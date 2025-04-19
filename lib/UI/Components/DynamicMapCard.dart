@@ -367,7 +367,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     double userLat = _currentLatLng?.latitude ?? defaultLat;
     double userLon = _currentLatLng?.longitude ?? defaultLon;
 
-    final mapHeight = 400.0;
+    final mapHeight = 450.0;
 
     // Map tile selection logic (only voyager and satellite)
     String urlTemplate;

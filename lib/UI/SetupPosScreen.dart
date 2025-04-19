@@ -285,7 +285,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           child: ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
             child: SizedBox(
-              height: 480, // Fixed height for the modal
+              height: 540, // Fixed height for the modal
               child: Stack(
                 children: [
                   DynamicMapCard(geolocation: widget.geolocation),
