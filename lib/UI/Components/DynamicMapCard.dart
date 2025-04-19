@@ -26,10 +26,10 @@ class _MapStyles {
   static const double zoneFillOpacity = 0.1;
   static const double legendBgOpacity = 0.95;
 
-  static const double userIconSize = 28;
-  static const double rassemblementIconSize = 28;
-  static const double legendUserIconSize = 22;
-  static const double legendRassemblementIconSize = 20;
+  static const double userIconSize = 36; // Increased from 28
+  static const double rassemblementIconSize = 34; // Increased from 28
+  static const double legendUserIconSize = 26; // Increased from 22
+  static const double legendRassemblementIconSize = 24; // Increased from 20
 
   static Icon userPositionIcon({double? size}) => Icon(
         Icons.my_location,
@@ -39,7 +39,7 @@ class _MapStyles {
 
   static Icon rassemblementIcon({double? size}) => Icon(
         Icons.location_pin,
-        color: zoneBorderColor,
+        color: Color(Config.COLOR_BUTTON), // Changed from zoneBorderColor to BUTTON_COLOR
         size: size ?? rassemblementIconSize,
       );
 
@@ -54,6 +54,9 @@ class _MapStyles {
 }
 // --- End global style definitions ---
 
+// Update: enum for map type (remove standard)
+enum _MapBaseType { satellite, voyager }
+
 class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAliveClientMixin {
   final MapController _mapController = MapController();
   LatLng? _currentLatLng;
@@ -64,6 +67,26 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   bool _mapInteractive = false; // Add: controls map interactivity
   List<LatLng> _zonePoints = [];
   LatLng? _meetingPoint;
+
+  // Default to voyager
+  _MapBaseType _mapBaseType = _MapBaseType.voyager;
+
+  // Helper for marker color based on map type
+  Color get _userMarkerColor {
+    if (_mapBaseType == _MapBaseType.satellite) {
+      // Bright blue for user (stands out on green/brown satellite)
+      return Colors.white;
+    }
+    return _MapStyles.zoneBorderColor;
+  }
+
+  Color get _gatheringMarkerColor {
+    if (_mapBaseType == _MapBaseType.satellite) {
+      // Bright orange for meeting point (contrasts with blue and green)
+      return const Color(0xFFFF9800); // Material orange 500
+    }
+    return Color(Config.COLOR_BUTTON);
+  }
 
   bool isValidCoordinate(double? value) {
     return value != null && value.isFinite;
@@ -107,7 +130,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     _fetchUserPosition();
     _positionTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchUserPosition());
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 4), () {
       if (mounted && !_isMapReady) {
         setState(() {
           _isMapReady = true;
@@ -186,14 +209,22 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   Widget _userPositionMarker() {
     return FittedBox(
       fit: BoxFit.scaleDown,
-      child: _MapStyles.userPositionIcon(),
+      child: Icon(
+        Icons.my_location,
+        color: _userMarkerColor,
+        size: _MapStyles.userIconSize,
+      ),
     );
   }
 
   Widget _gatheringPointMarker() {
     return FittedBox(
       fit: BoxFit.scaleDown,
-      child: _MapStyles.rassemblementIcon(),
+      child: Icon(
+        Icons.location_pin,
+        color: _gatheringMarkerColor,
+        size: _MapStyles.rassemblementIconSize,
+      ),
     );
   }
 
@@ -250,7 +281,16 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                         Container(
                           width: 18,
                           height: 18,
-                          decoration: _MapStyles.zoneLegendDecoration,
+                          decoration: BoxDecoration(
+                            color: _mapBaseType == _MapBaseType.satellite
+                                ? Colors.white.withOpacity(0.25)
+                                : _MapStyles.zoneBorderColor.withOpacity(_MapStyles.zoneFillOpacity),
+                            border: Border.all(
+                              color: _mapBaseType == _MapBaseType.satellite ? Colors.white : _MapStyles.zoneBorderColor,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                         const SizedBox(width: 10),
                         const Text(
@@ -266,7 +306,11 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        _MapStyles.rassemblementIcon(size: _MapStyles.legendRassemblementIconSize),
+                        Icon(
+                          Icons.location_pin,
+                          color: _gatheringMarkerColor,
+                          size: _MapStyles.legendRassemblementIconSize,
+                        ),
                         const SizedBox(width: 10),
                         const Text(
                           "Point de rassemblement",
@@ -281,7 +325,11 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        _MapStyles.userPositionIcon(size: _MapStyles.legendUserIconSize),
+                        Icon(
+                          Icons.my_location,
+                          color: _userMarkerColor,
+                          size: _MapStyles.legendUserIconSize,
+                        ),
                         const SizedBox(width: 10),
                         const Text(
                           "Votre position",
@@ -319,7 +367,36 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     double userLat = _currentLatLng?.latitude ?? defaultLat;
     double userLon = _currentLatLng?.longitude ?? defaultLon;
 
-    final mapHeight = 400.0;
+    final mapHeight = 450.0;
+
+    // Map tile selection logic (only voyager and satellite)
+    String urlTemplate;
+    List<String> subdomains;
+    String tooltip;
+    IconData icon;
+    // Polygon color logic
+    Color polygonColor;
+    Color polygonBorderColor;
+    switch (_mapBaseType) {
+      case _MapBaseType.voyager:
+        // Use CartoDB Voyager for a modern, light, and clean look
+        urlTemplate = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+        subdomains = ['a', 'b', 'c', 'd'];
+        tooltip = "Vue satellite";
+        icon = Icons.satellite_alt;
+        polygonColor = _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity);
+        polygonBorderColor = _MapStyles.zoneBorderColor;
+        break;
+      case _MapBaseType.satellite:
+      default:
+        urlTemplate = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+        subdomains = [];
+        tooltip = "Vue moderne";
+        icon = Icons.terrain;
+        polygonColor = Colors.white.withOpacity(0.25);
+        polygonBorderColor = Colors.white;
+        break;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,34 +468,37 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                           ),
                           children: [
                             TileLayer(
-                              urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                              subdomains: const ['a', 'b', 'c'],
+                              urlTemplate: urlTemplate,
+                              subdomains: subdomains,
+                              retinaMode: urlTemplate.contains('{r}') ? RetinaMode.isHighDensity(context) : false,
                             ),
                             PolygonLayer(
                               polygons: [
                                 Polygon(
                                   points: _zonePoints,
-                                  color: _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity),
-                                  borderColor: _MapStyles.zoneBorderColor,
+                                  color: polygonColor,
+                                  borderColor: polygonBorderColor,
                                   borderStrokeWidth: 2,
                                 ),
                               ],
                             ),
                             MarkerLayer(
                               markers: [
-                                if (_currentLatLng != null)
-                                  Marker(
-                                    point: _currentLatLng!,
-                                    width: _MapStyles.userIconSize,
-                                    height: _MapStyles.userIconSize,
-                                    child: _userPositionMarker(),
-                                  ),
+                                // Place meeting point first so it appears below user position
                                 if (_meetingPoint != null)
                                   Marker(
                                     point: _meetingPoint!,
                                     width: _MapStyles.rassemblementIconSize,
                                     height: _MapStyles.rassemblementIconSize,
                                     child: _gatheringPointMarker(),
+                                  ),
+                                // User position marker appears last (on top)
+                                if (_currentLatLng != null)
+                                  Marker(
+                                    point: _currentLatLng!,
+                                    width: _MapStyles.userIconSize,
+                                    height: _MapStyles.userIconSize,
+                                    child: _userPositionMarker(),
                                   ),
                               ],
                             ),
@@ -448,6 +528,23 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                                 onPressed: _toggleLegend,
                               ),
                             ),
+                    ),
+                    const SizedBox(height: 14),
+                    // Replace: Satellite toggle button with voyager/satellite toggle
+                    Material(
+                      color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: IconButton(
+                        icon: Icon(icon, color: Colors.black87),
+                        tooltip: tooltip,
+                        onPressed: () {
+                          setState(() {
+                            _mapBaseType =
+                                _mapBaseType == _MapBaseType.satellite ? _MapBaseType.voyager : _MapBaseType.satellite;
+                          });
+                        },
+                      ),
                     ),
                     const SizedBox(height: 14),
                     Material(

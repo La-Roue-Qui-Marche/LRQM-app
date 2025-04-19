@@ -1,4 +1,5 @@
 import 'DataManagement.dart';
+import 'dart:developer'; // Add this for logging
 
 /// Class to manage user-related data.
 class UserData {
@@ -7,10 +8,22 @@ class UserData {
 
   /// Save user details in the shared preferences.
   static Future<bool> saveUser(Map<String, dynamic> user) async {
+    log('Saving user_id: ${user['id']}');
     bool idSaved = await _dataManagement.saveInt('user_id', user['id']);
+    log('Result of saving user_id: $idSaved');
+
+    log('Saving username: ${user['username']}');
     bool usernameSaved = await _dataManagement.saveString('username', user['username']);
+    log('Result of saving username: $usernameSaved');
+
+    log('Saving bib_id: ${user['bib_id']}');
     bool bibIdSaved = await _dataManagement.saveString('bib_id', user['bib_id']);
+    log('Result of saving bib_id: $bibIdSaved');
+
+    log('Saving event_id: ${user['event_id']}');
     bool eventIdSaved = await _dataManagement.saveInt('event_id', user['event_id']);
+    log('Result of saving event_id: $eventIdSaved');
+
     return idSaved && usernameSaved && bibIdSaved && eventIdSaved;
   }
 

@@ -11,10 +11,9 @@ import '../Utils/config.dart';
 import 'Components/TextModal.dart'; // Add this import for showTextModal
 
 class ConfirmScreen extends StatelessWidget {
-  final String name;
-  final int dossard;
+  final Map<String, dynamic> userData;
 
-  const ConfirmScreen({super.key, required this.name, required this.dossard});
+  const ConfirmScreen({super.key, required this.userData});
 
   void showInSnackBar(BuildContext context, String value) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
@@ -248,6 +247,9 @@ class ConfirmScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String name = userData['username'] ?? '';
+    final int dossard = int.tryParse(userData['bib_id'].toString()) ?? 0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -321,13 +323,8 @@ class ConfirmScreen extends StatelessWidget {
                           log("Name: $name");
                           log("Dossard: $dossard");
 
-                          var tmp = await NewUserController.getUser(dossard);
-                          if (!tmp.hasError && tmp.value != null) {
-                            // Use bib_id for code generation
-                            showConfirmationCodeModal(context, tmp.value!['bib_id'], userData: tmp.value!);
-                          } else {
-                            showInSnackBar(context, tmp.error ?? "Une erreur inconnue est survenue.");
-                          }
+                          // Use bib_id for code generation and pass userData directly
+                          showConfirmationCodeModal(context, userData['bib_id'], userData: userData);
                         },
                       ),
                       const SizedBox(height: 6),
