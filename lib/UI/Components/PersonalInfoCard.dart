@@ -139,7 +139,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               _buildInfoCards(),
               const SizedBox(height: 16),
               _buildFunMessage(),
-              const SizedBox(height: 8),
+              if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
               if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
@@ -361,8 +361,10 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   String _getDistanceMessage(int distance) {
-    if (distance <= 100) {
-      return "C'est ${(distance / 0.2).toStringAsFixed(0)} saucisse aux choux mis bout à bout. Quel papet!";
+    if (distance == 0) {
+      return "Vas-y, je suis prêt ! Commence à avancer pour faire progresser les mètres!";
+    } else if (distance <= 100) {
+      return "C'est ${(distance / 0.2).toStringAsFixed(0)} saucisses aux choux mis bout à bout. Quel papet!";
     } else if (distance <= 4000) {
       return "C'est ${(distance / 400).toStringAsFixed(1)} tour(s) de la piste de la Pontaise. Trop fort!";
     } else if (distance <= 38400) {

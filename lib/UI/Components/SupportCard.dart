@@ -49,7 +49,7 @@ class SupportCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Découvrez les détails de l\'événement, les objectifs, et comment vous pouvez participer pour faire une différence.',
+                'Découvrez les détails de l\'événement, les objectifs, et comment tu peux participer pour faire une différence.',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.black87,

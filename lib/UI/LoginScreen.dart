@@ -24,8 +24,6 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final TextEditingController _controller = TextEditingController();
-  String _name = "";
-  int _dossard = -1;
   bool _isEventActive = false;
   String? _eventName;
 
@@ -206,13 +204,9 @@ class _LoginState extends State<Login> {
         return;
       }
 
-      setState(() {
-        _name = user['username'];
-        _dossard = dossardNumber;
-      });
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ConfirmScreen(name: _name, dossard: _dossard)),
+        MaterialPageRoute(builder: (context) => ConfirmScreen(userData: user)),
       );
     } catch (e) {
       showInSnackBar("Numéro de dossard invalide");

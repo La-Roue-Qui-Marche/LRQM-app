@@ -29,11 +29,11 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan QR codes</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app need it to keep track of the distance of the user</string>
+	<string>Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer votre distance parcourue, même si votre téléphone est inactif, dans votre poche par exemple ?</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app need it to keep track of the distance of the user</string>
+	<string>Cette application a besoin de votre position pour calculer la distance parcourue pendant l'évènement.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This app need it to keep track of the distance of the user</string>
+	<string>Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer votre distance parcourue, même si votre téléphone est inactif, dans votre poche par exemple ?</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

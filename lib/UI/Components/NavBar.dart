@@ -6,7 +6,7 @@ class NavBar extends StatelessWidget {
   final int currentPage;
   final Function(int) onPageSelected;
   final bool isMeasureActive;
-  final bool canStartNewSession; // New parameter to control start button state
+  final bool canStartNewSession;
   final VoidCallback onStartStopPressed;
 
   const NavBar({
@@ -21,47 +21,106 @@ class NavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Removed SafeArea
-      padding: const EdgeInsets.only(top: 10, bottom: 20, left: 12, right: 12), // Adjusted top padding
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center, // Ensures vertical centering
+      color: Colors.amber.withOpacity(0.2), // For debugging: visualize the area
+      child: Stack(
+        clipBehavior: Clip.none, // allows the button to overflow
+        alignment: Alignment.bottomCenter,
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: _navBarButton(
-                context,
-                svgActive: 'assets/icons/user-fill.svg',
-                svgInactive: 'assets/icons/user.svg',
-                label: 'Personnel',
-                selected: currentPage == 0,
-                onTap: () => onPageSelected(0),
+          // Background bar
+          Container(
+            height: 80, // Slightly increased for better vertical balance
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0)
+                .copyWith(bottom: 6.0), // Increased bottom padding
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: Color(0x11000000), width: 1),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 6,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Even horizontal spacing
+              crossAxisAlignment: CrossAxisAlignment.center, // Vertically center items
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _navBarButton(
+                      context,
+                      svgActive: 'assets/icons/user-fill.svg',
+                      svgInactive: 'assets/icons/user.svg',
+                      label: 'Personnel',
+                      selected: currentPage == 0,
+                      onTap: () => onPageSelected(0),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 88), // Space for center button, matches floating button size
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _navBarButton(
+                      context,
+                      svgActive: 'assets/icons/calendar-fill.svg',
+                      svgInactive: 'assets/icons/calendar.svg',
+                      label: 'Événement',
+                      selected: currentPage == 1,
+                      onTap: () => onPageSelected(1),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          _startStopButton(context),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: _navBarButton(
-                context,
-                svgActive: 'assets/icons/calendar-fill.svg',
-                svgInactive: 'assets/icons/calendar.svg',
-                label: 'Événement',
-                selected: currentPage == 1,
-                onTap: () => onPageSelected(1),
+
+          // Floating button
+          Positioned(
+            top: -14, // Adjusted for new button size to keep it centered
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: canStartNewSession ? onStartStopPressed : null,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: canStartNewSession
+                        ? LinearGradient(
+                            colors: isMeasureActive
+                                ? [Colors.redAccent, Colors.red]
+                                : [Color(Config.COLOR_BUTTON), Color(Config.COLOR_BUTTON)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : LinearGradient(
+                            colors: [Colors.grey.shade300, Colors.grey.shade400],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 6,
+                    ),
+                  ),
+                  child: Center(
+                    child: isMeasureActive
+                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 32)
+                        : SvgPicture.asset(
+                            'assets/icons/dot-circle.svg',
+                            color: Colors.white,
+                            width: 32,
+                            height: 32,
+                          ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -78,75 +137,36 @@ class NavBar extends StatelessWidget {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center, // Center vertically
-        children: [
-          // Removed extra vertical spacing for better alignment
-          SvgPicture.asset(
-            selected ? svgActive : svgInactive,
-            color: selected ? Theme.of(context).primaryColor : Colors.black87,
-            width: 24, // Consistent icon size
-            height: 24,
-          ),
-          const SizedBox(height: 2), // Small spacing between icon and text
-          Text(
-            label,
-            style: TextStyle(
-              color: selected ? Theme.of(context).primaryColor : Colors.black87,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _startStopButton(BuildContext context) {
     return GestureDetector(
-      onTap: canStartNewSession ? onStartStopPressed : null, // Disable tap if not allowed
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: canStartNewSession
-              ? LinearGradient(
-                  colors: isMeasureActive ? [Colors.redAccent, Colors.red] : [Colors.orangeAccent, Colors.deepOrange],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : LinearGradient(
-                  colors: [Colors.grey, Colors.grey.shade400], // Greyed out when disabled
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-          boxShadow: canStartNewSession
-              ? [
-                  BoxShadow(
-                    color: (isMeasureActive ? Colors.red : Colors.deepOrange).withOpacity(0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : [],
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(
+          minWidth: 64,
+          minHeight: 64,
         ),
-        child: Center(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: isMeasureActive
-                ? const Icon(Icons.stop, key: ValueKey('stop'), color: Colors.white, size: 30)
-                : SvgPicture.asset(
-                    'assets/icons/dot-circle.svg',
-                    key: const ValueKey('flag'),
-                    color: Colors.white,
-                    width: 24,
-                    height: 24,
-                  ),
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+        alignment: Alignment.center,
+        color: Colors.transparent, // Remove debug color
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              selected ? svgActive : svgInactive,
+              color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
+              width: 26,
+              height: 26,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
+              ),
+            ),
+          ],
         ),
       ),
     );
