@@ -266,17 +266,17 @@ class _EventProgressCardState extends State<EventProgressCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
-              // Time + Participants (stacked vertically)
+              // Time and Participants (stacked vertically)
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Removed the label 'Temps restant' from _infoCard
                   _infoCard(
-                    label: 'Temps restant',
+                    label: '', // Empty label now
                     value: _formatRemainingTime(_remainingTime),
-                    percentage: _percentage,
                     color: const Color(Config.COLOR_APP_BAR),
-                    showProgress: true,
                   ),
                   const SizedBox(height: 8),
                   Divider(
@@ -285,11 +285,9 @@ class _EventProgressCardState extends State<EventProgressCard> {
                   ),
                   const SizedBox(height: 8),
                   _infoCard(
-                    label: 'Participants ou groupes sur le parcours',
+                    label: 'Participants ou groupe actifs sur le parcours',
                     value: _participants,
-                    percentage: null,
                     color: const Color(Config.COLOR_APP_BAR),
-                    showProgress: false,
                   ),
                 ],
               ),
@@ -302,72 +300,119 @@ class _EventProgressCardState extends State<EventProgressCard> {
 
   String? _formatRemainingTime(String? value) {
     if (value == null) return null;
-    // If value is already in hh:mm:ss or contains letters, return as is
-    if (RegExp(r'[a-zA-Z]').hasMatch(value) || value.contains(':')) return value;
+    // If value contains letters (like "L'évènement est terminé"), return as is
+    if (RegExp(r'[a-zA-Z]').hasMatch(value)) return value;
     // Try to parse as int (seconds)
+    if (value.contains(':')) return value; // Already formatted
     final seconds = int.tryParse(value);
     if (seconds == null) return value;
     return _formatModernTime(seconds);
   }
 
   String _formatModernTime(int seconds) {
-    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
-    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
-    final s = (seconds % 60).toString().padLeft(2, '0');
-    return "$h:$m:$s";
+    final days = seconds ~/ 86400;
+    final hours = (seconds % 86400) ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    // Format with days if more than 24 hours
+    if (days > 0) {
+      return "$days:${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+    } else {
+      return "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+    }
   }
 
   Widget _infoCard({
     required String label,
     String? value,
-    double? percentage,
     required Color color,
-    required bool showProgress,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showProgress)
-            SizedBox(
-              width: 50,
-              height: 50,
-              child: Stack(
-                alignment: Alignment.bottomLeft,
-                children: [
-                  CircularProgressIndicator(
-                    value: (percentage ?? 0) / 100,
-                    strokeWidth: 6,
-                    backgroundColor: Color(Config.COLOR_BACKGROUND),
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                  ),
-                ],
+          if (label.isNotEmpty)
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
               ),
-            )
-          else
-            const SizedBox(width: 0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                value != null ? _styledValue(value, color: color) : _buildShimmer(width: 60),
-              ],
             ),
-          ),
+          if (label.isNotEmpty) const SizedBox(height: 4),
+          value != null
+              ? RegExp(r'[a-zA-Z]').hasMatch(value)
+                  ? _styledValue(value, color: color)
+                  : label.isEmpty || label.toLowerCase().contains("temps")
+                      ? styledCountdownTimer(value, color: color)
+                      : _formatTimeWithLabels(value, color: color)
+              : _buildShimmer(width: 60),
         ],
       ),
     );
   }
 
+  Widget _formatTimeWithLabels(String value, {required Color color}) {
+    // Format the value (usually for participants count)
+    return _styledValue(value, color: color);
+  }
+
+  Widget styledCountdownTimer(String timeStr, {required Color color}) {
+    List<String> parts = timeStr.split(':');
+    List<String> labels =
+        parts.length == 4 ? ['jours', 'heures', 'minutes', 'secondes'] : ['heures', 'minutes', 'secondes'];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(parts.length, (index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  parts[index],
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                labels[index],
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: color.withOpacity(0.75),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
   Widget _styledValue(String value, {required Color color}) {
+    // If it's a time format, use the dedicated formatter
+
     // Extract value and unit if possible
     String mainValue = '';
     String unit = '';

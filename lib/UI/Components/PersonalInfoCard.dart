@@ -243,8 +243,15 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(Config.COLOR_BACKGROUND),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
