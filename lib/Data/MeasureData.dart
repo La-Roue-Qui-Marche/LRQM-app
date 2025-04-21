@@ -67,19 +67,6 @@ class MeasureData {
     }
   }
 
-  /// Retrieve the last recorded coordinate from measure points.
-  static Future<Map<String, double>?> getLastCoordinate() async {
-    List<Map<String, dynamic>> points = await getMeasurePoints();
-    if (points.isEmpty) return null;
-
-    // Get the last point
-    final lastPoint = points.last;
-    return {
-      'latitude': lastPoint['lat'],
-      'longitude': lastPoint['lng'],
-    };
-  }
-
   static Future<bool> clearMeasurePoints() async {
     return _dataManagement.removeData('measure_points');
   }

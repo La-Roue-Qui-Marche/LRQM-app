@@ -57,7 +57,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
   Future<void> _initLocation() async {
     _fetchUserPosition();
-    _positionTimer = Timer.periodic(const Duration(seconds: 5), (_) => _fetchUserPosition());
+    _positionTimer = Timer.periodic(const Duration(seconds: 1), (_) => _fetchUserPosition());
   }
 
   Future<void> _fetchUserPosition() async {
@@ -161,7 +161,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         polygonColor = Colors.grey.shade400.withOpacity(0.25);
         polygonBorderColor = Colors.grey.shade400;
         userColor = Colors.pinkAccent;
-        meetingPointColor = Colors.grey.shade400;
+        meetingPointColor = Colors.tealAccent;
         break;
     }
 
@@ -239,6 +239,36 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                   ),
                 ),
               ),
+              // --- North indicator floating top left ---
+              Positioned(
+                top: 20,
+                left: 20,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.navigation, color: Colors.redAccent, size: 18),
+                        Text(
+                          "N",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            height: 1.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               // Button stack (top right)
               Positioned(
                 top: 20,
@@ -300,7 +330,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                   left: 20,
                   right: 20,
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.only(top: 6, left: 16, right: 16, bottom: 24),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(1),
                       borderRadius: BorderRadius.circular(16),
@@ -318,7 +348,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text("Légende", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            const Text("Légende", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                             IconButton(
                               icon: const Icon(Icons.close, size: 20),
                               onPressed: () => setState(() => _showLegend = false),

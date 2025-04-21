@@ -88,8 +88,8 @@ class NavBar extends StatelessWidget {
               child: GestureDetector(
                 onTap: canStartNewSession ? onStartStopPressed : null,
                 child: Container(
-                  width: 78,
-                  height: 78,
+                  width: 74,
+                  height: 74,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: canStartNewSession
@@ -112,12 +112,12 @@ class NavBar extends StatelessWidget {
                   ),
                   child: Center(
                     child: isMeasureActive
-                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 34)
+                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 32)
                         : SvgPicture.asset(
                             'assets/icons/dot-circle.svg',
                             color: Colors.white,
-                            width: 34,
-                            height: 34,
+                            width: 32,
+                            height: 32,
                           ),
                   ),
                 ),

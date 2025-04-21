@@ -1,23 +1,171 @@
+import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Utils/config.dart';
 import '../../Data/EventData.dart';
+import '../../API/NewEventController.dart';
+import '../../Data/ContributorsData.dart';
+import '../../Utils/Result.dart';
 
-class EventProgressCard extends StatelessWidget {
-  final String? objectif;
-  final String? currentValue;
-  final double? percentage;
-  final String? remainingTime;
-  final String? participants;
-
+class EventProgressCard extends StatefulWidget {
   const EventProgressCard({
     super.key,
-    this.objectif,
-    this.currentValue,
-    this.percentage,
-    this.remainingTime,
-    this.participants,
   });
+
+  @override
+  State<EventProgressCard> createState() => _EventProgressCardState();
+}
+
+class _EventProgressCardState extends State<EventProgressCard> {
+  String? _objectif;
+  String? _currentValue;
+  double? _percentage;
+  String? _remainingTime;
+  String? _participants;
+  Timer? _countdownTimer;
+  Timer? _refreshTimer;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  String? _eventId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load event dates and start timers
+    _loadEventDates();
+    _startTimers();
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _loadEventDates() async {
+    final startDate = await EventData.getStartDate();
+    final endDate = await EventData.getEndDate();
+    final eventId = await EventData.getEventId();
+
+    if (mounted) {
+      setState(() {
+        _startDate = startDate != null ? DateTime.parse(startDate) : null;
+        _endDate = endDate != null ? DateTime.parse(endDate) : null;
+        _eventId = eventId?.toString(); // Convert int to String
+      });
+
+      // Start countdown once we have dates
+      if (_startDate != null && _endDate != null) {
+        _countdown();
+      }
+
+      // Refresh data immediately after loading dates
+      _refreshEventValues();
+    }
+  }
+
+  void _startTimers() {
+    // Timer for countdown (every second)
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_startDate != null && _endDate != null) {
+        _countdown();
+      }
+    });
+
+    // Timer for API refresh (every 10 seconds)
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _refreshEventValues();
+    });
+  }
+
+  void _countdown() {
+    if (_startDate == null || _endDate == null) return;
+
+    DateTime now = DateTime.now();
+    Duration remaining = _endDate!.difference(now);
+
+    // Calculate percentage of event completion
+    Duration totalDuration = _endDate!.difference(_startDate!);
+    Duration elapsed = now.difference(_startDate!);
+    double newPercentage = elapsed.inSeconds / totalDuration.inSeconds * 100;
+
+    if (remaining.isNegative) {
+      // Event is over
+      String newRemainingTime = "L'évènement est terminé !";
+      if (_remainingTime != newRemainingTime) {
+        if (mounted) {
+          setState(() {
+            _remainingTime = newRemainingTime;
+            _percentage = 100.0;
+          });
+        }
+      }
+    } else if (now.isBefore(_startDate!)) {
+      // Event hasn't started yet
+      String newRemainingTime = "L'évènement n'a pas encore commencé !";
+      if (_remainingTime != newRemainingTime) {
+        if (mounted) {
+          setState(() {
+            _remainingTime = newRemainingTime;
+            _percentage = 0.0;
+          });
+        }
+      }
+    } else {
+      // Event is ongoing
+      String newRemainingTime = _formatModernTime(remaining.inSeconds);
+      if (_remainingTime != newRemainingTime ||
+          (_percentage?.toStringAsFixed(1) ?? '') != newPercentage.toStringAsFixed(1)) {
+        if (mounted) {
+          setState(() {
+            _remainingTime = newRemainingTime;
+            _percentage = newPercentage;
+          });
+        }
+      }
+    }
+  }
+
+  void _refreshEventValues() async {
+    if (_eventId == null) return;
+
+    try {
+      // Get the total distance
+      final metersResult = await NewEventController.getTotalMeters(int.parse(_eventId!));
+      if (!metersResult.hasError && mounted) {
+        setState(() {
+          _currentValue = '${_formatDistance(metersResult.value!)} m';
+        });
+      }
+
+      // Get the number of participants
+      final participantsResult = await NewEventController.getActiveUsers(int.parse(_eventId!));
+      if (!participantsResult.hasError && mounted) {
+        setState(() {
+          _participants = '${participantsResult.value}';
+        });
+      }
+
+      // Get meters goal
+      final metersGoal = await EventData.getMetersGoal();
+      if (metersGoal != null && mounted) {
+        setState(() {
+          _objectif = '${_formatDistance(metersGoal)} m';
+        });
+      }
+    } catch (e) {
+      log("Error refreshing event values: $e");
+    }
+  }
+
+  String _formatDistance(int distance) {
+    return distance.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}\'',
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +215,10 @@ class EventProgressCard extends StatelessWidget {
                     'Objectif',
                     style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
-                  currentValue != null && objectif != null && objectif != '-1'
+                  _currentValue != null && _objectif != null && _objectif != '-1'
                       ? Row(
                           children: [
-                            _styledValue(currentValue!, color: const Color(Config.COLOR_APP_BAR)),
+                            _styledValue(_currentValue!, color: const Color(Config.COLOR_APP_BAR)),
                             const Text(
                               ' / ',
                               style: TextStyle(
@@ -79,7 +227,7 @@ class EventProgressCard extends StatelessWidget {
                                 color: Colors.black87,
                               ),
                             ),
-                            _styledValue(objectif!, color: Colors.black54),
+                            _styledValue(_objectif!, color: Colors.black54),
                           ],
                         )
                       : _buildShimmer(width: 100),
@@ -89,11 +237,11 @@ class EventProgressCard extends StatelessWidget {
               // Progress Bar
               Row(
                 children: [
-                  if (currentValue != null && objectif != null && objectif != '-1')
+                  if (_currentValue != null && _objectif != null && _objectif != '-1')
                     Padding(
                       padding: const EdgeInsets.only(right: 12.0),
                       child: Text(
-                        '${(_sanitizeValue(currentValue!) / _sanitizeValue(objectif!) * 100).toStringAsFixed(1)}%',
+                        '${(_sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!) * 100).toStringAsFixed(1)}%',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -105,8 +253,8 @@ class EventProgressCard extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
-                        value: currentValue != null && objectif != null && objectif != '-1'
-                            ? _sanitizeValue(currentValue!) / _sanitizeValue(objectif!)
+                        value: _currentValue != null && _objectif != null && _objectif != '-1'
+                            ? _sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!)
                             : 0.0,
                         backgroundColor: Color(Config.COLOR_BACKGROUND),
                         valueColor: const AlwaysStoppedAnimation<Color>(
@@ -125,8 +273,8 @@ class EventProgressCard extends StatelessWidget {
                 children: [
                   _infoCard(
                     label: 'Temps restant',
-                    value: _formatRemainingTime(remainingTime),
-                    percentage: percentage,
+                    value: _formatRemainingTime(_remainingTime),
+                    percentage: _percentage,
                     color: const Color(Config.COLOR_APP_BAR),
                     showProgress: true,
                   ),
@@ -138,7 +286,7 @@ class EventProgressCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   _infoCard(
                     label: 'Participants ou groupes sur le parcours',
-                    value: participants,
+                    value: _participants,
                     percentage: null,
                     color: const Color(Config.COLOR_APP_BAR),
                     showProgress: false,

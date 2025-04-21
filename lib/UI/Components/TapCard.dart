@@ -23,9 +23,9 @@ class TapCard extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           color: isSelected ? Color(Config.COLOR_BUTTON) : Colors.white,
-          borderRadius: BorderRadius.circular(4.0),
+          borderRadius: BorderRadius.circular(8.0),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -44,7 +44,7 @@ class TapCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

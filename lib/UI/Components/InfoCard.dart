@@ -79,7 +79,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
           color: Colors.transparent, // Ensure white background
           borderRadius: BorderRadius.circular(16.0), // Rounded corners
         ),
-        padding: const EdgeInsets.all(10.0), // Consistent padding
+        padding: const EdgeInsets.only(bottom: 10.0), // Consistent padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

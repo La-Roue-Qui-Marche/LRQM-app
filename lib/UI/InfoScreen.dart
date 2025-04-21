@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import '../Utils/config.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -161,27 +163,34 @@ class InfoScreen extends StatelessWidget {
                           _buildContributorsSection(context),
                           const SizedBox(height: 24),
                           Center(
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                final Uri uri = Uri.parse('mailto:Larqm.app.feedback@gmail.com');
-                                await launchUrl(uri);
-                              },
-                              icon: const Icon(Icons.email),
-                              label: const Text('Partager commentaires et suggestions'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            child: Text(
+                              "Un commentaire? Un bug? Une suggestion?\nlarqm.app.feedback@gmail.com",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                           const SizedBox(height: 16),
                           Center(
-                            child: Text(
-                              "Un commentaire? Un bug? Une suggestion?\nlarqm.app.feedback@gmail.com",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                final Uri uri = Uri.parse('mailto:larqm.app.feedback@gmail.com');
+                                await launchUrl(uri);
+                              },
+                              icon: const Icon(Icons.email, color: Colors.white),
+                              label: const Text(
+                                'Contacter l\'équipe',
+                                style: TextStyle(color: Colors.white),
                               ),
-                              textAlign: TextAlign.center,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(Config.COLOR_APP_BAR),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 40),
