@@ -88,7 +88,6 @@ class NewMeasureController {
     return _client.put(uri).then((response) async {
       print('[stopMeasure] Response: ${response.statusCode} ${response.body}');
       if (response.statusCode == 200) {
-        await MeasureData.clearMeasureData();
         return Result<bool>(value: true);
       } else {
         throw Exception('Failed to stop measure: ${response.statusCode}');

@@ -17,12 +17,10 @@ class PermissionHelper {
   static Future<bool> requestLocationWhenInUsePermission() async {
     var status = await Permission.locationWhenInUse.status;
     if (status.isGranted) {
-      LogHelper.logInfo("[PERMISSION] Location whileInUse permission already granted: $status");
       return true;
     }
     status = await Permission.locationWhenInUse.request();
     if (status.isGranted) {
-      LogHelper.logInfo("[PERMISSION] Location whileInUse permission granted: $status");
       return true;
     }
     LogHelper.logError("[PERMISSION] Location whileInUse permission not granted: $status");
@@ -33,7 +31,6 @@ class PermissionHelper {
   static Future<bool> requestLocationAlwaysPermission() async {
     var status = await Permission.locationAlways.status;
     if (status.isGranted) {
-      LogHelper.logInfo("[PERMISSION] Location always permission already granted: $status");
       return true;
     }
     // First, ensure "when in use" is granted
@@ -43,7 +40,6 @@ class PermissionHelper {
     }
     status = await Permission.locationAlways.request();
     if (status.isGranted) {
-      LogHelper.logInfo("[PERMISSION] Location always permission granted: $status");
       return true;
     }
     LogHelper.logError("[PERMISSION] Location always permission not granted: $status");

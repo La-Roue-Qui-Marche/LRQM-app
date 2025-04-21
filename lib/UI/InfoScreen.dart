@@ -16,179 +16,198 @@ class InfoScreen extends StatelessWidget {
         showInfoButton: false,
         showLogoutButton: false,
       ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 16.0).copyWith(bottom: 120.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Text(
-                    'La petite histoire',
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'La Roue Qui Marche',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Le Roue Qui Marche est une association, mais c'est avant tout un événement. Un événement caritatif ayant comme objectif principal de rassembler naturellement et sportivement les personnes qui sont en situation de handicap, avec celles qui ne le sont pas. Le but est de parcourir 2'000'000 mètres (course à pied, marche, fauteuil roulant) en 24 heures ainsi que d'organiser une manifestation autour de l'événement. Tout un chacun peut rejoindre le parcours pour effectuer la distance qu'il peut et/ou qu'il veut.",
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Chaque mètre compte.",
+                    style: const TextStyle(
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
+                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: () async {
+                      final Uri uri = Uri.parse('https://larouequimarche.ch');
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    },
+                    child: Text(
+                      "Plus d'information sur le site de la manifestation: ici",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'Comment est venue l\'idée de créer une application dédiée ?',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: Text(
-                          'Origines et évolution',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "L'idée a germé en essayant de trouver un moyen pour comptabiliser une distance collective sans que la performance soit le centre de l'attention, en valorisant les mètres (et non les kilomètres), car chaque mètre parcouru est important. Il fallait aussi laisser la liberté de la distance; permettre à chacun de faire un bout de chemin avec un minimum de contrainte associée à un parcours. Et enfin, la notion de collectif devait ressortir. Une application mobile semblait une évidence.",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Dans une volonté de rassembler et de créer autour de l'événement, cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière informatique et systèemes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024 par Thibault. La Roue Qui Marche le remercie pour son travail et le félicite pour l'obtention de son diplôme d'ingénieur.",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 12),
+                  Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
+                  const SizedBox(height: 16),
+                  Text(
+                    "L'application a ensuite été reprise par des bénévoles dont l'informatique est le métier, sont sensibles à l'objectif de la Roue Qui Marche et au but de la manifestation. Ces 4 personnes ne sont pas purement des développeurs d'applications mobiles mais ont décidé d'unir leur talent pour proposer une solution adaptée à cet événement.",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'L\'équipe de développement',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildContributorsSection(context),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final Uri uri = Uri.parse('mailto:Larqm.app.feedback@gmail.com');
+                        await launchUrl(uri);
+                      },
+                      icon: const Icon(Icons.email),
+                      label: const Text('Partager commentaires et suggestions'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
-                      Text(
-                        "Cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière Informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024. Merci à Thibault pour son travail et bravo pour l'obtention de son diplôme d'ingénieur.",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.left,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      "Un commentaire? Un bug? Une suggestion?\nlarqm.app.feedback@gmail.com",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
                       ),
-                      const SizedBox(height: 12),
-                      Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
-                      const SizedBox(height: 12),
-                      Text(
-                        "L'application a ensuite été reprise par des bénévoles passionnés et éclairés de la Roue Qui Marche qui l'ont mis à jour, complété et finalement distribué.\nMerci à toute l'équipe de développement. \n",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                      const Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          "- Nicolas Fontaine",
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Center(
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Made with ❤️ by AnCa ',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.black54,
+                            fontSize: 12,
+                            color: Colors.black38,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Text(
-                    'L\'équipe de développement bénévole',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                        const SizedBox(height: 8),
+                        FutureBuilder<String>(
+                          future: Config.getAppVersion(),
+                          builder: (context, snapshot) {
+                            final version = snapshot.data ?? '';
+                            return version.isNotEmpty
+                                ? Text(
+                                    'v$version (+1)',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black38,
+                                    ),
+                                  )
+                                : const SizedBox.shrink();
+                          },
+                        ),
+                        Text(
+                          'Copyright La Roue Qui Marche',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black38,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: Text(
-                          'Les Développeurs',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      _buildContributorsSection(context),
-                      const SizedBox(height: 16),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Product Owner",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                _buildContributorProfile(
-                                    context,
-                                    null,
-                                    'https://focus.telerama.fr/664x442/60/2024/10/29/3b3403637a604a82a67436c828a965c6.jpg',
-                                    'Nicolas Fontaine'),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 32),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "GitHub Repo",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                _buildContributorProfile(
-                                  context,
-                                  'https://github.com/La-Roue-Qui-Marche/LRQM-app',
-                                  'https://avatars.githubusercontent.com/u/205062865?s=200&v=4',
-                                  'La RQM',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
-          ),
-          // Version at the top right, absolute position
-          Positioned(
-            bottom: 12,
-            right: 16,
-            child: FutureBuilder<String>(
-              future: Config.getAppVersion(),
-              builder: (context, snapshot) {
-                final version = snapshot.data ?? '';
-                return version.isNotEmpty
-                    ? Text(
-                        'v$version',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black38,
-                        ),
-                      )
-                    : const SizedBox.shrink();
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -202,13 +221,13 @@ class InfoScreen extends StatelessWidget {
         runSpacing: 24,
         children: [
           _buildContributorProfile(context, 'https://github.com/therundmc',
-              'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine Cavallera'),
-          _buildContributorProfile(context, 'https://github.com/chloefont',
-              'https://avatars.githubusercontent.com/u/60699567?v=4', 'Chloé Fontaine'),
+              'https://avatars.githubusercontent.com/u/25774146?v=4', 'Antoine'),
+          _buildContributorProfile(
+              context, 'https://github.com/chloefont', 'https://avatars.githubusercontent.com/u/60699567?v=4', 'Chloé'),
           _buildContributorProfile(context, 'https://github.com/Maxime-Nicolet',
-              'https://avatars.githubusercontent.com/u/21175110?v=4', 'Maxime Nicolet'),
+              'https://avatars.githubusercontent.com/u/21175110?v=4', 'Maxime'),
           _buildContributorProfile(context, 'https://github.com/tchekoto',
-              'https://avatars.githubusercontent.com/u/16468108?v=4', 'William Fromont'),
+              'https://avatars.githubusercontent.com/u/16468108?v=4', 'William'),
         ],
       ),
     );

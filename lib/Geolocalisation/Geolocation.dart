@@ -6,33 +6,21 @@ import 'package:geolocator/geolocator.dart' as geo;
 import 'package:background_location/background_location.dart' as bg;
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
 import 'package:lrqm/API/NewMeasureController.dart';
-import 'package:lrqm/Utils/config.dart';
 import 'package:lrqm/Utils/LogHelper.dart';
 import '../Utils/Permission.dart';
 import '../Data/EventData.dart';
+import '../Data/MeasureData.dart';
 
-/// Configuration parameters for geolocation tracking.
 class GeolocationConfig {
-  /// How often (and with what accuracy) the location should be updated.
   final Duration locationUpdateInterval;
   final int locationDistanceFilter;
   final geo.LocationAccuracy locationAccuracy;
-
-  /// The interval used for API calls to send the distance diff.
   final Duration apiInterval;
-
-  /// The maximum chunk of data to send in one API call.
   final int maxChunkSize;
-
-  /// Filtering thresholds to help ignore spurious location updates.
-  final double accuracyThreshold; // meters threshold
-  final int distanceThreshold; // meters threshold
-  final double speedThreshold; // m/s threshold
-
-  /// Number of consecutive updates outside the zone before pausing counting.
+  final double accuracyThreshold;
+  final int distanceThreshold;
+  final double speedThreshold;
   final int outsideCounterMax;
-
-  /// Notification configuration for Android foreground service.
   final String notificationTitle;
   final String notificationText;
   final String notificationIconName;
@@ -44,9 +32,9 @@ class GeolocationConfig {
     this.locationAccuracy = geo.LocationAccuracy.bestForNavigation,
     this.apiInterval = const Duration(seconds: 10),
     this.maxChunkSize = 40,
-    this.accuracyThreshold = 20, // meters
-    this.distanceThreshold = 50, // meters
-    this.speedThreshold = 10, // m/s
+    this.accuracyThreshold = 20,
+    this.distanceThreshold = 50,
+    this.speedThreshold = 10,
     this.outsideCounterMax = 10,
     this.notificationTitle = "La RQM Background Tracking",
     this.notificationText = "Tracking in progress...",
@@ -57,27 +45,24 @@ class GeolocationConfig {
 
 class Geolocation with WidgetsBindingObserver {
   final GeolocationConfig config;
-
   Geolocation({required this.config}) {
     _settings = _getSettings();
     WidgetsBinding.instance.addObserver(this);
-    _initZone(); // Called here, not in initState
-  }
-
-  Future<void> _initZone() async {
-    _zonePoints = await EventData.getSiteCoordLatLngList();
+    _initZone();
   }
 
   late geo.LocationSettings _settings;
   geo.Position? _oldPos;
   StreamSubscription<geo.Position>? _positionStream;
   Timer? _apiTimer;
-  Timer? _streamTimer; // Timer for periodic stream updates
+  Timer? _streamTimer;
+  Timer? _silenceCheckTimer;
+
+  final Stopwatch _gpsSilenceStopwatch = Stopwatch();
   final StreamController<Map<String, int>> _streamController = StreamController<Map<String, int>>.broadcast();
 
   bool _positionStreamStarted = false;
   int _distance = 0;
-  int _totalDistanceSent = 0;
   int _outsideCounter = 0;
   DateTime _startTime = DateTime.now();
   bool _resetPosition = false;
@@ -88,9 +73,13 @@ class Geolocation with WidgetsBindingObserver {
 
   Stream<Map<String, int>> get stream => _streamController.stream;
 
+  Future<void> _initZone() async {
+    _zonePoints = await EventData.getSiteCoordLatLngList();
+  }
+
   Future<geo.Position?> get currentPosition async {
     if (!await PermissionHelper.requestLocationWhenInUsePermission()) {
-      LogHelper.logError("[GEO] Location permission not granted. Cannot get current position.");
+      LogHelper.logError("[GEO] Location permission not granted.");
       return null;
     }
     try {
@@ -112,8 +101,10 @@ class Geolocation with WidgetsBindingObserver {
           notificationText: config.notificationText,
           notificationTitle: config.notificationTitle,
           enableWakeLock: true,
-          notificationIcon:
-              geo.AndroidResource(name: config.notificationIconName, defType: config.notificationIconType),
+          notificationIcon: geo.AndroidResource(
+            name: config.notificationIconName,
+            defType: config.notificationIconType,
+          ),
         ),
       );
     } else {
@@ -128,30 +119,32 @@ class Geolocation with WidgetsBindingObserver {
 
   Future<void> startListening() async {
     LogHelper.logInfo("[GEO] Starting geolocation...");
+
     if (_positionStreamStarted || !(await PermissionHelper.isLocationAlwaysGranted())) {
       LogHelper.logError("Permission not granted or already started.");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
     }
 
+    await MeasureData.clearMeasureData();
+
     _positionStreamStarted = true;
     _startTime = DateTime.now();
     _distance = 0;
     _outsideCounter = 0;
-    _totalDistanceSent = 0;
 
     _oldPos = await geo.Geolocator.getCurrentPosition();
     _resetPosition = false;
 
-    // Start listening to location updates.
+    _gpsSilenceStopwatch.reset();
+    _gpsSilenceStopwatch.start();
+
     _startPositionStream();
 
-    // Timer used for API calls to send the current total distance.
     _apiTimer = Timer.periodic(config.apiInterval, (_) {
       _sendCurrentDistance();
     });
 
-    // Timer to periodically send stream updates.
     _streamTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_streamController.isClosed) {
         _streamController.sink.add({
@@ -162,7 +155,16 @@ class Geolocation with WidgetsBindingObserver {
       }
     });
 
-    LogHelper.logInfo("[GEO] Geolocation started in foreground.");
+    _silenceCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_gpsSilenceStopwatch.elapsed.inSeconds >= 10) {
+        LogHelper.logInfo("[GEO] No GPS update in 10s , recording stationary point...");
+        _recordStationaryPoint();
+        _gpsSilenceStopwatch.reset();
+        _gpsSilenceStopwatch.start();
+      }
+    });
+
+    LogHelper.logInfo("[GEO] Geolocation started.");
   }
 
   void _startPositionStream() {
@@ -173,7 +175,9 @@ class Geolocation with WidgetsBindingObserver {
   }
 
   void _handleForegroundUpdate(geo.Position position) {
-    LogHelper.logInfo("[GEO] Handling foreground update...");
+    _gpsSilenceStopwatch.reset();
+    _gpsSilenceStopwatch.start();
+
     _processPositionUpdate(
       position.latitude,
       position.longitude,
@@ -183,7 +187,9 @@ class Geolocation with WidgetsBindingObserver {
   }
 
   void _handleBackgroundUpdate(bg.Location location) {
-    LogHelper.logInfo("[GEO] Handling background update...");
+    _gpsSilenceStopwatch.reset();
+    _gpsSilenceStopwatch.start();
+
     _processPositionUpdate(
       location.latitude ?? 0,
       location.longitude ?? 0,
@@ -192,64 +198,73 @@ class Geolocation with WidgetsBindingObserver {
     );
   }
 
-  void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
-    LogHelper.logInfo("[GEO] Update: Lat=$lat, Lng=$lng, Acc=${acc.toStringAsFixed(1)}m");
+  Future<void> _recordStationaryPoint() async {
+    if (_oldPos != null) {
+      await MeasureData.addMeasurePoint(
+        distance: _distance.toDouble(),
+        speed: 0.0,
+        acc: _oldPos!.accuracy,
+        timestamp: DateTime.now(),
+        lat: _oldPos!.latitude,
+        lng: _oldPos!.longitude,
+        duration: _elapsedTimeInSeconds, // Add duration
+      );
+      LogHelper.logInfo("[GEO] Recorded stationary point at ${_oldPos!.latitude}, ${_oldPos!.longitude}");
+    } else {
+      LogHelper.logError("[GEO] Cannot record stationary point: no previous position available");
+    }
+  }
 
-    // On first update or when a reset is needed, record the new position and send an update.
+  void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
     if (_resetPosition || _oldPos == null) {
+      LogHelper.logInfo("[GEO] First update or reset position. Acc=${acc.toStringAsFixed(1)}m");
       _saveOldPos(lat, lng, acc, timestamp);
       _resetPosition = false;
-      if (!_streamController.isClosed) {
-        _streamController.sink.add({
-          "time": _elapsedTimeInSeconds,
-          "distance": _distance,
-          "isCountingInZone": _isCountingInZone ? 1 : 0,
-        });
-      }
+      _streamController.sink.add({
+        "time": _elapsedTimeInSeconds,
+        "distance": _distance,
+        "isCountingInZone": _isCountingInZone ? 1 : 0,
+      });
       return;
     }
 
-    final dist = geo.Geolocator.distanceBetween(
-      _oldPos!.latitude,
-      _oldPos!.longitude,
-      lat,
-      lng,
-    ).round();
-
+    final dist = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng).round();
     final timeDiff = timestamp.difference(_oldPos!.timestamp ?? DateTime.now()).inSeconds;
     final speed = timeDiff > 0 ? dist / timeDiff : 0;
 
-    // Filter out spurious updates.
     if (acc > config.accuracyThreshold || dist > config.distanceThreshold || speed > config.speedThreshold) {
-      LogHelper.logWarn(
-          "[GEO] Filtered point: dist=$dist m, speed=${speed.toStringAsFixed(2)} m/s, acc=${acc.toStringAsFixed(1)}");
+      LogHelper.logWarn("[GEO] Filtered point. acc=$acc, dist=$dist, speed=$speed");
       _saveOldPos(lat, lng, acc, timestamp);
       return;
     }
 
     final inZone = await isLocationInZone(lat, lng);
     if (inZone) {
-      if (!_isCountingInZone) {
-        LogHelper.logInfo("[ZONE] User re-entered zone, resuming counting. Resetting baseline.");
-        _isCountingInZone = true;
-      } else if (_outsideCounter > 0) {
-        LogHelper.logInfo("[ZONE] Back in zone. Resetting outside counter.");
-      }
+      if (!_isCountingInZone) LogHelper.logInfo("[ZONE] Re-entered zone.");
       _outsideCounter = 0;
+      _isCountingInZone = true;
       _distance += dist;
     } else {
       _outsideCounter++;
-      LogHelper.logWarn("[ZONE] Outside zone counter: $_outsideCounter");
-
-      if (_outsideCounter <= config.outsideCounterMax) {
-        _distance += dist;
+      if (_outsideCounter > config.outsideCounterMax) {
+        if (_isCountingInZone) LogHelper.logError("[ZONE] Outside too long, pausing count.");
+        _isCountingInZone = false;
+        _saveOldPos(lat, lng, acc, timestamp);
+        return;
       } else {
-        if (_isCountingInZone) {
-          LogHelper.logError("[ZONE] Outside too long, pausing counting!");
-          _isCountingInZone = false;
-        }
+        _distance += dist;
       }
     }
+
+    await MeasureData.addMeasurePoint(
+      distance: _distance.toDouble(),
+      speed: speed.toDouble(),
+      acc: acc.toDouble(),
+      timestamp: timestamp,
+      lat: lat,
+      lng: lng,
+      duration: _elapsedTimeInSeconds, // Add duration
+    );
 
     _saveOldPos(lat, lng, acc, timestamp);
   }
@@ -277,28 +292,26 @@ class Geolocation with WidgetsBindingObserver {
       if (response.error != null) {
         LogHelper.logError("[API] Failed to send current distance: ${response.error}");
       } else {
-        _totalDistanceSent = _distance;
         LogHelper.logInfo("[API] Sent current distance: $_distance m");
       }
     } catch (e) {
-      LogHelper.logError("[API] Exception in sending current distance: $e");
+      LogHelper.logError("[API] Exception while sending distance: $e");
     } finally {
       _isSending = false;
     }
   }
 
   Future<void> _sendFinalDistance() async {
-    LogHelper.logInfo("[GEO] Sending final distance ($_distance m) before stopping...");
+    LogHelper.logInfo("[GEO] Sending final distance $_distance m...");
     try {
       final response = await NewMeasureController.editMeters(_distance);
       if (response.error != null) {
         LogHelper.logError("[API] Failed to send final distance: ${response.error}");
       } else {
-        _totalDistanceSent = _distance;
         LogHelper.logInfo("[API] Sent final distance: $_distance m");
       }
     } catch (e) {
-      LogHelper.logError("[API] Exception in sending final distance: $e");
+      LogHelper.logError("[API] Exception sending final distance: $e");
     }
   }
 
@@ -306,13 +319,14 @@ class Geolocation with WidgetsBindingObserver {
     if (!_positionStreamStarted) return;
     LogHelper.logInfo("[GEO] Stopping geolocation...");
 
+    _positionStreamStarted = false;
+
     try {
       await _positionStream?.cancel();
-      _positionStream = null;
-
       _apiTimer?.cancel();
-
       _streamTimer?.cancel();
+      _silenceCheckTimer?.cancel();
+      _gpsSilenceStopwatch.stop();
 
       await _sendFinalDistance();
 
@@ -321,18 +335,16 @@ class Geolocation with WidgetsBindingObserver {
       }
 
       await bg.BackgroundLocation.stopLocationService();
-      _positionStreamStarted = false;
 
       final result = await NewMeasureController.stopMeasure();
       if (result.value == true) {
+        await MeasureData.clearMeasureData();
         LogHelper.logInfo("[GEO] Measure stopped successfully.");
       } else {
         LogHelper.logError("[GEO] Failed to stop measure: ${result.error}");
       }
     } catch (e) {
-      LogHelper.logError("[GEO] Exception during stopListening: $e");
-    } finally {
-      LogHelper.logInfo("[GEO] Geolocation stopped.");
+      LogHelper.logError("[GEO] Error during stop: $e");
     }
   }
 
@@ -375,32 +387,31 @@ class Geolocation with WidgetsBindingObserver {
   }
 
   Future<void> _switchToBackgroundLocation() async {
-    LogHelper.logInfo("[BG] Switching to background tracking...");
+    LogHelper.logInfo("[BG] Switching to background...");
     await _positionStream?.cancel();
+
     if (!await PermissionHelper.isLocationAlwaysGranted()) {
-      LogHelper.logError("[BG] Permission lost while switching to background!");
+      LogHelper.logError("[BG] Permission lost!");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
     }
 
     _resetPosition = true;
-    await bg.BackgroundLocation.startLocationService(
-      distanceFilter: config.locationDistanceFilter.toDouble(),
-    );
+    await bg.BackgroundLocation.startLocationService(distanceFilter: config.locationDistanceFilter.toDouble());
     bg.BackgroundLocation.getLocationUpdates(_handleBackgroundUpdate);
   }
 
   Future<void> _switchToForegroundLocation() async {
-    LogHelper.logInfo("[FG] Switching to foreground tracking...");
+    LogHelper.logInfo("[FG] Switching to foreground...");
     try {
       await bg.BackgroundLocation.stopLocationService();
     } catch (e) {
-      LogHelper.logError("[FG] Failed to stop background service: $e");
+      LogHelper.logError("[FG] Failed to stop background: $e");
     }
 
     _resetPosition = true;
     if (!await PermissionHelper.isLocationAlwaysGranted()) {
-      LogHelper.logError("[FG] Permission lost while switching to foreground!");
+      LogHelper.logError("[FG] Permission lost!");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
     }

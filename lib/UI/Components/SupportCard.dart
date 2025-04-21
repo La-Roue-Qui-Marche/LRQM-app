@@ -18,19 +18,8 @@ class SupportCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
-          child: Text(
-            'Informations sur l\'événement',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ),
         Container(
-          margin: const EdgeInsets.only(bottom: 12.0, right: 12.0, left: 12.0),
+          margin: const EdgeInsets.only(bottom: 12.0, right: 12.0, left: 12.0, top: 24.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -39,6 +28,15 @@ class SupportCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Informations sur l\'événement',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
               Text(
                 'À propos de l\'événement',
                 style: const TextStyle(

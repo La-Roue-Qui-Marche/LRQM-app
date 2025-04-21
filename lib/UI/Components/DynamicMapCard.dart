@@ -5,7 +5,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../Utils/config.dart';
-import '../../Utils/Permission.dart';
 import '../../Geolocalisation/Geolocation.dart';
 import '../../Data/EventData.dart';
 
@@ -30,27 +29,6 @@ class _MapStyles {
   static const double rassemblementIconSize = 34; // Increased from 28
   static const double legendUserIconSize = 26; // Increased from 22
   static const double legendRassemblementIconSize = 24; // Increased from 20
-
-  static Icon userPositionIcon({double? size}) => Icon(
-        Icons.my_location,
-        color: zoneBorderColor,
-        size: size ?? userIconSize,
-      );
-
-  static Icon rassemblementIcon({double? size}) => Icon(
-        Icons.location_pin,
-        color: Color(Config.COLOR_BUTTON), // Changed from zoneBorderColor to BUTTON_COLOR
-        size: size ?? rassemblementIconSize,
-      );
-
-  static BoxDecoration zoneLegendDecoration = BoxDecoration(
-    color: zoneBorderColor.withOpacity(zoneFillOpacity),
-    border: Border.all(
-      color: zoneBorderColor,
-      width: 2,
-    ),
-    borderRadius: BorderRadius.circular(4),
-  );
 }
 // --- End global style definitions ---
 
@@ -64,7 +42,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   bool _isMapReady = false;
   Timer? _positionTimer;
   bool _showLegend = false;
-  bool _mapInteractive = false; // Add: controls map interactivity
+  bool _followUserMode = false; // Tracks if camera should follow user
   List<LatLng> _zonePoints = [];
   LatLng? _meetingPoint;
 
@@ -75,7 +53,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   Color get _userMarkerColor {
     if (_mapBaseType == _MapBaseType.satellite) {
       // Bright blue for user (stands out on green/brown satellite)
-      return Colors.white;
+      return Colors.pink; // Material grey 800
     }
     return _MapStyles.zoneBorderColor;
   }
@@ -83,7 +61,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   Color get _gatheringMarkerColor {
     if (_mapBaseType == _MapBaseType.satellite) {
       // Bright orange for meeting point (contrasts with blue and green)
-      return const Color(0xFFFF9800); // Material orange 500
+      return Colors.black;
     }
     return Color(Config.COLOR_BUTTON);
   }
@@ -128,15 +106,29 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 
   Future<void> _initLocation() async {
     _fetchUserPosition();
-    _positionTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchUserPosition());
+    _positionTimer = Timer.periodic(const Duration(seconds: 5), (_) => _fetchUserPosition());
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 1), () {
       if (mounted && !_isMapReady) {
         setState(() {
           _isMapReady = true;
         });
       }
     });
+  }
+
+  // New method to center map on user with close zoom
+  void _centerOnUser() {
+    if (_currentLatLng == null || !_isMapReady) return;
+
+    // Use a closer zoom level when following the user
+    const double followZoomLevel = 17.0;
+
+    try {
+      _mapController.move(_currentLatLng!, followZoomLevel);
+    } catch (e) {
+      // Ignore if controller is not ready
+    }
   }
 
   Future<void> _fetchUserPosition() async {
@@ -146,11 +138,16 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
       setState(() {
         if (pos != null && isValidCoordinate(pos.latitude) && isValidCoordinate(pos.longitude)) {
           _currentLatLng = LatLng(pos.latitude, pos.longitude);
+
+          // If in follow mode, update camera position
+          if (_followUserMode && _currentLatLng != null) {
+            _centerOnUser();
+          }
         } else {
           _currentLatLng = null;
         }
         _isFetchingPosition = false;
-        if (_isMapReady && !_mapInteractive) _fitMapBounds();
+        if (_isMapReady && !_followUserMode) _fitMapBounds();
       });
     }
   }
@@ -283,10 +280,12 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                           height: 18,
                           decoration: BoxDecoration(
                             color: _mapBaseType == _MapBaseType.satellite
-                                ? Colors.white.withOpacity(0.25)
+                                ? Colors.grey.shade400.withOpacity(0.25)
                                 : _MapStyles.zoneBorderColor.withOpacity(_MapStyles.zoneFillOpacity),
                             border: Border.all(
-                              color: _mapBaseType == _MapBaseType.satellite ? Colors.white : _MapStyles.zoneBorderColor,
+                              color: _mapBaseType == _MapBaseType.satellite
+                                  ? Colors.grey.shade400
+                                  : _MapStyles.zoneBorderColor,
                               width: 2,
                             ),
                             borderRadius: BorderRadius.circular(4),
@@ -367,7 +366,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     double userLat = _currentLatLng?.latitude ?? defaultLat;
     double userLon = _currentLatLng?.longitude ?? defaultLon;
 
-    final mapHeight = 450.0;
+    final mapHeight = MediaQuery.of(context).size.height * 0.6;
 
     // Map tile selection logic (voyager and satellite)
     String urlTemplate;
@@ -393,8 +392,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         subdomains = [];
         tooltip = "Vue Swisstopo";
         icon = Icons.terrain;
-        polygonColor = Colors.white.withOpacity(0.25);
-        polygonBorderColor = Colors.white;
+        polygonColor = Colors.grey.shade400.withOpacity(0.25);
+        polygonBorderColor = Colors.grey.shade400;
         break;
     }
 
@@ -403,28 +402,20 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
       children: [
         Padding(
           padding: const EdgeInsets.only(right: 16.0, left: 16.0, bottom: 8.0, top: 16.0),
-          child: Text(
-            'Ta position en temps réel',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
         ),
         Stack(
           children: [
             AbsorbPointer(
-              absorbing: !_mapInteractive,
+              absorbing: false,
               child: Container(
                 height: mapHeight,
-                margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
+                margin: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 0.0),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(0.0),
                   color: Colors.white,
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(0.0),
                   child: _isFetchingPosition || !_isMapReady
                       ? Container(
                           height: mapHeight,
@@ -462,9 +453,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                               });
                               WidgetsBinding.instance.addPostFrameCallback((_) => _fitMapBounds());
                             },
-                            interactionOptions: _mapInteractive
-                                ? const InteractionOptions(flags: InteractiveFlag.all)
-                                : const InteractionOptions(flags: InteractiveFlag.none),
+                            interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
                           ),
                           children: [
                             TileLayer(
@@ -546,7 +535,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                             ),
                     ),
                     const SizedBox(height: 14),
-                    // Replace: Satellite toggle button with voyager/satellite toggle
+                    // Map type toggle button
                     Material(
                       color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
                       shape: const CircleBorder(),
@@ -563,23 +552,27 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                       ),
                     ),
                     const SizedBox(height: 14),
+                    // Follow user toggle button
                     Material(
                       color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
                       shape: const CircleBorder(),
                       elevation: 2,
                       child: IconButton(
                         icon: Icon(
-                          _mapInteractive ? Icons.lock_open : Icons.lock,
-                          color: Colors.black87,
+                          _followUserMode ? Icons.gps_fixed : Icons.gps_not_fixed,
+                          color: _followUserMode ? Color(Config.COLOR_BUTTON) : Colors.black87,
                         ),
-                        tooltip:
-                            _mapInteractive ? "Désactiver le contrôle de la carte" : "Activer le contrôle de la carte",
+                        tooltip: _followUserMode ? "Arrêter de suivre ma position" : "Suivre ma position",
                         onPressed: () {
                           setState(() {
-                            _mapInteractive = !_mapInteractive;
-                            if (!_mapInteractive) {
+                            _followUserMode = !_followUserMode;
+
+                            if (_followUserMode) {
+                              // When enabling follow mode, center on user immediately
+                              _centerOnUser();
+                            } else {
+                              // When disabling, return to fitting map bounds
                               _fitMapBounds();
-                              _mapController.rotate(0);
                             }
                           });
                         },

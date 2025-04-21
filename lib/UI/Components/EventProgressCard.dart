@@ -24,19 +24,8 @@ class EventProgressCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
-          child: Text(
-            'Progression de l\'événement',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ),
         Container(
-          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0),
+          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0, top: 16.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -45,6 +34,15 @@ class EventProgressCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Progression de l\'événement',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
               FutureBuilder<String?>(
                 future: EventData.getEventName(),
                 builder: (context, snapshot) {

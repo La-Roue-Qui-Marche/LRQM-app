@@ -290,10 +290,10 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                 children: [
                   DynamicMapCard(geolocation: widget.geolocation),
                   Positioned(
-                    top: 10,
-                    right: 10,
+                    top: 50,
+                    left: 10,
                     child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.black),
+                      icon: const Icon(Icons.close, color: Colors.black, size: 32),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),

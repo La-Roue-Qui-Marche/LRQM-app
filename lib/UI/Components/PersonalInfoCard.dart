@@ -13,7 +13,6 @@ class PersonalInfoCard extends StatefulWidget {
   final String userName;
   final String contribution;
   final String totalTime;
-  final Stream<Map<String, int>> geoStream;
 
   const PersonalInfoCard({
     super.key,
@@ -24,7 +23,6 @@ class PersonalInfoCard extends StatefulWidget {
     required this.userName,
     required this.contribution,
     required this.totalTime,
-    required this.geoStream,
   });
 
   @override
@@ -91,12 +89,26 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
-          child: Row(
+        _buildCard(),
+        ..._particles,
+      ],
+    );
+  }
+
+  Widget _buildCard() {
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0, top: 16.0),
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Ta contribution à l\'événement',
@@ -106,32 +118,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                   color: Colors.black87,
                 ),
               ),
-            ],
-          ),
-        ),
-        Stack(
-          children: [
-            _buildCard(),
-            ..._particles,
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCard() {
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0),
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              const SizedBox(height: 12),
               _buildHeader(),
               const SizedBox(height: 8),
               Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
@@ -142,12 +129,12 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
               if (widget.isSessionActive) const SizedBox(height: 8),
-              if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
+              if (widget.isSessionActive) ContributionGraph(),
             ],
           ),
         ),
         Positioned(
-          top: 16,
+          top: 72,
           right: 28,
           child: _statusBadge(),
         ),
@@ -407,7 +394,7 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
       animation: _controller,
       builder: (_, child) {
         return Positioned(
-          top: 150 - widget.offsetY * _controller.value,
+          top: 200 - widget.offsetY * _controller.value,
           left: MediaQuery.of(context).size.width / 3.5 + widget.offsetX * _controller.value,
           child: Opacity(
             opacity: 1 - _controller.value,
