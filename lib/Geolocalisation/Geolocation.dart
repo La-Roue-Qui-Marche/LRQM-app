@@ -126,8 +126,6 @@ class Geolocation with WidgetsBindingObserver {
       return;
     }
 
-    await MeasureData.clearMeasureData();
-
     _positionStreamStarted = true;
     _startTime = DateTime.now();
     _distance = 0;
