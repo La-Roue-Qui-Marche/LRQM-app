@@ -9,204 +9,227 @@ class InfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(Config.COLOR_BACKGROUND),
       appBar: const TopAppBar(
         title: "Informations",
         showBackButton: true,
         showInfoButton: false,
         showLogoutButton: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'La Roue Qui Marche',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Le Roue Qui Marche est une association, mais c'est avant tout un événement. Un événement caritatif ayant comme objectif principal de rassembler naturellement et sportivement les personnes qui sont en situation de handicap, avec celles qui ne le sont pas. Le but est de parcourir 2'000'000 mètres (course à pied, marche, fauteuil roulant) en 24 heures ainsi que d'organiser une manifestation autour de l'événement. Tout un chacun peut rejoindre le parcours pour effectuer la distance qu'il peut et/ou qu'il veut.",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "Chaque mètre compte.",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () async {
-                      final Uri uri = Uri.parse('https://larouequimarche.ch');
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    },
-                    child: Text(
-                      "Plus d'information sur le site de la manifestation: ici",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+      body: Container(
+        color: const Color(Config.COLOR_BACKGROUND),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 0.0),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 0.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'Comment est venue l\'idée de créer une application dédiée ?',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "L'idée a germé en essayant de trouver un moyen pour comptabiliser une distance collective sans que la performance soit le centre de l'attention, en valorisant les mètres (et non les kilomètres), car chaque mètre parcouru est important. Il fallait aussi laisser la liberté de la distance; permettre à chacun de faire un bout de chemin avec un minimum de contrainte associée à un parcours. Et enfin, la notion de collectif devait ressortir. Une application mobile semblait une évidence.",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Dans une volonté de rassembler et de créer autour de l'événement, cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière informatique et systèemes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024 par Thibault. La Roue Qui Marche le remercie pour son travail et le félicite pour l'obtention de son diplôme d'ingénieur.",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                  const SizedBox(height: 12),
-                  Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
-                  const SizedBox(height: 16),
-                  Text(
-                    "L'application a ensuite été reprise par des bénévoles dont l'informatique est le métier, sont sensibles à l'objectif de la Roue Qui Marche et au but de la manifestation. Ces 4 personnes ne sont pas purement des développeurs d'applications mobiles mais ont décidé d'unir leur talent pour proposer une solution adaptée à cet événement.",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'L\'équipe de développement',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildContributorsSection(context),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        final Uri uri = Uri.parse('mailto:Larqm.app.feedback@gmail.com');
-                        await launchUrl(uri);
-                      },
-                      icon: const Icon(Icons.email),
-                      label: const Text('Partager commentaires et suggestions'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Text(
+                        'La Roue Qui Marche',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(
-                      "Un commentaire? Un bug? Une suggestion?\nlarqm.app.feedback@gmail.com",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Center(
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Made with ❤️ by AnCa ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black38,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Le Roue Qui Marche est une association, mais c'est avant tout un événement. Un événement caritatif ayant comme objectif principal de rassembler naturellement et sportivement les personnes qui sont en situation de handicap, avec celles qui ne le sont pas. Le but est de parcourir 2'000'000 mètres (course à pied, marche, fauteuil roulant) en 24 heures ainsi que d'organiser une manifestation autour de l'événement. Tout un chacun peut rejoindre le parcours pour effectuer la distance qu'il peut et/ou qu'il veut.",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.left,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        FutureBuilder<String>(
-                          future: Config.getAppVersion(),
-                          builder: (context, snapshot) {
-                            final version = snapshot.data ?? '';
-                            return version.isNotEmpty
-                                ? Text(
-                                    'v$version (+1)',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black38,
-                                    ),
-                                  )
-                                : const SizedBox.shrink();
-                          },
-                        ),
-                        Text(
-                          'Copyright La Roue Qui Marche',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black38,
+                          const SizedBox(height: 12),
+                          Text(
+                            "Chaque mètre compte.",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTap: () async {
+                              final Uri uri = Uri.parse('https://larouequimarche.ch');
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            },
+                            child: Text(
+                              "Plus d'information sur le site de la manifestation: ici",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Text(
+                        'Comment est venue l\'idée de créer une application dédiée ?',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "L'idée a germé en essayant de trouver un moyen pour comptabiliser une distance collective sans que la performance soit le centre de l'attention, en valorisant les mètres (et non les kilomètres), car chaque mètre parcouru est important. Il fallait aussi laisser la liberté de la distance; permettre à chacun de faire un bout de chemin avec un minimum de contrainte associée à un parcours. Et enfin, la notion de collectif devait ressortir. Une application mobile semblait une évidence.",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Dans une volonté de rassembler et de créer autour de l'événement, cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière informatique et systèemes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024 par Thibault. La Roue Qui Marche le remercie pour son travail et le félicite pour l'obtention de son diplôme d'ingénieur.",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                          const SizedBox(height: 12),
+                          Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
+                          const SizedBox(height: 16),
+                          Text(
+                            "L'application a ensuite été reprise par des bénévoles dont l'informatique est le métier, sont sensibles à l'objectif de la Roue Qui Marche et au but de la manifestation. Ces 4 personnes ne sont pas purement des développeurs d'applications mobiles mais ont décidé d'unir leur talent pour proposer une solution adaptée à cet événement.",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Text(
+                        'L\'équipe de développement',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildContributorsSection(context),
+                          const SizedBox(height: 24),
+                          Center(
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                final Uri uri = Uri.parse('mailto:Larqm.app.feedback@gmail.com');
+                                await launchUrl(uri);
+                              },
+                              icon: const Icon(Icons.email),
+                              label: const Text('Partager commentaires et suggestions'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Text(
+                              "Un commentaire? Un bug? Une suggestion?\nlarqm.app.feedback@gmail.com",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          Center(
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Made with ❤️ by AnCa ',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black38,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                FutureBuilder<String>(
+                                  future: Config.getAppVersion(),
+                                  builder: (context, snapshot) {
+                                    final version = snapshot.data ?? '';
+                                    return version.isNotEmpty
+                                        ? Text(
+                                            'v$version (+1)',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.black38,
+                                            ),
+                                          )
+                                        : const SizedBox.shrink();
+                                  },
+                                ),
+                                Text(
+                                  'Copyright La Roue Qui Marche',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black38,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

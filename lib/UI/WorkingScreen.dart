@@ -458,7 +458,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
               ),
             ),
           ),
-        const SizedBox(height: 160),
+        const SizedBox(height: 40),
       ],
     );
   }
@@ -478,7 +478,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
             participants: _numberOfParticipants != null ? '${_numberOfParticipants!}' : null,
           ),
           const SupportCard(),
-          const SizedBox(height: 50),
         ],
       ),
     );
@@ -499,44 +498,35 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           showInfoButton: true,
           showLogoutButton: true,
         ),
-        body: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 0.0),
-              child: SingleChildScrollView(
-                controller: _parentScrollController,
-                child: IndexedStack(
-                  index: _currentPage,
-                  children: [
-                    _buildPersonalInfoContent(displayedTime),
-                    _buildEventInfoContent(),
-                  ],
-                ),
-              ),
+        body: Padding(
+          padding: const EdgeInsets.only(bottom: 0.0),
+          child: SingleChildScrollView(
+            controller: _parentScrollController,
+            child: IndexedStack(
+              index: _currentPage,
+              children: [
+                _buildPersonalInfoContent(displayedTime),
+                _buildEventInfoContent(),
+              ],
             ),
-            Positioned(
-              bottom: 0.0,
-              left: 0.0,
-              right: 0.0,
-              child: NavBar(
-                currentPage: _currentPage,
-                onPageSelected: (int page) {
-                  setState(() {
-                    _currentPage = page;
-                  });
-                },
-                isMeasureActive: _isMeasureOngoing,
-                canStartNewSession: !_isEventOver,
-                onStartStopPressed: () {
-                  if (_isMeasureOngoing) {
-                    _confirmStopMeasure(context);
-                  } else {
-                    _startSetupPosScreen();
-                  }
-                },
-              ),
-            ),
-          ],
+          ),
+        ),
+        bottomNavigationBar: NavBar(
+          currentPage: _currentPage,
+          onPageSelected: (int page) {
+            setState(() {
+              _currentPage = page;
+            });
+          },
+          isMeasureActive: _isMeasureOngoing,
+          canStartNewSession: !_isEventOver,
+          onStartStopPressed: () {
+            if (_isMeasureOngoing) {
+              _confirmStopMeasure(context);
+            } else {
+              _startSetupPosScreen();
+            }
+          },
         ),
       ),
     );

@@ -25,11 +25,11 @@ class EventProgressCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0, top: 16.0),
+          margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 6.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(0.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

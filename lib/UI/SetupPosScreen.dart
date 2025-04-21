@@ -152,7 +152,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 12.0, bottom: 12.0),
+                padding: const EdgeInsets.only(top: 6.0, bottom: 12.0),
                 child: Column(
                   children: [
                     _buildInfoCard(context),

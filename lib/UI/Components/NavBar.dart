@@ -81,15 +81,15 @@ class NavBar extends StatelessWidget {
 
           // Floating button
           Positioned(
-            top: -14, // Adjusted for new button size to keep it centered
+            top: -12, // Adjusted for new button size to keep it centered
             left: 0,
             right: 0,
             child: Center(
               child: GestureDetector(
                 onTap: canStartNewSession ? onStartStopPressed : null,
                 child: Container(
-                  width: 70,
-                  height: 70,
+                  width: 78,
+                  height: 78,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: canStartNewSession
@@ -107,17 +107,17 @@ class NavBar extends StatelessWidget {
                           ),
                     border: Border.all(
                       color: Colors.white,
-                      width: 6,
+                      width: 8,
                     ),
                   ),
                   child: Center(
                     child: isMeasureActive
-                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 32)
+                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 34)
                         : SvgPicture.asset(
                             'assets/icons/dot-circle.svg',
                             color: Colors.white,
-                            width: 32,
-                            height: 32,
+                            width: 34,
+                            height: 34,
                           ),
                   ),
                 ),

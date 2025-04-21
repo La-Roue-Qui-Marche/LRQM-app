@@ -80,6 +80,10 @@ class MeasureData {
     };
   }
 
+  static Future<bool> clearMeasurePoints() async {
+    return _dataManagement.removeData('measure_points');
+  }
+
   /// Clear the measure ID and points from the shared preferences.
   static Future<bool> clearMeasureData() async {
     final bool idCleared = await _dataManagement.removeData('measure_id');

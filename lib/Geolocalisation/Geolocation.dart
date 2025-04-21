@@ -120,6 +120,8 @@ class Geolocation with WidgetsBindingObserver {
   Future<void> startListening() async {
     LogHelper.logInfo("[GEO] Starting geolocation...");
 
+    await MeasureData.clearMeasurePoints();
+
     if (_positionStreamStarted || !(await PermissionHelper.isLocationAlwaysGranted())) {
       LogHelper.logError("Permission not granted or already started.");
       _streamController.sink.add({"time": -1, "distance": -1});

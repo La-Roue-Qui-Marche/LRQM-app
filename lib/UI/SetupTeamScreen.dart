@@ -60,7 +60,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
           children: [
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.only(top: 12.0, left: 0.0, right: 0.0, bottom: 120.0), // Add bottom padding
+                padding: const EdgeInsets.only(top: 6.0, left: 0.0, right: 0.0, bottom: 120.0), // Add bottom padding
                 child: Column(
                   children: [
                     SingleChildScrollView(
