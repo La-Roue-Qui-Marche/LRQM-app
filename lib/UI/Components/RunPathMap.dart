@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -18,6 +19,7 @@ class _RunPathMapState extends State<RunPathMap> {
   List<LatLng> _animatedPath = [];
   bool _isLoading = true;
   bool _isError = false;
+  bool _isMapReady = false;
   Timer? _animationTimer;
   int _currentIndex = 0;
 
@@ -48,10 +50,9 @@ class _RunPathMapState extends State<RunPathMap> {
         _animatedPath = [];
       });
 
-      if (_fullPath.isNotEmpty) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _startPathAnimation();
-        });
+      if (_fullPath.isNotEmpty && _isMapReady) {
+        _fitMapToPath();
+        _startPathAnimation();
       }
     } catch (e) {
       setState(() {
@@ -59,6 +60,63 @@ class _RunPathMapState extends State<RunPathMap> {
         _isError = true;
       });
     }
+  }
+
+  void _fitMapToPath() {
+    if (!_isMapReady || !mounted) return;
+
+    if (_fullPath.length < 2) {
+      if (_fullPath.isNotEmpty) {
+        _mapController.move(_fullPath.first, 16.0);
+      }
+      return;
+    }
+
+    // Calculate bounds
+    double minLat = double.infinity;
+    double maxLat = -double.infinity;
+    double minLng = double.infinity;
+    double maxLng = -double.infinity;
+
+    for (final point in _fullPath) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    // Add padding to the bounds (approximate method)
+    final double latPadding = (maxLat - minLat) * 0.1;
+    final double lngPadding = (maxLng - minLng) * 0.1;
+
+    minLat -= latPadding;
+    maxLat += latPadding;
+    minLng -= lngPadding;
+    maxLng += lngPadding;
+
+    // Calculate center point
+    final LatLng center = LatLng((minLat + maxLat) / 2, (minLng + maxLng) / 2);
+
+    // Calculate appropriate zoom level
+    final pi = 3.14159265359;
+    final ln2 = 0.6931471805599453;
+
+    double _latRad(double lat) => log((1 + sin(lat * pi / 180)) / (1 - sin(lat * pi / 180))) / 2;
+
+    double _zoom(double mapPx, double worldPx, double fraction) => log(mapPx / worldPx / fraction) / ln2;
+
+    final Size mapSize = MediaQuery.of(context).size;
+
+    double latZoom = _zoom(mapSize.height, 256, (_latRad(maxLat) - _latRad(minLat)) / pi);
+    double lngZoom = _zoom(mapSize.width, 256, (maxLng - minLng) / 360);
+
+    double zoom = min(latZoom, lngZoom);
+
+    if (!zoom.isFinite || zoom < 2.0) zoom = 5.0;
+    zoom -= 0.3; // Adjust to ensure everything is visible
+    if (zoom < 2.0) zoom = 2.0;
+
+    _mapController.move(center, zoom);
   }
 
   void _startPathAnimation() {
@@ -128,13 +186,24 @@ class _RunPathMapState extends State<RunPathMap> {
         ClipRRect(
           borderRadius: BorderRadius.circular(0),
           child: SizedBox(
-            height: 400,
+            height: MediaQuery.of(context).size.height * 0.6,
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: _fullPath.first,
+                initialCenter: _fullPath.isNotEmpty ? _fullPath.first : const LatLng(0, 0),
                 initialZoom: 15.0,
                 interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+                onMapReady: () {
+                  _isMapReady = true;
+                  if (_fullPath.isNotEmpty) {
+                    Future.delayed(const Duration(milliseconds: 200), () {
+                      if (mounted) {
+                        _fitMapToPath();
+                        _startPathAnimation();
+                      }
+                    });
+                  }
+                },
               ),
               children: [
                 TileLayer(
