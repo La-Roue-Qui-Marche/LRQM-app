@@ -1,6 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../Utils/config.dart';
 import '../ShareLog.dart';
 import '../LoginScreen.dart';
 import '../InfoScreen.dart';
@@ -24,6 +25,7 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _TopAppBarState createState() => _TopAppBarState();
 
   @override
@@ -40,13 +42,6 @@ class _TopAppBarState extends State<TopAppBar> {
       if (_infoButtonClickCount >= 5) {
         _showShareButton = true;
       }
-    });
-  }
-
-  void _resetInfoButtonClickCount() {
-    setState(() {
-      _infoButtonClickCount = 0;
-      _showShareButton = false;
     });
   }
 
@@ -163,6 +158,7 @@ class _TopAppBarState extends State<TopAppBar> {
                   icon,
                   width: 22,
                   height: 22,
+                  // ignore: deprecated_member_use
                   color: Colors.black87,
                 )
               : Icon(

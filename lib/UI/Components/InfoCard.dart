@@ -89,9 +89,9 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                   Container(
                     width: 48,
                     height: 48,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(Config.COLOR_BACKGROUND), // Subtle background for logo
+                      color: Color(Config.backgroundColor), // Subtle background for logo
                     ),
                     child: Center(
                       child: IconTheme(

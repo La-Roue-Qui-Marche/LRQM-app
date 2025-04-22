@@ -1,8 +1,9 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../Utils/config.dart';
 import 'LoadingScreen.dart';
 import 'Components/InfoCard.dart';
@@ -59,7 +60,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   }
 
   void _handleBarcode(BarcodeCapture barcodes) {
-    if (mounted && barcodes.barcodes.isNotEmpty && barcodes.barcodes.first.displayValue == Config.QR_CODE_S_VALUE) {
+    if (mounted && barcodes.barcodes.isNotEmpty && barcodes.barcodes.first.displayValue == Config.qrCodeStartContent) {
       _navigateToLoadingScreen();
     }
   }
@@ -115,10 +116,10 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(Config.COLOR_BACKGROUND),
+      backgroundColor: const Color(Config.backgroundColor),
       appBar: _isCameraOpen
           ? null // Hide the TopAppBar when the camera is open
-          : TopAppBar(
+          : const TopAppBar(
               title: "Scanner",
               showBackButton: true,
               showInfoButton: false,

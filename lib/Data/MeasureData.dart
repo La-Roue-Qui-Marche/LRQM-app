@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_declarations
+
 import 'DataManagement.dart';
 import 'dart:convert'; // Add for JSON encoding/decoding
 import '../Utils/LogHelper.dart'; // Import LogHelper
@@ -42,13 +44,8 @@ class MeasureData {
     };
 
     // Log the point details
-    LogHelper.logInfo("[MEASURE] Added point: distance=${distance.toStringAsFixed(2)}m, " +
-        "speed=${speed.toStringAsFixed(2)}m/s, " +
-        "accuracy=${acc.toStringAsFixed(2)}m, " +
-        "lat=${lat.toStringAsFixed(6)}, " +
-        "lng=${lng.toStringAsFixed(6)}, " +
-        "duration=${duration}s, " +
-        "timestamp=${timestamp.toString()}");
+    LogHelper.logInfo(
+        "[MEASURE] Added point: distance=${distance.toStringAsFixed(2)}m, speed=${speed.toStringAsFixed(2)}m/s, accuracy=${acc.toStringAsFixed(2)}m, lat=${lat.toStringAsFixed(6)}, lng=${lng.toStringAsFixed(6)}, duration=${duration}s, timestamp=${timestamp.toString()}");
 
     points.add(pointData);
     await _dataManagement.saveString(key, jsonEncode(points));
@@ -58,7 +55,6 @@ class MeasureData {
   static Future<List<Map<String, dynamic>>> getMeasurePoints() async {
     const String key = 'measure_points';
     String? jsonStr = await _dataManagement.getString(key);
-    if (jsonStr == null) return [];
     try {
       final List<dynamic> decoded = jsonDecode(jsonStr);
       return decoded.cast<Map<String, dynamic>>();

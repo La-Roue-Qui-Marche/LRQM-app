@@ -113,9 +113,9 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Ta contribution à l\'événement',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -124,13 +124,13 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               const SizedBox(height: 12),
               _buildHeader(),
               const SizedBox(height: 8),
-              Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
+              const Divider(color: Color(Config.backgroundColor), thickness: 1),
               const SizedBox(height: 8),
               _buildInfoCards(),
               const SizedBox(height: 16),
               _buildFunMessage(),
               if (widget.isSessionActive) const SizedBox(height: 8),
-              if (widget.isSessionActive) Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
+              if (widget.isSessionActive) const Divider(color: Color(Config.backgroundColor), thickness: 1),
               if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) ContributionGraph(geolocation: widget.geolocation),
             ],
@@ -157,9 +157,9 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                 children: [
                   Row(
                     children: [
-                      Text(
+                      const Text(
                         '№ de dossard: ',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
                       ),
                       Text(
                         widget.bibNumber,
@@ -204,14 +204,14 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
             value: widget.contribution.isNotEmpty
                 ? "${_formatDistance(_currentContribution)} m"
                 : null, // Pass null to trigger shimmer
-            color: const Color(Config.COLOR_APP_BAR),
+            color: const Color(Config.primaryColor),
           ),
         ),
         Expanded(
           child: _infoCard(
             label: 'Temps total',
             value: widget.totalTime.isNotEmpty ? widget.totalTime : null,
-            color: const Color(Config.COLOR_APP_BAR),
+            color: const Color(Config.primaryColor),
           ),
         ),
       ],
@@ -243,7 +243,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -315,7 +315,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
     if (!widget.isSessionActive) {
       statusText = 'En pause';
-      badgeColor = Color(Config.COLOR_BACKGROUND);
+      badgeColor = const Color(Config.backgroundColor);
       textColor = Colors.black87;
     } else if (!widget.isCountingInZone) {
       statusText = 'Hors Zone';

@@ -45,10 +45,10 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(Config.COLOR_BACKGROUND),
+      backgroundColor: const Color(Config.backgroundColor),
       appBar: _isLoading
           ? null // Hide the TopAppBar when loading
-          : TopAppBar(
+          : const TopAppBar(
               title: "Équipe",
               showBackButton: true,
               showInfoButton: false,
@@ -102,7 +102,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                             ),
                             Container(
                               height: 1,
-                              color: Color(Config.COLOR_BACKGROUND), // Separator color
+                              color: const Color(Config.backgroundColor), // Separator color
                             ),
                             TapCard(
                               logo: SvgPicture.asset(
@@ -116,7 +116,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                             ),
                             Container(
                               height: 1,
-                              color: Color(Config.COLOR_BACKGROUND), // Separator color
+                              color: const Color(Config.backgroundColor), // Separator color
                             ),
                             TapCard(
                               logo: SvgPicture.asset(
@@ -130,7 +130,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                             ),
                             Container(
                               height: 1,
-                              color: Color(Config.COLOR_BACKGROUND), // Separator color
+                              color: const Color(Config.backgroundColor), // Separator color
                             ),
                             TapCard(
                               logo: SvgPicture.asset(

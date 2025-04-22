@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
@@ -5,8 +7,6 @@ import 'package:shimmer/shimmer.dart';
 import '../../Utils/config.dart';
 import '../../Data/EventData.dart';
 import '../../API/NewEventController.dart';
-import '../../Data/ContributorsData.dart';
-import '../../Utils/Result.dart';
 
 class EventProgressCard extends StatefulWidget {
   const EventProgressCard({
@@ -218,7 +218,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
                   _currentValue != null && _objectif != null && _objectif != '-1'
                       ? Row(
                           children: [
-                            _styledValue(_currentValue!, color: const Color(Config.COLOR_APP_BAR)),
+                            _styledValue(_currentValue!, color: const Color(Config.primaryColor)),
                             const Text(
                               ' / ',
                               style: TextStyle(
@@ -256,9 +256,9 @@ class _EventProgressCardState extends State<EventProgressCard> {
                         value: _currentValue != null && _objectif != null && _objectif != '-1'
                             ? _sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!)
                             : 0.0,
-                        backgroundColor: Color(Config.COLOR_BACKGROUND),
+                        backgroundColor: Color(Config.backgroundColor),
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(Config.COLOR_APP_BAR),
+                          Color(Config.primaryColor),
                         ),
                         minHeight: 6,
                       ),
@@ -276,18 +276,18 @@ class _EventProgressCardState extends State<EventProgressCard> {
                   _infoCard(
                     label: '', // Empty label now
                     value: _formatRemainingTime(_remainingTime),
-                    color: const Color(Config.COLOR_APP_BAR),
+                    color: const Color(Config.primaryColor),
                   ),
                   const SizedBox(height: 8),
                   Divider(
-                    color: Color(Config.COLOR_BACKGROUND),
+                    color: Color(Config.backgroundColor),
                     thickness: 1,
                   ),
                   const SizedBox(height: 8),
                   _infoCard(
                     label: 'Participants ou groupe actifs sur le parcours',
                     value: _participants,
-                    color: const Color(Config.COLOR_APP_BAR),
+                    color: const Color(Config.primaryColor),
                   ),
                 ],
               ),

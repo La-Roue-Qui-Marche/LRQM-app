@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'dart:async';
 import 'dart:math';
@@ -13,9 +13,10 @@ import '../../Data/EventData.dart';
 class DynamicMapCard extends StatefulWidget {
   final Geolocation geolocation;
 
-  const DynamicMapCard({Key? key, required this.geolocation}) : super(key: key);
+  const DynamicMapCard({super.key, required this.geolocation});
 
   @override
+  // ignore: library_private_types_in_public_api
   _DynamicMapCardState createState() => _DynamicMapCardState();
 }
 
@@ -88,8 +89,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   void _fitMapBounds() {
     if (!_isMapReady || !mounted) return;
 
-    final double defaultLat = _meetingPoint?.latitude ?? Config.DEFAULT_LAT1;
-    final double defaultLon = _meetingPoint?.longitude ?? Config.DEFAULT_LON1;
+    final double defaultLat = _meetingPoint?.latitude ?? Config.defaultLat1;
+    final double defaultLon = _meetingPoint?.longitude ?? Config.defaultLon1;
     double userLat = _currentLatLng?.latitude ?? defaultLat;
     double userLon = _currentLatLng?.longitude ?? defaultLon;
 
@@ -128,8 +129,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final defaultLat = _meetingPoint?.latitude ?? Config.DEFAULT_LAT1;
-    final defaultLon = _meetingPoint?.longitude ?? Config.DEFAULT_LON1;
+    final defaultLat = _meetingPoint?.latitude ?? Config.defaultLat1;
+    final defaultLon = _meetingPoint?.longitude ?? Config.defaultLon1;
     final userLat = _currentLatLng?.latitude ?? defaultLat;
     final userLon = _currentLatLng?.longitude ?? defaultLon;
 
@@ -150,7 +151,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
         tooltip = "Vue satellite";
         polygonColor = _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity);
         polygonBorderColor = _MapStyles.zoneBorderColor;
-        userColor = Color(Config.COLOR_APP_BAR);
+        userColor = Color(Config.primaryColor);
         meetingPointColor = Colors.redAccent;
         break;
       case _MapBaseType.satellite:
@@ -297,8 +298,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                               _mapBaseType == _MapBaseType.satellite ? _MapBaseType.voyager : _MapBaseType.satellite;
                         });
                       },
-                      child: Icon(icon, color: Colors.black87),
                       tooltip: tooltip,
+                      child: Icon(icon, color: Colors.black87),
                     ),
                     const SizedBox(height: 12),
                     FloatingActionButton(
@@ -420,10 +421,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
 enum _MapBaseType { satellite, voyager }
 
 class _MapStyles {
-  static const Color zoneBorderColor = Color(Config.COLOR_APP_BAR);
-  static const Color zoneFillColor = Color(Config.COLOR_APP_BAR);
+  static const Color zoneBorderColor = Color(Config.primaryColor);
+  static const Color zoneFillColor = Color(Config.primaryColor);
   static const double zoneFillOpacity = 0.1;
   static const double legendBgOpacity = 0.95;
-  static const double userIconSize = 36;
-  static const double rassemblementIconSize = 34;
 }

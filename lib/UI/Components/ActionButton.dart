@@ -18,7 +18,7 @@ class ActionButton extends StatelessWidget {
     return Container(
       width: double.infinity, // Full width
       decoration: BoxDecoration(
-        color: const Color(Config.COLOR_BUTTON),
+        color: const Color(Config.accentColor),
         borderRadius: BorderRadius.circular(8.0),
         boxShadow: [
           BoxShadow(
@@ -42,12 +42,12 @@ class ActionButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (icon != null) Icon(icon, color: const Color(Config.COLOR_BACKGROUND), size: 22),
+            if (icon != null) Icon(icon, color: const Color(Config.backgroundColor), size: 22),
             if (icon != null) const SizedBox(width: 12),
             Text(
               text,
               style: const TextStyle(
-                color: Color(Config.COLOR_BACKGROUND),
+                color: Color(Config.backgroundColor),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),

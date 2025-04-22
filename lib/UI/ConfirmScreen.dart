@@ -1,14 +1,14 @@
+// ignore_for_file: prefer_const_declarations, prefer_const_constructors
+
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pinput/pinput.dart';
-import '../API/NewUserController.dart';
 import '../Data/UserData.dart';
 import 'WorkingScreen.dart';
 import 'Components/ActionButton.dart';
 import 'Components/DiscardButton.dart';
 import '../Utils/config.dart';
-import 'Components/TextModal.dart'; // Add this import for showTextModal
 
 class ConfirmScreen extends StatelessWidget {
   final Map<String, dynamic> userData;
@@ -30,9 +30,9 @@ class ConfirmScreen extends StatelessWidget {
 
   void showConfirmationCodeModal(BuildContext context, dynamic bibId, {Map<String, dynamic>? userData}) {
     int bibInt = bibId is int ? bibId : int.tryParse(bibId.toString()) ?? 0;
-    final int secretKey = Config.CONFIRMATION_SECRET_KEY;
-    final int prime = Config.CONFIRMATION_PRIME;
-    final String prefix = Config.PREFIX_LETTER;
+    final int secretKey = Config.confirmationSecretKey;
+    final int prime = Config.confirmationPrime;
+    final String prefix = Config.confirmationPrefixLetter;
     final TextEditingController pinController = TextEditingController();
     final FocusNode pinFocusNode = FocusNode();
 
@@ -40,16 +40,16 @@ class ConfirmScreen extends StatelessWidget {
     bool showRetry = false;
 
     // Pin theme as in the provided style
-    final Color pinBorderColor = Color(Config.COLOR_BUTTON); // Use your app's button color
+    final Color pinBorderColor = Color(Config.accentColor); // Use your app's button color
 
     const errorColor = Color.fromRGBO(255, 234, 238, 1);
-    final Color fillColor = Color(Config.COLOR_BACKGROUND); // Use your app's background color
+    final Color fillColor = Color(Config.backgroundColor); // Use your app's background color
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 60,
       textStyle: TextStyle(
         fontSize: 32,
-        color: Color(Config.COLOR_APP_BAR),
+        color: Color(Config.primaryColor),
         fontWeight: FontWeight.w600,
       ),
       decoration: BoxDecoration(
@@ -107,7 +107,7 @@ class ConfirmScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(Config.COLOR_APP_BAR),
+                          color: Color(Config.primaryColor),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -132,7 +132,7 @@ class ConfirmScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: Color(Config.COLOR_APP_BAR),
+                                color: Color(Config.primaryColor),
                                 letterSpacing: 2,
                               ),
                             ),
@@ -169,8 +169,10 @@ class ConfirmScreen extends StatelessWidget {
                                         "event_id": userData['event_id'],
                                       });
                                     }
+                                    // ignore: use_build_context_synchronously
                                     Navigator.of(context).pop();
                                     Navigator.pushReplacement(
+                                      // ignore: use_build_context_synchronously
                                       context,
                                       MaterialPageRoute(builder: (context) => const WorkingScreen()),
                                     );
@@ -275,7 +277,7 @@ class ConfirmScreen extends StatelessWidget {
                             const Icon(
                               Icons.help_outline,
                               size: 60,
-                              color: Color(Config.COLOR_APP_BAR),
+                              color: Color(Config.primaryColor),
                             ),
                             const SizedBox(height: 24),
                             const Text(
@@ -283,7 +285,7 @@ class ConfirmScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Color(Config.COLOR_APP_BAR),
+                                color: Color(Config.primaryColor),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -293,7 +295,7 @@ class ConfirmScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Color(Config.COLOR_APP_BAR),
+                                color: Color(Config.primaryColor),
                               ),
                             ),
                           ],

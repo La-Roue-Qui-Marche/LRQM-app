@@ -27,8 +27,10 @@ class ContributionGraphState extends State<ContributionGraph> {
   StreamSubscription? _geoSubscription;
   int _dataIndex = 0;
 
-  // Variables for averaging speed
-  List<double> _speedBuffer = [];
+  // Variables for tracking distance and time for better speed calculation
+  int _lastDistance = 0;
+  int _previousDistance = 0;
+  int _lastPlotTime = 0;
 
   @override
   void initState() {
@@ -48,31 +50,47 @@ class ContributionGraphState extends State<ContributionGraph> {
   void _setupGeolocationListener() {
     if (widget.geolocation != null) {
       _geoSubscription = widget.geolocation!.stream.listen((event) {
-        if (event.containsKey('speed')) {
-          double speed = (event['speed'] ?? 0).toDouble();
-          _speedBuffer.add(speed);
+        if (event.containsKey('distance')) {
+          _lastDistance = event['distance'] ?? 0;
         }
+        // No need to track time from the stream
       });
     }
   }
 
   void _setupPlotTimer() {
     _plotTimer = Timer.periodic(const Duration(seconds: plotIntervalSeconds), (_) {
-      _plotAverageSpeed();
+      _plotDistanceBasedSpeed();
     });
   }
 
-  void _plotAverageSpeed() {
-    if (_speedBuffer.isEmpty || widget.geolocation == null) return;
+  void _plotDistanceBasedSpeed() {
+    if (widget.geolocation == null) return;
 
-    // Calculate average speed
-    double avgSpeed = _speedBuffer.reduce((a, b) => a + b) / _speedBuffer.length;
+    // Get current time
+    final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
-    // Plot the average speed
-    _addContributionValue(avgSpeed);
+    // Calculate time delta since last plot - should be approximately plotIntervalSeconds
+    final timeDelta = _lastPlotTime > 0 ? currentTime - _lastPlotTime : plotIntervalSeconds;
 
-    // Clear buffer for next interval
-    _speedBuffer.clear();
+    // Calculate distance change
+    final distanceDelta = _lastDistance - _previousDistance;
+
+    // Only calculate if we have valid data
+    if (distanceDelta >= 0 && timeDelta > 0) {
+      // Calculate speed in m/s
+      final calculatedSpeed = distanceDelta / timeDelta;
+
+      print("Distance delta: $distanceDelta m in $timeDelta seconds");
+      print("Calculated speed: $calculatedSpeed m/s");
+
+      // Plot the calculated speed
+      _addContributionValue(calculatedSpeed);
+    }
+
+    // Update values for next calculation
+    _previousDistance = _lastDistance;
+    _lastPlotTime = currentTime;
   }
 
   @override
@@ -118,6 +136,18 @@ class ContributionGraphState extends State<ContributionGraph> {
 
     final bool hasEnoughData = _graphData.length >= minGraphPoints;
 
+    // Generate placeholder data if we don't have enough real data
+    List<FlSpot> displayData;
+    if (hasEnoughData) {
+      displayData = _graphData;
+    } else {
+      // Create placeholder wave-like data
+      displayData = List.generate(10, (index) {
+        return FlSpot(index.toDouble(), 1.0 + (index % 3) * 0.5 // Creates a gentle wave pattern between 1.0 and 2.0
+            );
+      });
+    }
+
     double maxY = 3;
     if (hasEnoughData) {
       final maxDataValue = _graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b);
@@ -128,7 +158,7 @@ class ContributionGraphState extends State<ContributionGraph> {
 
     // Set min and max X based on the data indices
     double minX = hasEnoughData && _graphData.isNotEmpty ? _graphData.first.x : 0;
-    double maxX = hasEnoughData && _graphData.isNotEmpty ? _graphData.last.x + 5 : 10;
+    double maxX = hasEnoughData && _graphData.isNotEmpty ? _graphData.last.x + 1 : 10;
 
     return Padding(
       padding: const EdgeInsets.only(left: 0, top: 0, bottom: 0),
@@ -155,7 +185,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                   curve: Curves.easeInOut,
                   child: LineChart(
                     LineChartData(
-                      lineTouchData: LineTouchData(enabled: false),
+                      lineTouchData: const LineTouchData(enabled: false),
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: false,
@@ -166,9 +196,9 @@ class ContributionGraphState extends State<ContributionGraph> {
                         ),
                       ),
                       titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
@@ -190,21 +220,21 @@ class ContributionGraphState extends State<ContributionGraph> {
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
-                          spots: hasEnoughData ? _graphData : [],
+                          spots: displayData,
                           isCurved: true,
                           preventCurveOverShooting: true,
                           preventCurveOvershootingThreshold: 0.0,
                           color: hasEnoughData
-                              ? Color(Config.COLOR_BUTTON).withOpacity(1)
-                              : Colors.black54.withOpacity(0.1),
+                              ? const Color(Config.accentColor).withOpacity(1)
+                              : Colors.black26.withOpacity(0.2),
                           barWidth: 3,
                           isStrokeCapRound: true,
-                          dotData: FlDotData(show: false),
+                          dotData: const FlDotData(show: false),
                           belowBarData: BarAreaData(
-                            show: hasEnoughData,
+                            show: true,
                             color: hasEnoughData
-                                ? Color(Config.COLOR_BUTTON).withOpacity(0.15)
-                                : Colors.black54.withOpacity(0.1),
+                                ? const Color(Config.accentColor).withOpacity(0.15)
+                                : Colors.black26.withOpacity(0.05),
                           ),
                         ),
                       ],

@@ -61,88 +61,86 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
     final double mapHeight = MediaQuery.of(context).size.height * 0.32;
 
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'Bravo !',
-                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                            textAlign: TextAlign.left,
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Voici le résumé de ta contribution',
-                            style: TextStyle(fontSize: 16, color: Colors.black54),
-                            textAlign: TextAlign.left,
-                          ),
-                        ],
-                      ),
+      backgroundColor: const Color(Config.backgroundColor),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 52, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Bravo !',
+                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                          textAlign: TextAlign.left,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Voici le résumé de ta contribution',
+                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                          textAlign: TextAlign.left,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    // Summary card first
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _buildSummaryCard(),
-                    ),
-                    const SizedBox(height: 20),
-                    // Map at the bottom
-                    // Remove horizontal padding and border radius for full width
-                    SizedBox(
-                      height: mapHeight,
-                      width: double.infinity,
-                      child: const RunPathMap(),
-                    ),
-                    // Add extra bottom padding for scroll
-                    const SizedBox(height: 30),
-                  ],
-                ),
-              ),
-            ),
-            // Add bottom bar for OK button
-            Container(
-              height: 80,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: Color(0x11000000), width: 1),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 6,
-                    offset: Offset(0, -2),
                   ),
+                  const SizedBox(height: 24),
+                  // Summary card first
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSummaryCard(),
+                  ),
+                  const SizedBox(height: 24),
+                  // Map at the bottom
+                  // Remove horizontal padding and border radius for full width
+                  SizedBox(
+                    height: mapHeight,
+                    width: double.infinity,
+                    child: const RunPathMap(),
+                  ),
+                  // Add extra bottom padding for scroll
+                  const SizedBox(height: 30),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: ActionButton(
-                icon: Icons.check,
-                text: 'OK',
-                onPressed: () async {
-                  await MeasureData.clearMeasurePoints();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const WorkingScreen()),
-                    (_) => false,
-                  );
-                },
-              ),
             ),
-          ],
-        ),
+          ),
+          // Add bottom bar for OK button
+          Container(
+            height: 80,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: Color(0x11000000), width: 1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 6,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.only(right: 20, left: 20, bottom: 20, top: 10),
+            child: ActionButton(
+              icon: Icons.check,
+              text: 'OK',
+              onPressed: () async {
+                await MeasureData.clearMeasurePoints();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const WorkingScreen()),
+                  (_) => false,
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -152,7 +150,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
@@ -161,14 +159,14 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       child: Column(
         children: [
           _animatedItem(0, Icons.route, "Distance parcourue", widget.distanceAdded, isMeter: true),
-          const Divider(height: 22),
+          const Divider(color: Color(Config.backgroundColor), thickness: 1),
           _animatedItem(1, Icons.group, "Participants", widget.contributors),
-          const Divider(height: 22),
+          const Divider(color: Color(Config.backgroundColor), thickness: 1),
           _animatedItem(2, Icons.timer, "Temps total", widget.timeAdded, isTime: true),
-          const Divider(height: 22),
+          const Divider(color: Color(Config.backgroundColor), thickness: 1),
           _animatedItem(3, Icons.add_chart, "Distance totale", widget.distanceAdded * widget.contributors,
               isMeter: true),
-          const Divider(height: 22),
+          const Divider(color: Color(Config.backgroundColor), thickness: 1),
           _animatedItem(4, Icons.pie_chart, "% Evènement", widget.percentageAdded, isPercentage: true),
         ],
       ),
@@ -181,7 +179,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       opacity: _itemControllers[index],
       child: Row(
         children: [
-          Icon(icon, color: const Color(Config.COLOR_APP_BAR), size: 32),
+          Icon(icon, color: const Color(Config.primaryColor), size: 32),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

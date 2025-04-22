@@ -28,25 +28,25 @@ class SupportCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Informations sur l\'événement',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
+              const Text(
                 'À propos de l\'événement',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Découvrez les détails de l\'événement, les objectifs, et comment tu peux participer pour faire une différence.',
                 style: TextStyle(
                   fontSize: 16,
@@ -63,7 +63,7 @@ class SupportCard extends StatelessWidget {
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(Config.COLOR_APP_BAR),
+                    backgroundColor: const Color(Config.primaryColor),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -72,9 +72,9 @@ class SupportCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Divider(color: Color(Config.COLOR_BACKGROUND)),
+              const Divider(color: Color(Config.backgroundColor)),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Suis-nous sur les réseaux sociaux :',
                 style: TextStyle(
                   fontSize: 16,
@@ -110,7 +110,7 @@ class SupportCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Color(Config.COLOR_BACKGROUND),
+          color: const Color(Config.backgroundColor),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(

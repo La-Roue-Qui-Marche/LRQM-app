@@ -11,7 +11,7 @@ class InfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND),
+      backgroundColor: const Color(Config.backgroundColor),
       appBar: const TopAppBar(
         title: "Informations",
         showBackButton: true,
@@ -19,7 +19,7 @@ class InfoScreen extends StatelessWidget {
         showLogoutButton: false,
       ),
       body: Container(
-        color: const Color(Config.COLOR_BACKGROUND),
+        color: const Color(Config.backgroundColor),
         child: Padding(
           padding: const EdgeInsets.only(top: 0.0),
           child: SingleChildScrollView(
@@ -185,7 +185,7 @@ class InfoScreen extends StatelessWidget {
                                 style: TextStyle(color: Colors.white),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(Config.COLOR_APP_BAR),
+                                backgroundColor: const Color(Config.primaryColor),
                                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),

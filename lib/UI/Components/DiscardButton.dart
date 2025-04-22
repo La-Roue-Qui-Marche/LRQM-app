@@ -33,11 +33,11 @@ class DiscardButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (icon != null) Icon(icon, color: const Color(Config.COLOR_APP_BAR), size: 18),
+            if (icon != null) Icon(icon, color: const Color(Config.primaryColor), size: 18),
             if (icon != null) const SizedBox(width: 10),
             Text(
               text,
-              style: const TextStyle(color: Color(Config.COLOR_APP_BAR), fontSize: 18),
+              style: const TextStyle(color: Color(Config.primaryColor), fontSize: 18),
             ),
           ],
         ),

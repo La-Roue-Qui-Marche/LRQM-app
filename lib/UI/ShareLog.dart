@@ -96,8 +96,8 @@ class _ShareLogState extends State<ShareLog> {
             tooltip: "Clear logs",
             onPressed: _clearLogs,
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
+          const IconButton(
+            icon: Icon(Icons.refresh),
             tooltip: "Force refresh",
             onPressed: LogHelper.forceRefresh,
           ),

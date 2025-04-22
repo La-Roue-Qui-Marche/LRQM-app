@@ -141,17 +141,6 @@ class _LoginState extends State<Login> {
     );
   }
 
-  void _showUserNotFoundModal() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showTextModal(
-        context,
-        "Numéro de dossard introuvable",
-        "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
-        showConfirmButton: true,
-      );
-    });
-  }
-
   void showInSnackBar(String value) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
@@ -179,7 +168,7 @@ class _LoginState extends State<Login> {
     );
 
     try {
-      int dossardNumber = int.parse(_controller.text);
+      int.parse(_controller.text); // Parse the input to ensure it's a valid number
       Result<Map<String, dynamic>> loginResult = await NewUserController.login(_controller.text, _selectedEvent['id']);
 
       final user = loginResult.value;
@@ -190,6 +179,7 @@ class _LoginState extends State<Login> {
           user['username'] == null ||
           user['bib_id'] == null ||
           user['event_id'] == null) {
+        // ignore: use_build_context_synchronously
         Navigator.pop(context);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           showTextModal(
@@ -205,11 +195,13 @@ class _LoginState extends State<Login> {
       }
 
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => ConfirmScreen(userData: user)),
       );
     } catch (e) {
       showInSnackBar("Numéro de dossard invalide");
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
     }
   }
@@ -283,19 +275,19 @@ class _LoginState extends State<Login> {
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w600,
-                          color: Color(Config.COLOR_APP_BAR),
+                          color: Color(Config.primaryColor),
                           letterSpacing: 5.0,
                         ),
                         decoration: const InputDecoration(
                           hintStyle: TextStyle(
                             fontSize: 18,
-                            color: Color(Config.COLOR_APP_BAR),
+                            color: Color(Config.primaryColor),
                           ),
                           enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 1),
+                            borderSide: BorderSide(color: Color(Config.primaryColor), width: 1),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 2),
+                            borderSide: BorderSide(color: Color(Config.primaryColor), width: 2),
                           ),
                           contentPadding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                         ),
@@ -307,7 +299,7 @@ class _LoginState extends State<Login> {
                           'Numéro entre 1 et 9999.',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Color(Config.COLOR_APP_BAR),
+                            color: Color(Config.primaryColor),
                           ),
                         ),
                       ),

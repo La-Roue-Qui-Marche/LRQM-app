@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart' as geo;
@@ -16,7 +15,6 @@ class GeolocationConfig {
   final int locationDistanceFilter;
   final geo.LocationAccuracy locationAccuracy;
   final Duration apiInterval;
-  final int maxChunkSize;
   final double accuracyThreshold;
   final int distanceThreshold;
   final double speedThreshold;
@@ -31,7 +29,6 @@ class GeolocationConfig {
     this.locationDistanceFilter = 5,
     this.locationAccuracy = geo.LocationAccuracy.bestForNavigation,
     this.apiInterval = const Duration(seconds: 10),
-    this.maxChunkSize = 40,
     this.accuracyThreshold = 20,
     this.distanceThreshold = 50,
     this.speedThreshold = 10,
@@ -166,7 +163,7 @@ class Geolocation with WidgetsBindingObserver {
       position.latitude,
       position.longitude,
       position.accuracy,
-      position.timestamp ?? DateTime.now(),
+      position.timestamp,
     );
   }
 
@@ -194,7 +191,7 @@ class Geolocation with WidgetsBindingObserver {
     }
 
     final dist = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng).round();
-    final timeDiff = timestamp.difference(_oldPos!.timestamp ?? DateTime.now()).inSeconds;
+    final timeDiff = timestamp.difference(_oldPos!.timestamp).inSeconds;
     final speed = timeDiff > 0 ? dist / timeDiff : 0;
 
     if (acc > config.accuracyThreshold || dist > config.distanceThreshold || speed > config.speedThreshold) {

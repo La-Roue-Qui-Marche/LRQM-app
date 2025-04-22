@@ -7,9 +7,10 @@ import '../../Data/MeasureData.dart';
 import '../../Utils/config.dart';
 
 class RunPathMap extends StatefulWidget {
-  const RunPathMap({Key? key}) : super(key: key);
+  const RunPathMap({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _RunPathMapState createState() => _RunPathMapState();
 }
 
@@ -98,8 +99,8 @@ class _RunPathMapState extends State<RunPathMap> {
     final LatLng center = LatLng((minLat + maxLat) / 2, (minLng + maxLng) / 2);
 
     // Calculate appropriate zoom level
-    final pi = 3.14159265359;
-    final ln2 = 0.6931471805599453;
+    const pi = 3.14159265359;
+    const ln2 = 0.6931471805599453;
 
     double _latRad(double lat) => log((1 + sin(lat * pi / 180)) / (1 - sin(lat * pi / 180))) / 2;
 
@@ -216,7 +217,7 @@ class _RunPathMapState extends State<RunPathMap> {
                     polylines: [
                       Polyline(
                         points: _animatedPath,
-                        color: Color(Config.COLOR_BUTTON),
+                        color: const Color(Config.accentColor),
                         strokeWidth: 5,
                       ),
                     ],
@@ -227,14 +228,14 @@ class _RunPathMapState extends State<RunPathMap> {
                       point: _fullPath.first,
                       width: 40,
                       height: 40,
-                      child: Icon(Icons.location_on, color: Color(Config.COLOR_APP_BAR), size: 40),
+                      child: const Icon(Icons.location_on, color: Color(Config.primaryColor), size: 40),
                     ),
                     if (_animatedPath.length == _fullPath.length)
                       Marker(
                         point: _fullPath.last,
                         width: 40,
                         height: 40,
-                        child: Icon(Icons.flag, color: Colors.redAccent, size: 36),
+                        child: const Icon(Icons.flag, color: Colors.redAccent, size: 36),
                       ),
                   ],
                 ),

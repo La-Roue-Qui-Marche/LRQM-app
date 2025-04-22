@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, use_build_context_synchronously
 
 import 'dart:async';
 import 'dart:developer';
@@ -53,14 +53,13 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void initState() {
     super.initState();
     _geoConfig = GeolocationConfig(
-      locationUpdateInterval: Config.LOCATION_UPDATE_INTERVAL,
-      locationDistanceFilter: Config.LOCATION_DISTANCE_FILTER,
-      maxChunkSize: Config.MAX_CHUNK_SIZE,
-      accuracyThreshold: Config.ACCURACY_THRESHOLD,
-      distanceThreshold: Config.DISTANCE_THRESHOLD,
-      speedThreshold: Config.SPEED_THRESHOLD,
-      apiInterval: Config.API_INTERVAL,
-      outsideCounterMax: Config.OUTSIDE_COUNTER_MAX,
+      locationUpdateInterval: Config.locationUpdateInterval,
+      locationDistanceFilter: Config.locationDistanceFilter,
+      accuracyThreshold: Config.accuracyThreshold,
+      distanceThreshold: Config.distanceThreshold,
+      speedThreshold: Config.speedThreshold,
+      apiInterval: Config.apiInterval,
+      outsideCounterMax: Config.outsideCounterMax,
     );
     _geolocation = Geolocation(config: _geoConfig);
     _initializeData();
@@ -296,7 +295,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       canPop: false,
       onPopInvoked: (bool didPop) async {},
       child: Scaffold(
-        backgroundColor: const Color(Config.COLOR_BACKGROUND),
+        backgroundColor: const Color(Config.backgroundColor),
         appBar: TopAppBar(
           title: 'Accueil',
           showInfoButton: true,

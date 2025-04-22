@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../Utils/config.dart';
@@ -61,7 +63,7 @@ class NavBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 88), // Space for center button, matches floating button size
+                const SizedBox(width: 88), // Space for center button, matches floating button size
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
@@ -96,7 +98,7 @@ class NavBar extends StatelessWidget {
                         ? LinearGradient(
                             colors: isMeasureActive
                                 ? [Colors.redAccent, Colors.red]
-                                : [Color(Config.COLOR_BUTTON), Color(Config.COLOR_BUTTON)],
+                                : [const Color(Config.accentColor), const Color(Config.accentColor)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           )
@@ -112,7 +114,7 @@ class NavBar extends StatelessWidget {
                   ),
                   child: Center(
                     child: isMeasureActive
-                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 32)
+                        ? const Icon(Icons.stop_rounded, color: Colors.white, size: 32)
                         : SvgPicture.asset(
                             'assets/icons/dot-circle.svg',
                             color: Colors.white,
@@ -153,7 +155,7 @@ class NavBar extends StatelessWidget {
           children: [
             SvgPicture.asset(
               selected ? svgActive : svgInactive,
-              color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
+              color: selected ? const Color(Config.primaryColor) : Colors.black87,
               width: 26,
               height: 26,
             ),
@@ -163,7 +165,7 @@ class NavBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
+                color: selected ? const Color(Config.primaryColor) : Colors.black87,
               ),
             ),
           ],

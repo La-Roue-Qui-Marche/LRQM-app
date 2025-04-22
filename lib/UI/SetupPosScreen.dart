@@ -1,4 +1,5 @@
-import 'dart:developer';
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
@@ -25,12 +26,12 @@ class SetupPosScreen extends StatefulWidget {
   const SetupPosScreen({super.key, required this.geolocation});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SetupPosScreenState createState() => _SetupPosScreenState();
 }
 
 class _SetupPosScreenState extends State<SetupPosScreen> {
   bool _isLoading = false;
-  bool _isMapLoading = false;
 
   double? _meetingLat;
   double? _meetingLon;
@@ -137,10 +138,10 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(Config.COLOR_BACKGROUND),
+      backgroundColor: const Color(Config.backgroundColor),
       appBar: _isLoading
           ? null
-          : TopAppBar(
+          : const TopAppBar(
               title: "Position",
               showInfoButton: false,
               showBackButton: true,
