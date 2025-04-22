@@ -151,6 +151,7 @@ class Geolocation with WidgetsBindingObserver {
           "time": _elapsedTimeInSeconds,
           "distance": _distance,
           "isCountingInZone": _isCountingInZone ? 1 : 0,
+          "speed": _oldPos != null ? 0 : 0, // Add default speed value
         });
       }
     });
@@ -224,6 +225,7 @@ class Geolocation with WidgetsBindingObserver {
         "time": _elapsedTimeInSeconds,
         "distance": _distance,
         "isCountingInZone": _isCountingInZone ? 1 : 0,
+        "speed": 0,
       });
       return;
     }
@@ -265,6 +267,16 @@ class Geolocation with WidgetsBindingObserver {
       lng: lng,
       duration: _elapsedTimeInSeconds, // Add duration
     );
+
+    // Add speed to the stream data
+    if (!_streamController.isClosed) {
+      _streamController.sink.add({
+        "time": _elapsedTimeInSeconds,
+        "distance": _distance,
+        "isCountingInZone": _isCountingInZone ? 1 : 0,
+        "speed": speed.toInt(),
+      });
+    }
 
     _saveOldPos(lat, lng, acc, timestamp);
   }

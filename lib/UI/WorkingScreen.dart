@@ -254,6 +254,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
                 ? '${_formatDistance(_isMeasureOngoing ? _distance : (_distancePerso ?? 0))} m'
                 : '',
             totalTime: _totalTimePerso != null || _isMeasureOngoing ? _formatModernTime(displayedTime) : '',
+            geolocation: _isMeasureOngoing ? _geolocation : null,
           ),
         ),
         DynamicMapCard(geolocation: _geolocation),

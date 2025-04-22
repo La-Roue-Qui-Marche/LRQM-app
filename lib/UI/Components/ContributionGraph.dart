@@ -2,10 +2,15 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../Utils/config.dart';
-import '../../Data/MeasureData.dart';
+import '../../Geolocalisation/Geolocation.dart';
 
 class ContributionGraph extends StatefulWidget {
-  const ContributionGraph({super.key});
+  final Geolocation? geolocation;
+
+  const ContributionGraph({
+    super.key,
+    this.geolocation,
+  });
 
   @override
   ContributionGraphState createState() => ContributionGraphState();
@@ -14,19 +19,23 @@ class ContributionGraph extends StatefulWidget {
 class ContributionGraphState extends State<ContributionGraph> {
   final List<FlSpot> _graphData = [];
   static const int maxGraphPoints = 150;
-  static const int updateIntervalSeconds = 1;
   static const int minGraphPoints = 5;
-  Timer? _updateTimer;
+  static const int plotIntervalSeconds = 10;
+
+  Timer? _plotTimer;
   bool _showGraph = false;
+  StreamSubscription? _geoSubscription;
+  int _dataIndex = 0;
+
+  // Variables for averaging speed
+  List<double> _speedBuffer = [];
 
   @override
   void initState() {
     super.initState();
-    _loadMeasurePoints();
-    _updateTimer = Timer.periodic(
-      const Duration(seconds: updateIntervalSeconds),
-      (_) => _loadMeasurePoints(),
-    );
+    _setupGeolocationListener();
+    _setupPlotTimer();
+
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         setState(() {
@@ -36,67 +45,78 @@ class ContributionGraphState extends State<ContributionGraph> {
     });
   }
 
-  Future<void> _loadMeasurePoints() async {
-    final points = await MeasureData.getMeasurePoints();
-    if (points.isEmpty) return;
-    List<FlSpot> spots = [];
-    for (int i = 0; i < points.length; i++) {
-      final p = points[i];
-      double y = (p['speed'] as num?)?.toDouble() ?? 0;
-
-      // Parse timestamp from ISO 8601 string to DateTime and convert to milliseconds
-      double x;
-      if (p['timestamp'] is String) {
-        try {
-          DateTime dateTime = DateTime.parse(p['timestamp'] as String);
-          x = dateTime.millisecondsSinceEpoch.toDouble();
-        } catch (_) {
-          x = DateTime.now().millisecondsSinceEpoch.toDouble();
+  void _setupGeolocationListener() {
+    if (widget.geolocation != null) {
+      _geoSubscription = widget.geolocation!.stream.listen((event) {
+        if (event.containsKey('speed')) {
+          double speed = (event['speed'] ?? 0).toDouble();
+          _speedBuffer.add(speed);
         }
-      } else {
-        x = DateTime.now().millisecondsSinceEpoch.toDouble();
-      }
-
-      spots.add(FlSpot(x, y));
+      });
     }
-    // Keep only the last maxGraphPoints
-    if (spots.length > maxGraphPoints) {
-      spots = spots.sublist(spots.length - maxGraphPoints);
-    }
+  }
 
-    // Sort by timestamp (x value)
-    spots.sort((a, b) => a.x.compareTo(b.x));
-
-    setState(() {
-      _graphData
-        ..clear()
-        ..addAll(spots);
+  void _setupPlotTimer() {
+    _plotTimer = Timer.periodic(const Duration(seconds: plotIntervalSeconds), (_) {
+      _plotAverageSpeed();
     });
+  }
+
+  void _plotAverageSpeed() {
+    if (_speedBuffer.isEmpty || widget.geolocation == null) return;
+
+    // Calculate average speed
+    double avgSpeed = _speedBuffer.reduce((a, b) => a + b) / _speedBuffer.length;
+
+    // Plot the average speed
+    _addContributionValue(avgSpeed);
+
+    // Clear buffer for next interval
+    _speedBuffer.clear();
+  }
+
+  @override
+  void didUpdateWidget(ContributionGraph oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.geolocation != widget.geolocation) {
+      _geoSubscription?.cancel();
+      _setupGeolocationListener();
+    }
   }
 
   @override
   void dispose() {
-    _updateTimer?.cancel();
+    _plotTimer?.cancel();
+    _geoSubscription?.cancel();
     super.dispose();
   }
 
   void _addContributionValue(double contribution) {
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toDouble();
-
     setState(() {
+      _dataIndex++;
+
       if (_graphData.length >= maxGraphPoints) {
         _graphData.removeAt(0);
       }
-      _graphData.add(FlSpot(timestamp, contribution));
-
-      // Keep the list sorted by timestamp
-      _graphData.sort((a, b) => a.x.compareTo(b.x));
+      _graphData.add(FlSpot(_dataIndex.toDouble(), contribution));
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool hasEnoughData = _graphData.length >= minGraphPoints; // Use const for threshold
+    // If no geolocation is provided, show a message instead of an empty graph
+    if (widget.geolocation == null) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 0, bottom: 16),
+        child: Text(
+          "La mesure n'est pas active. Démarrez une mesure pour voir votre progression.",
+          style: TextStyle(fontSize: 13, color: Colors.black45),
+          textAlign: TextAlign.left,
+        ),
+      );
+    }
+
+    final bool hasEnoughData = _graphData.length >= minGraphPoints;
 
     double maxY = 3;
     if (hasEnoughData) {
@@ -106,19 +126,9 @@ class ContributionGraphState extends State<ContributionGraph> {
       }
     }
 
-    List<FlSpot> visibleData = _getVisibleGraphData();
-
-    // Set min and max X based on actual timestamps in the data
-    double minX =
-        hasEnoughData && _graphData.isNotEmpty ? _graphData.first.x : DateTime.now().millisecondsSinceEpoch.toDouble();
-    double maxX;
-    if (hasEnoughData && _graphData.isNotEmpty) {
-      final range = _graphData.last.x - _graphData.first.x;
-      final margin = range > 0 ? range * 0.10 : 10000; // fallback to 10s if all timestamps are equal
-      maxX = _graphData.last.x + margin;
-    } else {
-      maxX = minX + 10000; // Default range of 10 seconds if no data
-    }
+    // Set min and max X based on the data indices
+    double minX = hasEnoughData && _graphData.isNotEmpty ? _graphData.first.x : 0;
+    double maxX = hasEnoughData && _graphData.isNotEmpty ? _graphData.last.x + 5 : 10;
 
     return Padding(
       padding: const EdgeInsets.only(left: 0, top: 0, bottom: 0),
@@ -126,7 +136,7 @@ class ContributionGraphState extends State<ContributionGraph> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Contribution moyenne",
+            "Contribution moyenne (m/s)",
             style: TextStyle(
               fontSize: 16,
               color: Colors.black87,
@@ -180,7 +190,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
-                          spots: hasEnoughData ? visibleData : [],
+                          spots: hasEnoughData ? _graphData : [],
                           isCurved: true,
                           preventCurveOverShooting: true,
                           preventCurveOvershootingThreshold: 0.0,
@@ -221,9 +231,5 @@ class ContributionGraphState extends State<ContributionGraph> {
         ],
       ),
     );
-  }
-
-  List<FlSpot> _getVisibleGraphData() {
-    return _graphData;
   }
 }

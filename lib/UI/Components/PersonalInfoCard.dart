@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Utils/config.dart';
+import '../../Geolocalisation/Geolocation.dart';
 import 'ContributionGraph.dart';
 
 class PersonalInfoCard extends StatefulWidget {
@@ -13,6 +14,7 @@ class PersonalInfoCard extends StatefulWidget {
   final String userName;
   final String contribution;
   final String totalTime;
+  final Geolocation? geolocation;
 
   const PersonalInfoCard({
     super.key,
@@ -23,6 +25,7 @@ class PersonalInfoCard extends StatefulWidget {
     required this.userName,
     required this.contribution,
     required this.totalTime,
+    this.geolocation,
   });
 
   @override
@@ -129,7 +132,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
               if (widget.isSessionActive) const SizedBox(height: 8),
-              if (widget.isSessionActive) ContributionGraph(),
+              if (widget.isSessionActive) ContributionGraph(geolocation: widget.geolocation),
             ],
           ),
         ),
