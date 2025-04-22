@@ -25,7 +25,7 @@ class MeasureData {
     required DateTime timestamp,
     required double lat,
     required double lng,
-    required int duration, // Changed to required
+    required int duration,
   }) async {
     final String key = 'measure_points';
     List<Map<String, dynamic>> points = await getMeasurePoints();
@@ -72,10 +72,15 @@ class MeasureData {
   }
 
   /// Clear the measure ID and points from the shared preferences.
-  static Future<bool> clearMeasureData() async {
+  static Future<bool> clearMeasureId() async {
     final bool idCleared = await _dataManagement.removeData('measure_id');
-    final bool pointsCleared = await _dataManagement.removeData('measure_points');
-    return idCleared && pointsCleared;
+    return idCleared;
+  }
+
+  static Future<bool> clearMeasureData() async {
+    final bool pointsCleared = await clearMeasurePoints();
+    final bool idCleared = await clearMeasureId();
+    return pointsCleared && idCleared;
   }
 
   /// Check if a measure is ongoing by checking if the measure ID exists and is not empty.

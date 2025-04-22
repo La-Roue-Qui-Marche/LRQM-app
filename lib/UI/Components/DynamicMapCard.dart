@@ -391,6 +391,25 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
                     ),
                   ),
                 ),
+              // --- Map credits bottom right ---
+              Positioned(
+                bottom: 10,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                  child: Text(
+                    _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
       ],

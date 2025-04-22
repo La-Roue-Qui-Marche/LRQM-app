@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../Utils/config.dart';
 import 'WorkingScreen.dart';
 import 'Components/ActionButton.dart';
+import 'Components/RunPathMap.dart';
+import '../Data/MeasureData.dart';
 
 class SummaryScreen extends StatefulWidget {
   final int distanceAdded;
@@ -24,153 +26,149 @@ class SummaryScreen extends StatefulWidget {
 class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateMixin {
   late final AnimationController _mainController;
   late final List<AnimationController> _itemControllers;
-  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
-    // Create the main controller and start it.
-    _mainController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..forward();
-
-    // Create a list of item controllers (for the five animated items).
-    _itemControllers = List.generate(5, (index) {
-      return AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    });
-    _startItemAnimations();
+    _mainController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..forward();
+    _itemControllers =
+        List.generate(5, (index) => AnimationController(vsync: this, duration: const Duration(milliseconds: 600)));
+    _animateItems();
   }
 
-  void _startItemAnimations() async {
-    // Animate each item with a delay.
-    for (var controller in _itemControllers) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!mounted || _isDisposed) return; // Prevent calls if widget is disposed.
-      if (controller.status == AnimationStatus.dismissed) {
-        controller.forward();
-      }
+  Future<void> _animateItems() async {
+    for (final controller in _itemControllers) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      controller.forward();
     }
   }
 
   @override
   void dispose() {
-    _isDisposed = true;
     _mainController.dispose();
-    for (var controller in _itemControllers) {
+    for (final controller in _itemControllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
   String _formatTime(int seconds) {
-    return "${(seconds ~/ 3600).toString().padLeft(2, '0')}h "
-        "${(seconds % 3600 ~/ 60).toString().padLeft(2, '0')}m "
-        "${(seconds % 60).toString().padLeft(2, '0')}s";
+    return "${(seconds ~/ 3600).toString().padLeft(2, '0')}h ${((seconds % 3600) ~/ 60).toString().padLeft(2, '0')}m ${((seconds % 60)).toString().padLeft(2, '0')}s";
   }
 
   @override
   Widget build(BuildContext context) {
+    final double mapHeight = MediaQuery.of(context).size.height * 0.32;
+
     return Scaffold(
       backgroundColor: const Color(Config.COLOR_BACKGROUND),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 56.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: FadeTransition(
-                    opacity: _mainController,
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Bravo !',
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                            textAlign: TextAlign.left,
                           ),
-                          // Replace Icon with Image.asset
-                          child: Image.asset(
-                            'assets/pictures/Cup-AI.png',
-                            width: 80,
-                            height: 80,
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Voici le résumé de ta contribution',
+                            style: TextStyle(fontSize: 16, color: Colors.black54),
+                            textAlign: TextAlign.left,
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Bravo !',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.black87),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Voici le résumé de ta contribution',
-                          style: TextStyle(fontSize: 16, color: Colors.black87),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                    // Summary card first
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildSummaryCard(),
+                    ),
+                    const SizedBox(height: 20),
+                    // Map at the bottom
+                    // Remove horizontal padding and border radius for full width
+                    SizedBox(
+                      height: mapHeight,
+                      width: double.infinity,
+                      child: const RunPathMap(),
+                    ),
+                    // Add extra bottom padding for scroll
+                    const SizedBox(height: 30),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                _buildSummaryCard(),
-                const SizedBox(height: 120),
-              ],
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
+            // Add bottom bar for OK button
+            Container(
+              height: 80,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: Color(0x11000000), width: 1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 6,
+                    offset: Offset(0, -2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: ActionButton(
                 icon: Icons.check,
                 text: 'OK',
-                onPressed: () {
-                  // Stop any ongoing animations.
-                  for (var controller in _itemControllers) {
-                    if (controller.isAnimating) {
-                      controller.stop();
-                    }
-                  }
-                  if (_mainController.isAnimating) {
-                    _mainController.stop();
-                  }
+                onPressed: () async {
+                  await MeasureData.clearMeasurePoints();
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const WorkingScreen()),
-                    (route) => false,
+                    MaterialPageRoute(builder: (_) => const WorkingScreen()),
+                    (_) => false,
                   );
                 },
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSummaryCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
+      // Reduced padding for more space
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
         children: [
           _animatedItem(0, Icons.route, "Distance parcourue", widget.distanceAdded, isMeter: true),
-          const Divider(height: 32),
+          const Divider(height: 22),
           _animatedItem(1, Icons.group, "Participants", widget.contributors),
-          const Divider(height: 32),
+          const Divider(height: 22),
           _animatedItem(2, Icons.timer, "Temps total", widget.timeAdded, isTime: true),
-          const Divider(height: 32),
+          const Divider(height: 22),
           _animatedItem(3, Icons.add_chart, "Distance totale", widget.distanceAdded * widget.contributors,
               isMeter: true),
-          const Divider(height: 32),
+          const Divider(height: 22),
           _animatedItem(4, Icons.pie_chart, "% Evènement", widget.percentageAdded, isPercentage: true),
         ],
       ),
@@ -189,16 +187,16 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 16, color: Colors.black87)),
+                Text(title, style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 4),
                 TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0, end: 1),
+                  tween: Tween(begin: 0.0, end: 1.0),
                   duration: const Duration(milliseconds: 800),
                   builder: (context, animationValue, child) {
                     return Text(
                       _formatAnimatedValue(value, animationValue,
                           isTime: isTime, isPercentage: isPercentage, isMeter: isMeter),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     );
                   },
                 ),

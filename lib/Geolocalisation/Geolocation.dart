@@ -56,9 +56,7 @@ class Geolocation with WidgetsBindingObserver {
   StreamSubscription<geo.Position>? _positionStream;
   Timer? _apiTimer;
   Timer? _streamTimer;
-  Timer? _silenceCheckTimer;
 
-  final Stopwatch _gpsSilenceStopwatch = Stopwatch();
   final StreamController<Map<String, int>> _streamController = StreamController<Map<String, int>>.broadcast();
 
   bool _positionStreamStarted = false;
@@ -136,9 +134,6 @@ class Geolocation with WidgetsBindingObserver {
     _oldPos = await geo.Geolocator.getCurrentPosition();
     _resetPosition = false;
 
-    _gpsSilenceStopwatch.reset();
-    _gpsSilenceStopwatch.start();
-
     _startPositionStream();
 
     _apiTimer = Timer.periodic(config.apiInterval, (_) {
@@ -156,15 +151,6 @@ class Geolocation with WidgetsBindingObserver {
       }
     });
 
-    _silenceCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_gpsSilenceStopwatch.elapsed.inSeconds >= 10) {
-        LogHelper.logInfo("[GEO] No GPS update in 10s , recording stationary point...");
-        _recordStationaryPoint();
-        _gpsSilenceStopwatch.reset();
-        _gpsSilenceStopwatch.start();
-      }
-    });
-
     LogHelper.logInfo("[GEO] Geolocation started.");
   }
 
@@ -176,9 +162,6 @@ class Geolocation with WidgetsBindingObserver {
   }
 
   void _handleForegroundUpdate(geo.Position position) {
-    _gpsSilenceStopwatch.reset();
-    _gpsSilenceStopwatch.start();
-
     _processPositionUpdate(
       position.latitude,
       position.longitude,
@@ -188,32 +171,12 @@ class Geolocation with WidgetsBindingObserver {
   }
 
   void _handleBackgroundUpdate(bg.Location location) {
-    _gpsSilenceStopwatch.reset();
-    _gpsSilenceStopwatch.start();
-
     _processPositionUpdate(
       location.latitude ?? 0,
       location.longitude ?? 0,
       location.accuracy ?? config.accuracyThreshold,
       DateTime.now(),
     );
-  }
-
-  Future<void> _recordStationaryPoint() async {
-    if (_oldPos != null) {
-      await MeasureData.addMeasurePoint(
-        distance: _distance.toDouble(),
-        speed: 0.0,
-        acc: _oldPos!.accuracy,
-        timestamp: DateTime.now(),
-        lat: _oldPos!.latitude,
-        lng: _oldPos!.longitude,
-        duration: _elapsedTimeInSeconds, // Add duration
-      );
-      LogHelper.logInfo("[GEO] Recorded stationary point at ${_oldPos!.latitude}, ${_oldPos!.longitude}");
-    } else {
-      LogHelper.logError("[GEO] Cannot record stationary point: no previous position available");
-    }
   }
 
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
@@ -337,8 +300,6 @@ class Geolocation with WidgetsBindingObserver {
       await _positionStream?.cancel();
       _apiTimer?.cancel();
       _streamTimer?.cancel();
-      _silenceCheckTimer?.cancel();
-      _gpsSilenceStopwatch.stop();
 
       await _sendFinalDistance();
 
@@ -350,7 +311,7 @@ class Geolocation with WidgetsBindingObserver {
 
       final result = await NewMeasureController.stopMeasure();
       if (result.value == true) {
-        await MeasureData.clearMeasureData();
+        await MeasureData.clearMeasureId();
         LogHelper.logInfo("[GEO] Measure stopped successfully.");
       } else {
         LogHelper.logError("[GEO] Failed to stop measure: ${result.error}");
