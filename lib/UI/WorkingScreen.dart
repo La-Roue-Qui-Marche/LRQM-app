@@ -62,7 +62,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     _initializeData();
 
     // Set up timer to check if event is over every second
-    _eventCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) => _checkIfEventIsOver());
+    _eventCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) => _checkIfEventIsOver());
   }
 
   @override
@@ -214,6 +214,10 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       setState(() {
         _isMeasureOngoing = isOngoing;
       });
+    }
+
+    if (isOngoing && mounted) {
+      _geolocation.startListening();
     }
   }
 
