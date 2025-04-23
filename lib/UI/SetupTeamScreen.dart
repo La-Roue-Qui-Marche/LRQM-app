@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:typed_data';
+import 'package:transparent_image/transparent_image.dart';
 import '../Utils/config.dart';
 import 'Components/InfoCard.dart';
 import 'Components/ActionButton.dart';
@@ -18,6 +20,18 @@ class SetupTeamScreen extends StatefulWidget {
 class _SetupTeamScreenState extends State<SetupTeamScreen> {
   bool _isLoading = false;
   int _selectedContributors = 0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Pre-cache image here, context is available
+    precacheImage(const AssetImage('assets/pictures/DrawTeam-AI.png'), context);
+  }
 
   void _navigateToSetupScanScreen() async {
     setState(() {
@@ -78,9 +92,11 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
                             Center(
                               child: Container(
                                 width: MediaQuery.of(context).size.width * 0.45,
-                                padding: const EdgeInsets.all(16.0), // Add padding
-                                child: const Image(
-                                  image: AssetImage('assets/pictures/DrawTeam-AI.png'),
+                                padding: const EdgeInsets.all(16.0),
+                                child: FadeInImage(
+                                  placeholder: MemoryImage(kTransparentImage),
+                                  image: const AssetImage('assets/pictures/DrawTeam-AI.png'),
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                             ),

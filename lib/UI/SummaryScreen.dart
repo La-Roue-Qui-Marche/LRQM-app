@@ -4,6 +4,8 @@ import 'WorkingScreen.dart';
 import 'Components/RunPathMap.dart';
 import '../Data/MeasureData.dart';
 import 'Components/TopAppBar.dart';
+import 'dart:typed_data';
+import 'package:transparent_image/transparent_image.dart';
 
 class SummaryScreen extends StatefulWidget {
   final int distanceAdded;
@@ -50,6 +52,13 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
     ).animate(CurvedAnimation(parent: _percentController, curve: Curves.easeOutCubic));
     _metersController.forward();
     _percentController.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Pre-cache image here, context is available
+    precacheImage(const AssetImage('assets/pictures/Cup-AI.png'), context);
   }
 
   @override
@@ -115,8 +124,9 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                               Center(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Image.asset(
-                                    'assets/pictures/Cup-AI.png',
+                                  child: FadeInImage(
+                                    placeholder: MemoryImage(kTransparentImage),
+                                    image: const AssetImage('assets/pictures/Cup-AI.png'),
                                     width: 140,
                                     height: 140,
                                     fit: BoxFit.contain,

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:io' show Platform;
+import 'package:transparent_image/transparent_image.dart';
 
 import '../Utils/Permission.dart';
 import 'Components/InfoCard.dart';
@@ -41,6 +42,13 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     super.initState();
     _loadMeetingPoint();
     _checkPermissions();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Pre-cache image here, context is available
+    precacheImage(const AssetImage('assets/pictures/DrawPos-AI.png'), context);
   }
 
   Future<void> _checkPermissions() async {
@@ -200,9 +208,13 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           Center(
             child: SizedBox(
               width: MediaQuery.of(context).size.width * 0.4,
-              child: const Padding(
-                padding: EdgeInsets.only(top: 16.0),
-                child: Image(image: AssetImage('assets/pictures/DrawPos-AI.png')),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: FadeInImage(
+                  placeholder: MemoryImage(kTransparentImage),
+                  image: const AssetImage('assets/pictures/DrawPos-AI.png'),
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),

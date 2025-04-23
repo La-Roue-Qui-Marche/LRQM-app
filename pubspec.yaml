@@ -2,7 +2,7 @@ name: lrqm
 description: "La roue qui marche asso app"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -20,7 +20,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 2.5.2
 
 environment:
-  sdk: '>=3.4.3 <4.0.0'
+  sdk: ">=3.4.3 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -33,22 +33,23 @@ dependencies:
     sdk: flutter
   flutter_svg: ^2.0.7 # Add this dependency for SVG support
   flutter_map: ^7.0.2
-  shared_preferences: ^2.2.3      # For storing data locally
-  mobile_scanner: ^5.1.1          # For scanning QR codes
-  http: ^1.2.1                    # For making HTTP requests
-  permission_handler: ^11.3.1     # For handling permissions
-  geolocator: ^12.0.0             # For getting the user's location
-  maps_toolkit: ^3.0.0            # For calculating distances between two points
+  shared_preferences: ^2.2.3 # For storing data locally
+  mobile_scanner: ^5.1.1 # For scanning QR codes
+  http: ^1.2.1 # For making HTTP requests
+  permission_handler: ^11.3.1 # For handling permissions
+  geolocator: ^12.0.0 # For getting the user's location
+  maps_toolkit: ^3.0.0 # For calculating distances between two points
   flutter_launcher_icons: ^0.13.1 # For changing the app icon
   simple_circular_progress_bar: ^1.0.2
-  package_info_plus: ^4.2.0       # Update this dependency version
+  package_info_plus: ^4.2.0 # Update this dependency version
   url_launcher: ^6.3.1
   latlong2: ^0.9.1
   share_plus: ^7.2.2
   shimmer: ^3.0.0
-  fl_chart: ^0.66.1 
+  fl_chart: ^0.66.1
   background_location: ^0.13.0
   pinput: ^5.0.1
+  transparent_image: ^2.0.1
 
 # Removed path_provider and share dependencies
 
@@ -76,7 +77,6 @@ flutter_launcher_icons:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -118,7 +118,7 @@ flutter:
     - assets/icons/square-2.svg
     - assets/icons/square-3.svg
     - assets/icons/square-4.svg
-    
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

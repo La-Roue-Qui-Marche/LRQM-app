@@ -1,9 +1,11 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:developer';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:transparent_image/transparent_image.dart';
 import '../Utils/config.dart';
 import 'LoadingScreen.dart';
 import 'Components/InfoCard.dart';
@@ -32,6 +34,18 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   );
 
   bool _isCameraOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Pre-cache image here, context is available
+    precacheImage(const AssetImage('assets/pictures/DrawScan-AI.png'), context);
+  }
 
   void _navigateToLoadingScreen() async {
     controller.stop();
@@ -148,8 +162,10 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(16.0), // Add padding
                             width: MediaQuery.of(context).size.width * 0.45,
-                            child: const Image(
-                              image: AssetImage('assets/pictures/DrawScan-AI.png'),
+                            child: FadeInImage(
+                              placeholder: MemoryImage(kTransparentImage),
+                              image: const AssetImage('assets/pictures/DrawScan-AI.png'),
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
