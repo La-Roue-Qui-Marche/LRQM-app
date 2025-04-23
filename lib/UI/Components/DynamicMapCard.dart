@@ -259,8 +259,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
               ),
               // --- North indicator floating top left ---
               Positioned(
-                top: 20,
-                left: 20,
+                top: 12,
+                left: 12,
                 child: Container(
                   width: 40,
                   height: 40,
@@ -289,8 +289,8 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
               ),
               // Button stack (top right)
               Positioned(
-                top: 20,
-                right: 20,
+                top: 12,
+                right: 12,
                 child: Column(
                   children: [
                     FloatingActionButton(
@@ -344,9 +344,9 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
               // Fixed position legend popup (centered horizontally, top overlay)
               if (_showLegend)
                 Positioned(
-                  top: 20,
-                  left: 20,
-                  right: 20,
+                  top: 14,
+                  left: 120,
+                  right: 14,
                   child: Container(
                     padding: const EdgeInsets.only(top: 6, left: 16, right: 16, bottom: 24),
                     decoration: BoxDecoration(
@@ -412,7 +412,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
               // --- Map credits bottom right ---
               Positioned(
                 bottom: 10,
-                right: 16,
+                right: 12,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(

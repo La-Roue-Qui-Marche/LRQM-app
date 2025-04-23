@@ -1,28 +1,25 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Utils/config.dart';
 import '../../Geolocalisation/Geolocation.dart';
+import '../../Data/UserData.dart';
+import '../../Data/MeasureData.dart';
+import '../../API/NewUserController.dart';
+import '../../Utils/Result.dart';
 import 'ContributionGraph.dart';
 
 class PersonalInfoCard extends StatefulWidget {
   final bool isSessionActive;
   final bool isCountingInZone;
-  final String bibNumber;
-  final String userName;
-  final String contribution;
-  final String totalTime;
   final Geolocation? geolocation;
 
   const PersonalInfoCard({
     super.key,
     required this.isSessionActive,
     required this.isCountingInZone,
-    required this.bibNumber,
-    required this.userName,
-    required this.contribution,
-    required this.totalTime,
     this.geolocation,
   });
 
@@ -31,36 +28,133 @@ class PersonalInfoCard extends StatefulWidget {
 }
 
 class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
+  // State variables
   late int _currentContribution;
   final List<Widget> _particles = [];
+
+  // User data
+  String _bibNumber = "";
+  String _userName = "";
+  int _totalDistance = 0;
+  int _totalTime = 0;
+
+  // Session data
+  int _sessionDistance = 0;
+  int _sessionTime = 0;
+
+  bool _isLoading = true;
+  StreamSubscription? _geoSubscription;
 
   @override
   void initState() {
     super.initState();
-    _currentContribution = _parseDistance(widget.contribution);
+    _currentContribution = 0;
+    _loadUserData();
+    _setupGeolocationListener();
   }
 
   @override
   void dispose() {
+    _geoSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Get bib ID
+      final bibId = await UserData.getBibId();
+      if (bibId != null && mounted) {
+        setState(() {
+          _bibNumber = bibId;
+        });
+      }
+
+      // Get username
+      final username = await UserData.getUsername();
+      if (username != null && mounted) {
+        setState(() {
+          _userName = username;
+        });
+      }
+
+      // Get user ID for distance and time
+      final userId = await UserData.getUserId();
+      if (userId != null && mounted) {
+        // Get total distance
+        final distanceResult = await NewUserController.getUserTotalMeters(userId);
+        if (!distanceResult.hasError && mounted) {
+          setState(() {
+            _totalDistance = distanceResult.value ?? 0;
+            // Set current contribution to total distance initially
+            // If session is active, it will be updated by the geolocation stream
+            _currentContribution = _totalDistance;
+          });
+        }
+
+        // Get total time
+        final timeResult = await NewUserController.getUserTotalTime(userId);
+        if (!timeResult.hasError && mounted) {
+          setState(() {
+            _totalTime = timeResult.value ?? 0;
+          });
+        }
+      }
+
+      // For active sessions, initial values come from geolocation stream
+      // Don't need to fetch them here since they will be updated by the listener
+    } catch (e) {
+      developer.log("Error loading user data: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _setupGeolocationListener() {
+    // Cancel any existing subscription first
+    _geoSubscription?.cancel();
+
+    if (widget.geolocation != null && widget.isSessionActive) {
+      _geoSubscription = widget.geolocation!.stream.listen((event) {
+        if (mounted) {
+          // Add null checks for the distance and time
+          final int newDistance = (event["distance"] as num?)?.toInt() ?? 0;
+          final int newTime = (event["time"] as num?)?.toInt() ?? 0;
+
+          setState(() {
+            _sessionDistance = newDistance;
+            _sessionTime = newTime;
+
+            // Check for distance increase
+            if (_sessionDistance > _currentContribution) {
+              final int diff = _sessionDistance - _currentContribution;
+              _spawnParticle("+$diff m");
+              _currentContribution = _sessionDistance;
+            }
+          });
+        }
+      });
+    }
   }
 
   @override
   void didUpdateWidget(covariant PersonalInfoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _checkForContributionIncrease();
-  }
 
-  void _checkForContributionIncrease() {
-    final newContribution = _parseDistance(widget.contribution);
+    // If session status changed
+    if (oldWidget.isSessionActive != widget.isSessionActive) {
+      _loadUserData();
 
-    if (newContribution > _currentContribution) {
-      final int diff = newContribution - _currentContribution;
-      _spawnParticle("+$diff m");
-
-      setState(() {
-        _currentContribution = newContribution;
-      });
+      // Update geolocation listener
+      _geoSubscription?.cancel();
+      _setupGeolocationListener();
     }
   }
 
@@ -90,19 +184,24 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    // Use current session values when session is active, otherwise use totals
+    // Add null safety
+    final int displayedDistance = widget.isSessionActive ? _sessionDistance : _totalDistance;
+    final int displayedTime = widget.isSessionActive ? _sessionTime : _totalTime;
+
     return Stack(
       children: [
-        _buildCard(),
+        _buildCard(displayedDistance, displayedTime),
         ..._particles,
       ],
     );
   }
 
-  Widget _buildCard() {
+  Widget _buildCard(int displayedDistance, int displayedTime) {
     return Stack(
       children: [
         Container(
-          margin: const EdgeInsets.only(bottom: 6.0, right: 0.0, left: 0.0, top: 6.0),
+          margin: const EdgeInsets.only(bottom: 1.0, right: 0.0, left: 0.0, top: 6.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -122,9 +221,9 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               const SizedBox(height: 12),
               _buildHeader(),
               const SizedBox(height: 12),
-              _buildInfoCards(),
+              _buildInfoCards(displayedDistance, displayedTime),
               const SizedBox(height: 16),
-              _buildFunMessage(),
+              _buildFunMessage(displayedDistance),
               if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) const Divider(color: Color(Config.backgroundColor), thickness: 1),
               if (widget.isSessionActive) const SizedBox(height: 8),
@@ -157,23 +256,26 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                         '№ de dossard: ',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
                       ),
-                      Text(
-                        widget.bibNumber,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
-                      ),
+                      _isLoading || _bibNumber.isEmpty
+                          ? _buildShimmer(width: 40)
+                          : Text(
+                              _bibNumber,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                            ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      if (widget.userName.isNotEmpty)
+                      if (_isLoading)
+                        _buildShimmer(width: 100)
+                      else if (_userName.isNotEmpty)
                         Text(
-                          widget.userName,
+                          _userName,
                           style: const TextStyle(fontSize: 18, color: Colors.black87),
                         ),
                     ],
                   ),
-                  if (widget.userName.isEmpty) _buildShimmer(width: 100),
                 ],
               ),
             ),
@@ -183,23 +285,21 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     );
   }
 
-  Widget _buildInfoCards() {
+  Widget _buildInfoCards(int displayedDistance, int displayedTime) {
     return Row(
       children: [
         Expanded(
           child: _infoCard(
             label: 'Distance',
-            value: widget.contribution.isNotEmpty
-                ? "${_formatDistance(_currentContribution)} m"
-                : null, // Pass null to trigger shimmer
+            value: _isLoading ? null : "${_formatDistance(displayedDistance)} m",
             color: const Color(Config.primaryColor),
           ),
         ),
-        SizedBox(width: 16), // 16px horizontal space between the cards
+        const SizedBox(width: 16), // 16px horizontal space between the cards
         Expanded(
           child: _infoCard(
             label: 'Temps total',
-            value: widget.totalTime.isNotEmpty ? widget.totalTime : null,
+            value: _isLoading ? null : _formatModernTime(displayedTime),
             color: const Color(Config.primaryColor),
           ),
         ),
@@ -207,14 +307,14 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     );
   }
 
-  Widget _buildFunMessage() {
-    if (widget.contribution.isNotEmpty) {
-      return Text(
-        _getDistanceMessage(_currentContribution),
-        style: const TextStyle(fontSize: 16, color: Colors.black87),
-      );
+  Widget _buildFunMessage(int displayedDistance) {
+    if (_isLoading) {
+      return _buildShimmer(width: double.infinity, height: 16);
     }
-    return _buildShimmer(width: double.infinity, height: 16);
+    return Text(
+      _getDistanceMessage(displayedDistance),
+      style: const TextStyle(fontSize: 16, color: Colors.black87),
+    );
   }
 
   Widget _infoCard({required String label, String? value, required Color color}) {
@@ -332,11 +432,16 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   String _formatDistance(int distance) {
-    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\\d))'), (m) => "${m[1]}'");
+    if (distance <= 0) return "0";
+    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => "${m[1]}'");
   }
 
-  int _parseDistance(String input) {
-    return int.tryParse(input.replaceAll("'", "").replaceAll(" m", "")) ?? 0;
+  String _formatModernTime(int seconds) {
+    if (seconds < 0) seconds = 0;
+    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
+    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return "$h:$m:$s";
   }
 
   String _getDistanceMessage(int distance) {

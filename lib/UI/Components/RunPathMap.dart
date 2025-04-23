@@ -86,38 +86,37 @@ class _RunPathMapState extends State<RunPathMap> {
       if (point.longitude > maxLng) maxLng = point.longitude;
     }
 
-    // Add padding to the bounds (approximate method)
-    final double latPadding = (maxLat - minLat) * 0.1;
-    final double lngPadding = (maxLng - minLng) * 0.1;
+    // Add smaller padding (in degrees, approx 0.001 ~ 100m)
+    const double padding = 0.0012; // reduced padding for closer fit
+    minLat -= padding;
+    maxLat += padding;
+    minLng -= padding;
+    maxLng += padding;
 
-    minLat -= latPadding;
-    maxLat += latPadding;
-    minLng -= lngPadding;
-    maxLng += lngPadding;
-
-    // Calculate center point
+    // Center
     final LatLng center = LatLng((minLat + maxLat) / 2, (minLng + maxLng) / 2);
 
-    // Calculate appropriate zoom level
-    const pi = 3.14159265359;
-    const ln2 = 0.6931471805599453;
+    // Calculate zoom to fit bounds
+    double _latToY(double lat) => log(tan((lat * pi / 180) / 2 + pi / 4));
+    double worldMapWidth = MediaQuery.of(context).size.width;
+    double worldMapHeight = MediaQuery.of(context).size.height * 0.6;
 
-    double _latRad(double lat) => log((1 + sin(lat * pi / 180)) / (1 - sin(lat * pi / 180))) / 2;
+    double latFraction = (_latToY(maxLat) - _latToY(minLat)) / pi;
+    double lngDiff = maxLng - minLng;
+    double lngFraction = ((lngDiff < 0 ? lngDiff + 360 : lngDiff) / 360);
 
-    double _zoom(double mapPx, double worldPx, double fraction) => log(mapPx / worldPx / fraction) / ln2;
-
-    final Size mapSize = MediaQuery.of(context).size;
-
-    double latZoom = _zoom(mapSize.height, 256, (_latRad(maxLat) - _latRad(minLat)) / pi);
-    double lngZoom = _zoom(mapSize.width, 256, (maxLng - minLng) / 360);
+    double latZoom = _zoom(worldMapHeight, 256, latFraction);
+    double lngZoom = _zoom(worldMapWidth, 256, lngFraction);
 
     double zoom = min(latZoom, lngZoom);
-
-    if (!zoom.isFinite || zoom < 2.0) zoom = 5.0;
-    zoom -= 0.3; // Adjust to ensure everything is visible
-    if (zoom < 2.0) zoom = 2.0;
+    zoom = zoom.clamp(13.0, 18.0); // allow closer zoom (min 13 instead of 10)
 
     _mapController.move(center, zoom);
+  }
+
+  double _zoom(double mapPx, double worldPx, double fraction) {
+    const ln2 = 0.6931471805599453;
+    return log(mapPx / worldPx / fraction) / ln2;
   }
 
   void _startPathAnimation() {

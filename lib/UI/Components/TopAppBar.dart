@@ -15,7 +15,9 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final bool showInfoButton;
   final bool showBackButton;
   final bool showLogoutButton;
-  final VoidCallback? onBack; // <-- Add this line
+  final bool showCloseButton; // <-- New parameter
+  final VoidCallback? onBack;
+  final VoidCallback? onClose; // <-- New parameter
 
   const TopAppBar({
     super.key,
@@ -23,7 +25,9 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.showInfoButton = true,
     this.showBackButton = false,
     this.showLogoutButton = true,
-    this.onBack, // <-- Add this line
+    this.showCloseButton = false, // <-- New parameter
+    this.onBack,
+    this.onClose, // <-- New parameter
   });
 
   @override
@@ -110,7 +114,7 @@ class _TopAppBarState extends State<TopAppBar> {
                   ),
                 ),
 
-                // Right side: Info + Share (hidden easter egg) + Logout
+                // Right side: Info + Share + Logout + Close
                 Align(
                   alignment: Alignment.centerRight,
                   child: Row(
@@ -137,6 +141,15 @@ class _TopAppBarState extends State<TopAppBar> {
                         _buildIconButton(
                           onTap: () => _showLogoutConfirmation(context),
                           iconData: Icons.logout, // changed to Material icon
+                        ),
+                      if (widget.showCloseButton)
+                        _buildIconButton(
+                          onTap: () {
+                            if (widget.onClose != null) {
+                              widget.onClose!();
+                            }
+                          },
+                          iconData: Icons.close,
                         ),
                     ],
                   ),

@@ -431,41 +431,61 @@ class _EventProgressCardState extends State<EventProgressCard> {
       labels = ['jours', ...labels];
     }
 
-    return List.generate(4, (index) {
-      return Expanded(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8), // more space between containers
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                parts[index],
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+    List<Widget> widgets = [];
+    for (int i = 0; i < 4; i++) {
+      widgets.add(
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  parts[i],
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                labels[index],
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: color.withOpacity(0.75),
+                const SizedBox(height: 2),
+                Text(
+                  labels[i],
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: color.withOpacity(0.75),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
-    });
+      // Add ":" separator except after the last container
+      if (i < 3) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0),
+            child: Text(
+              ":",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[400],
+              ),
+            ),
+          ),
+        );
+      }
+    }
+    return widgets;
   }
 
   Widget _styledValue(String value, {required Color color}) {

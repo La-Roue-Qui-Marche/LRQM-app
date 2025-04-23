@@ -48,6 +48,9 @@ class Geolocation with WidgetsBindingObserver {
     _initZone();
   }
 
+  // Change the type to match the stream's Map<String, int>
+  Map<String, int>? lastEvent;
+
   late geo.LocationSettings _settings;
   geo.Position? _oldPos;
   StreamSubscription<geo.Position>? _positionStream;
@@ -67,6 +70,10 @@ class Geolocation with WidgetsBindingObserver {
   List<mp.LatLng>? _zonePoints;
 
   Stream<Map<String, int>> get stream => _streamController.stream;
+
+  // Add simple getters for current distance and elapsed time
+  int get currentDistance => _distance;
+  int get elapsedTimeInSeconds => _elapsedTimeInSeconds;
 
   Future<void> _initZone() async {
     _zonePoints = await EventData.getSiteCoordLatLngList();
@@ -127,6 +134,14 @@ class Geolocation with WidgetsBindingObserver {
     _startTime = DateTime.now();
     _distance = 0;
     _outsideCounter = 0;
+
+    // Initialize lastEvent with proper type
+    lastEvent = {
+      "time": 0,
+      "distance": 0,
+      "isCountingInZone": 1,
+      "speed": 0,
+    };
 
     _oldPos = await geo.Geolocator.getCurrentPosition();
     _resetPosition = false;
@@ -228,14 +243,17 @@ class Geolocation with WidgetsBindingObserver {
       duration: _elapsedTimeInSeconds, // Add duration
     );
 
+    // Store latest event data with proper integer values
+    lastEvent = {
+      "time": _elapsedTimeInSeconds,
+      "distance": _distance,
+      "isCountingInZone": _isCountingInZone ? 1 : 0,
+      "speed": speed.toInt(),
+    };
+
     // Add speed to the stream data
     if (!_streamController.isClosed) {
-      _streamController.sink.add({
-        "time": _elapsedTimeInSeconds,
-        "distance": _distance,
-        "isCountingInZone": _isCountingInZone ? 1 : 0,
-        "speed": speed.toInt(),
-      });
+      _streamController.sink.add(lastEvent!);
     }
 
     _saveOldPos(lat, lng, acc, timestamp);

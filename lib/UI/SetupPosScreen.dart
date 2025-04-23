@@ -282,26 +282,55 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (_) {
-        return SafeArea(
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
-            child: SizedBox(
-              height: 540, // Fixed height for the modal
-              child: Stack(
-                children: [
-                  DynamicMapCard(geolocation: widget.geolocation),
-                  Positioned(
-                    top: 50,
-                    left: 10,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.black, size: 32),
-                      onPressed: () => Navigator.of(context).pop(),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.62,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Stack(
+              children: [
+                // Floating drag indicator bar at the very top, outside the modal content
+                Positioned(
+                  top: 10,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
+                // Modal content below
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
+                  child: Container(
+                    color: Colors.white,
+                    margin: const EdgeInsets.only(top: 24), // leave space for the floating bar
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            controller: scrollController,
+                            child: SizedBox(
+                              height: 500, // You can adjust or remove this if you want dynamic height
+                              child: DynamicMapCard(geolocation: widget.geolocation),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

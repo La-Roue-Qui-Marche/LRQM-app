@@ -19,7 +19,6 @@ import '../Geolocalisation/Geolocation.dart';
 import '../API/NewUserController.dart';
 
 import '../Data/EventData.dart';
-import '../Data/UserData.dart';
 import '../Data/MeasureData.dart';
 import '../Data/ContributorsData.dart';
 
@@ -40,14 +39,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   // --- State variables ---
   // Only keep necessary variables
   DateTime? end;
-  int? _distancePerso, _contributors, _sessionTimePerso, _totalTimePerso, _metersGoal;
-  int _distance = 0;
-  String _dossard = "", _name = "";
   int _currentPage = 0;
   bool _isEventOver = false, _isMeasureOngoing = false, _isCountingInZone = true;
   final ScrollController _parentScrollController = ScrollController();
   late GeolocationConfig _geoConfig;
   late Geolocation _geolocation;
+  Timer? _eventCheckTimer;
 
   @override
   void initState() {
@@ -63,10 +60,14 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     );
     _geolocation = Geolocation(config: _geoConfig);
     _initializeData();
+
+    // Set up timer to check if event is over every second
+    _eventCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) => _checkIfEventIsOver());
   }
 
   @override
   void dispose() {
+    _eventCheckTimer?.cancel();
     _geolocation.stopListening();
     super.dispose();
   }
@@ -79,153 +80,30 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         setState(() {
           end = DateTime.parse(endDate);
           // Check if event is over immediately
-          if (DateTime.now().isAfter(end!)) {
-            _isEventOver = true;
-          }
+          _checkIfEventIsOver();
         });
       }
     });
 
-    // Retrieve user data (for personal info card)
-    UserData.getBibId().then((bibId) {
-      if (bibId != null && mounted) {
-        setState(() {
-          _dossard = bibId;
-        });
-
-        UserData.getUserId().then((userId) {
-          if (userId != null && mounted) {
-            // Get the personal distance
-            _getValue(() => NewUserController.getUserTotalMeters(userId), () async => null).then((value) {
-              if (mounted) {
-                setState(() {
-                  _distancePerso = value;
-                });
-              }
-            });
-
-            // Get the total time
-            _getValue(() => NewUserController.getUserTotalTime(userId), () async => null).then((value) {
-              if (mounted) {
-                setState(() {
-                  _totalTimePerso = value;
-                });
-              }
-            });
-          }
-        });
-
-        // Get the name of the user
-        UserData.getUsername().then((username) {
-          if (username != null && mounted) {
-            setState(() {
-              _name = username;
-            });
-          } else {
-            log("Failed to fetch username from UserData.");
-          }
-        });
-      } else {
-        log("Bib ID not found in UserData.");
-      }
-    });
-
-    // Check if a measure is ongoing and set up geolocation tracking if needed
+    // Just check if a measure is ongoing to update UI state
     _updateMeasureStatus();
-    MeasureData.isMeasureOngoing().then((isOngoing) {
-      if (isOngoing && mounted) {
-        _geolocation.stream.listen((event) {
-          if (event["distance"] == -1) {
-            _geolocation.stopListening();
-          } else {
-            if (mounted) {
-              setState(() {
-                _distance = event["distance"] ?? 0;
-                _sessionTimePerso = event["time"];
-                _isCountingInZone = (event["isCountingInZone"] ?? 1) == 1;
-              });
-            }
-          }
-        });
-        _geolocation.startListening();
-      } else {
-        // Get the total time spent on the track if no measure is ongoing
-        UserData.getUserId().then((userId) {
-          if (userId != null) {
-            NewUserController.getUserTotalTime(userId).then((result) {
-              if (!result.hasError && mounted) {
-                setState(() {
-                  _totalTimePerso = result.value;
-                });
-              }
-            });
-          }
-        });
-      }
-    });
-
-    // Retrieve the number of contributors (needed for summary screen)
-    ContributorsData.getContributors().then((contributors) {
-      if (contributors != null && mounted) {
-        setState(() {
-          _contributors = contributors;
-        });
-      }
-    });
-
-    // Retrieve meters goal (needed for summary screen)
-    EventData.getMetersGoal().then((metersGoal) {
-      if (metersGoal != null && mounted) {
-        setState(() {
-          _metersGoal = metersGoal;
-        });
-      }
-    });
   }
 
-  void _refreshValues() {
-    // Only refresh user-specific values, event data now handled by EventProgressCard
-    UserData.getBibId().then((bibId) {
-      if (bibId != null) {
-        if (mounted) {
-          setState(() {
-            _dossard = bibId;
-          });
+  // Check if the event is over based on the current time
+  void _checkIfEventIsOver() {
+    if (end != null && mounted) {
+      final isOver = DateTime.now().isAfter(end!);
+      if (isOver != _isEventOver) {
+        setState(() {
+          _isEventOver = isOver;
+        });
+
+        // If the event just ended and a measure is ongoing, show the event completion modal
+        if (isOver) {
+          _showEventCompletionModal();
         }
-
-        // Get the user id for meters
-        UserData.getUserId().then((userId) {
-          if (userId != null && mounted) {
-            // Get the personal distance
-            _getValue(() => NewUserController.getUserTotalMeters(userId), () async => null).then((value) {
-              if (mounted) {
-                setState(() {
-                  _distancePerso = value;
-                });
-              }
-            });
-
-            // Get the total time
-            NewUserController.getUserTotalTime(userId).then((result) {
-              if (!result.hasError && mounted) {
-                setState(() {
-                  _totalTimePerso = result.value;
-                });
-              }
-            });
-          }
-        });
-
-        // Get the name of the user
-        UserData.getUsername().then((username) {
-          if (username != null && mounted) {
-            setState(() {
-              _name = username;
-            });
-          }
-        });
       }
-    });
+    }
   }
 
   // --- Navigation ---
@@ -236,7 +114,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void _startSetupPosScreen() => _navigateToScreen(SetupPosScreen(geolocation: _geolocation));
 
   // --- UI Helper Methods ---
-  Widget _buildPersonalInfoContent(int displayedTime) {
+  Widget _buildPersonalInfoContent() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,13 +124,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           child: PersonalInfoCard(
             isSessionActive: _isMeasureOngoing,
             isCountingInZone: _isCountingInZone,
-            bibNumber: _dossard.isNotEmpty ? _dossard : '',
-            userName: _name.isNotEmpty ? _name : '',
-            contribution: _distancePerso != null || _isMeasureOngoing
-                ? '${_formatDistance(_isMeasureOngoing ? _distance : (_distancePerso ?? 0))} m'
-                : '',
-            totalTime: _totalTimePerso != null || _isMeasureOngoing ? _formatModernTime(displayedTime) : '',
-            geolocation: _isMeasureOngoing ? _geolocation : null,
+            geolocation: _geolocation,
           ),
         ),
         DynamicMapCard(
@@ -291,8 +163,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   // --- Main Build ---
   @override
   Widget build(BuildContext context) {
-    int displayedTime = _isMeasureOngoing ? (_sessionTimePerso ?? 0) : (_totalTimePerso ?? 0);
-
     return PopScope(
       canPop: false,
       onPopInvoked: (bool didPop) async {},
@@ -310,7 +180,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
             child: IndexedStack(
               index: _currentPage,
               children: [
-                _buildPersonalInfoContent(displayedTime),
+                _buildPersonalInfoContent(),
                 _buildEventInfoContent(),
               ],
             ),
@@ -357,37 +227,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     );
   }
 
-  Future<int> _getValue(Future<Result<int>> Function() fetchVal, Future<int?> Function() getVal) {
-    return fetchVal().then((value) {
-      if (value.hasError) {
-        throw Exception("Could not fetch value because : ${value.error}");
-      } else {
-        return value.value!;
-      }
-    }).onError((error, stackTrace) {
-      log('Error here: $error');
-      return getVal().then((value) {
-        if (value == null) {
-          log("No value");
-          return -1;
-        } else {
-          return value;
-        }
-      });
-    });
-  }
-
-  String _formatDistance(int distance) {
-    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}\'');
-  }
-
-  String _formatModernTime(int seconds) {
-    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
-    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
-    final s = (seconds % 60).toString().padLeft(2, '0');
-    return "$h:$m:$s";
-  }
-
   void _confirmStopMeasure(BuildContext context) {
     showTextModal(
       context,
@@ -404,29 +243,42 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
             builder: (context) => const LoadingScreen(text: 'On se repose un peu...'),
           ),
         );
+
+        int currentDistance = 0;
+        int currentTime = 0;
+
         try {
+          // Get current distance and time directly from geolocation getters
+          currentDistance = _geolocation.currentDistance;
+          currentTime = _geolocation.elapsedTimeInSeconds;
+          log("Retrieved from geolocation: distance=$currentDistance, time=$currentTime");
+
+          // Stop the geolocation
           await _geolocation.stopListening();
         } catch (e) {
-          log("Failed to stop measure: $e");
+          log("Failed to get measure data: $e");
         }
-        _refreshValues();
-        Navigator.of(context).pop(); // Close the loading screen
 
-        // Calculate percentage of total event progress
-        int totalDistanceAdded = _distance * (_contributors ?? 1);
-        double eventPercentageAdded = (totalDistanceAdded / (_metersGoal ?? 1)) * 100;
+        // Fetch necessary data for summary screen
+        final contributors = await ContributorsData.getContributors() ?? 1;
+        final metersGoal = await EventData.getMetersGoal() ?? 1;
+
+        // Pop loading screen
+        Navigator.of(context).pop();
 
         // Navigate to the SummaryScreen
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => SummaryScreen(
-              distanceAdded: _distance,
-              timeAdded: _sessionTimePerso ?? 0,
-              percentageAdded: eventPercentageAdded,
-              contributors: _contributors ?? 1,
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => SummaryScreen(
+                distanceAdded: currentDistance,
+                timeAdded: currentTime,
+                percentageAdded: (currentDistance * contributors / metersGoal) * 100,
+                contributors: contributors,
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
       showDiscardButton: true,
     );
