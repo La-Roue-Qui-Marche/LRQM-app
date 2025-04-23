@@ -87,39 +87,40 @@ class NavBar extends StatelessWidget {
             left: 0,
             right: 0,
             child: Center(
-              child: GestureDetector(
-                onTap: canStartNewSession ? onStartStopPressed : null,
-                child: Container(
-                  width: 74,
-                  height: 74,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: canStartNewSession
-                        ? LinearGradient(
-                            colors: isMeasureActive
-                                ? [Colors.redAccent, Colors.red]
-                                : [const Color(Config.accentColor), const Color(Config.accentColor)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : LinearGradient(
-                            colors: [Colors.white, Colors.white],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 6,
+              child: IgnorePointer(
+                ignoring: !canStartNewSession,
+                child: GestureDetector(
+                  onTap: canStartNewSession ? onStartStopPressed : null,
+                  child: Container(
+                    width: 74,
+                    height: 74,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: canStartNewSession
+                          ? LinearGradient(
+                              colors: isMeasureActive
+                                  ? [Colors.redAccent, Colors.red]
+                                  : [const Color(Config.accentColor), const Color(Config.accentColor)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [Colors.grey.shade300, Colors.grey.shade400],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 6,
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: isMeasureActive
-                        ? const Icon(Icons.stop_rounded, color: Colors.white, size: 32)
-                        : Image.asset(
-                            'assets/pictures/LogoSimpleOutlined.png',
-                            width: 38,
-                            height: 38,
-                          ),
+                    child: Center(
+                      child: canStartNewSession
+                          ? (isMeasureActive
+                              ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
+                              : const Icon(Icons.radio_button_on, color: Colors.white, size: 38))
+                          : Icon(Icons.radio_button_on, color: Colors.grey.shade100, size: 38),
+                    ),
                   ),
                 ),
               ),

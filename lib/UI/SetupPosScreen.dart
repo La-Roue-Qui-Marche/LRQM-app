@@ -279,58 +279,31 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
       builder: (_) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.62,
-          minChildSize: 0.4,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) {
-            return Stack(
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+          child: SizedBox(
+            height: 520,
+            width: double.infinity,
+            child: Stack(
               children: [
-                // Floating drag indicator bar at the very top, outside the modal content
-                Positioned(
-                  top: 10,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      width: 40,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                // Map fills the modal (no Column/Expanded)
+                Positioned.fill(
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: 540,
+                      width: double.infinity,
+                      child: DynamicMapCard(geolocation: widget.geolocation),
                     ),
                   ),
                 ),
-                // Modal content below
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
-                  child: Container(
-                    color: Colors.white,
-                    margin: const EdgeInsets.only(top: 24), // leave space for the floating bar
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            controller: scrollController,
-                            child: SizedBox(
-                              height: 500, // You can adjust or remove this if you want dynamic height
-                              child: DynamicMapCard(geolocation: widget.geolocation),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // Floating close button
               ],
-            );
-          },
+            ),
+          ),
         );
       },
     );
