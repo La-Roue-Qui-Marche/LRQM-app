@@ -15,6 +15,7 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final bool showInfoButton;
   final bool showBackButton;
   final bool showLogoutButton;
+  final VoidCallback? onBack; // <-- Add this line
 
   const TopAppBar({
     super.key,
@@ -22,6 +23,7 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.showInfoButton = true,
     this.showBackButton = false,
     this.showLogoutButton = true,
+    this.onBack, // <-- Add this line
   });
 
   @override
@@ -74,7 +76,13 @@ class _TopAppBarState extends State<TopAppBar> {
                   alignment: Alignment.centerLeft,
                   child: widget.showBackButton
                       ? _buildIconButton(
-                          onTap: () => Navigator.of(context).pop(),
+                          onTap: () {
+                            if (widget.onBack != null) {
+                              widget.onBack!();
+                            } else {
+                              Navigator.of(context).pop();
+                            }
+                          },
                           icon: 'assets/icons/angle-left.svg',
                         )
                       : Image.asset(
@@ -115,7 +123,7 @@ class _TopAppBarState extends State<TopAppBar> {
                             onTap: () {
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen()));
                             },
-                            icon: 'assets/icons/info.svg',
+                            iconData: Icons.info_outline, // changed to Material icon
                           ),
                         ),
                       if (_showShareButton)
@@ -128,7 +136,7 @@ class _TopAppBarState extends State<TopAppBar> {
                       if (widget.showLogoutButton)
                         _buildIconButton(
                           onTap: () => _showLogoutConfirmation(context),
-                          icon: 'assets/icons/sign-out.svg',
+                          iconData: Icons.logout, // changed to Material icon
                         ),
                     ],
                   ),
@@ -163,7 +171,7 @@ class _TopAppBarState extends State<TopAppBar> {
                 )
               : Icon(
                   iconData,
-                  size: 22,
+                  size: 26, // increased from 22 to 26
                   color: Colors.black87,
                 ),
         ),

@@ -12,8 +12,9 @@ import '../../Data/EventData.dart';
 
 class DynamicMapCard extends StatefulWidget {
   final Geolocation geolocation;
+  final bool followUser;
 
-  const DynamicMapCard({super.key, required this.geolocation});
+  const DynamicMapCard({super.key, required this.geolocation, this.followUser = false});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -37,9 +38,25 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
+    _followUserMode = widget.followUser;
     _initZone();
     _initMeetingPoint();
     _initLocation();
+  }
+
+  @override
+  void didUpdateWidget(covariant DynamicMapCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.followUser != oldWidget.followUser) {
+      setState(() {
+        _followUserMode = widget.followUser;
+        if (_followUserMode) {
+          _centerOnUser();
+        } else {
+          _fitMapBounds();
+        }
+      });
+    }
   }
 
   Future<void> _initZone() async {

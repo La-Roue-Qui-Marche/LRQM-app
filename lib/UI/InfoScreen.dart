@@ -211,7 +211,7 @@ class InfoScreen extends StatelessWidget {
                                     final version = snapshot.data ?? '';
                                     return version.isNotEmpty
                                         ? Text(
-                                            'v$version (+1)',
+                                            'v$version',
                                             style: const TextStyle(
                                               fontSize: 12,
                                               color: Colors.black38,

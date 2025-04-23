@@ -4,6 +4,7 @@ import 'WorkingScreen.dart';
 import 'Components/ActionButton.dart';
 import 'Components/RunPathMap.dart';
 import '../Data/MeasureData.dart';
+import 'Components/TopAppBar.dart';
 
 class SummaryScreen extends StatefulWidget {
   final int distanceAdded;
@@ -43,6 +44,15 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
     }
   }
 
+  Future<void> _handleBack() async {
+    await MeasureData.clearMeasurePoints();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const WorkingScreen()),
+      (_) => false,
+    );
+  }
+
   @override
   void dispose() {
     _mainController.dispose();
@@ -62,6 +72,15 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     return Scaffold(
       backgroundColor: const Color(Config.backgroundColor),
+      appBar: TopAppBar(
+        title: "Résumé",
+        showBackButton: true,
+        showInfoButton: false,
+        showLogoutButton: false,
+        onBack: () async {
+          await _handleBack();
+        },
+      ),
       body: Column(
         children: [
           Expanded(
@@ -70,138 +89,294 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 52, 20, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Bravo !',
-                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                          textAlign: TextAlign.left,
+                  const SizedBox(height: 12),
+                  // Centered Cup image in white circle
+                  Center(
+                    child: Container(
+                      width: 110,
+                      height: 110,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset(
+                          'assets/pictures/Cup-AI.png',
+                          fit: BoxFit.contain,
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Voici le résumé de ta contribution',
-                          style: TextStyle(fontSize: 16, color: Colors.black54),
-                          textAlign: TextAlign.left,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  // Summary card first
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _buildSummaryCard(),
+                  const SizedBox(height: 18),
+                  // Centered "Bravo !" text
+                  const Center(
+                    child: Text(
+                      'Bravo !',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 6),
+                  // Centered subtitle
+                  const Center(
+                    child: Text(
+                      'Voici le résumé de ta contribution',
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Contribution card with details inside
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 0),
+                    child: _contributionCard(
+                      meters: widget.distanceAdded * widget.contributors,
+                      percent: widget.percentageAdded,
+                      distance: widget.distanceAdded,
+                      contributors: widget.contributors,
+                      time: widget.timeAdded,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   // Map at the bottom
-                  // Remove horizontal padding and border radius for full width
                   SizedBox(
                     height: mapHeight,
                     width: double.infinity,
                     child: const RunPathMap(),
                   ),
-                  // Add extra bottom padding for scroll
                   const SizedBox(height: 30),
                 ],
               ),
             ),
           ),
-          // Add bottom bar for OK button
-          Container(
-            height: 80,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Color(0x11000000), width: 1),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, -2),
+        ],
+      ),
+    );
+  }
+
+  Widget _contributionCard({
+    required int meters,
+    required double percent,
+    required int distance,
+    required int contributors,
+    required int time,
+  }) {
+    return FadeTransition(
+      opacity: _itemControllers[3],
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 0),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(0),
+          border: Border.all(color: const Color(Config.primaryColor).withOpacity(0.10), width: 1.2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Main contribution row
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(Config.accentColor).withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.stars,
+                    color: Color(Config.accentColor),
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _itemControllers[0],
+                        builder: (context, child) => Opacity(
+                          opacity: _itemControllers[0].value,
+                          child: child,
+                        ),
+                        child: const Text(
+                          "Contribution",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Color(Config.primaryColor),
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 900),
+                        builder: (context, animationValue, child) {
+                          final int animatedMeters = (meters * animationValue).toInt();
+                          final double animatedPercent = percent * animationValue;
+                          return Row(
+                            children: [
+                              AnimatedOpacity(
+                                opacity: animationValue,
+                                duration: const Duration(milliseconds: 400),
+                                child: Text(
+                                  '$animatedMeters m',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(Config.primaryColor),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              AnimatedOpacity(
+                                opacity: animationValue,
+                                duration: const Duration(milliseconds: 400),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(Config.accentColor).withOpacity(0.13),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '+${animatedPercent.toStringAsFixed(2)}%',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(Config.accentColor),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            padding: const EdgeInsets.only(right: 20, left: 20, bottom: 20, top: 10),
-            child: ActionButton(
-              icon: Icons.check,
-              text: 'OK',
-              onPressed: () async {
-                await MeasureData.clearMeasurePoints();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const WorkingScreen()),
-                  (_) => false,
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4)),
-        ],
-      ),
-      // Reduced padding for more space
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Column(
-        children: [
-          _animatedItem(0, Icons.route, "Distance parcourue", widget.distanceAdded, isMeter: true),
-          const Divider(color: Color(Config.backgroundColor), thickness: 1),
-          _animatedItem(1, Icons.group, "Participants", widget.contributors),
-          const Divider(color: Color(Config.backgroundColor), thickness: 1),
-          _animatedItem(2, Icons.timer, "Temps total", widget.timeAdded, isTime: true),
-          const Divider(color: Color(Config.backgroundColor), thickness: 1),
-          _animatedItem(3, Icons.add_chart, "Distance totale", widget.distanceAdded * widget.contributors,
-              isMeter: true),
-          const Divider(color: Color(Config.backgroundColor), thickness: 1),
-          _animatedItem(4, Icons.pie_chart, "% Evènement", widget.percentageAdded, isPercentage: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _animatedItem(int index, IconData icon, String title, dynamic value,
-      {bool isTime = false, bool isPercentage = false, bool isMeter = false}) {
-    return FadeTransition(
-      opacity: _itemControllers[index],
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(Config.primaryColor), size: 32),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 18),
+            // Details section
+            Row(
               children: [
-                Text(title, style: const TextStyle(fontSize: 16)),
-                const SizedBox(height: 4),
+                Icon(Icons.route, color: const Color(Config.primaryColor).withOpacity(0.85), size: 20),
+                const SizedBox(width: 10),
+                AnimatedBuilder(
+                  animation: _itemControllers[1],
+                  builder: (context, child) => Opacity(
+                    opacity: _itemControllers[1].value,
+                    child: child,
+                  ),
+                  child: Text(
+                    'Distance parcourue : ',
+                    style: const TextStyle(fontSize: 15, color: Color(Config.primaryColor)),
+                  ),
+                ),
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
+                  duration: const Duration(milliseconds: 700),
                   builder: (context, animationValue, child) {
-                    return Text(
-                      _formatAnimatedValue(value, animationValue,
-                          isTime: isTime, isPercentage: isPercentage, isMeter: isMeter),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    return AnimatedOpacity(
+                      opacity: animationValue,
+                      duration: const Duration(milliseconds: 400),
+                      child: Text(
+                        '${(distance * animationValue).toInt()} m',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(Config.primaryColor),
+                        ),
+                      ),
                     );
                   },
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 7),
+            Row(
+              children: [
+                Icon(Icons.group, color: const Color(Config.primaryColor).withOpacity(0.85), size: 20),
+                const SizedBox(width: 10),
+                AnimatedBuilder(
+                  animation: _itemControllers[2],
+                  builder: (context, child) => Opacity(
+                    opacity: _itemControllers[2].value,
+                    child: child,
+                  ),
+                  child: Text(
+                    'Participants : ',
+                    style: const TextStyle(fontSize: 15, color: Color(Config.primaryColor)),
+                  ),
+                ),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 700),
+                  builder: (context, animationValue, child) {
+                    return AnimatedOpacity(
+                      opacity: animationValue,
+                      duration: const Duration(milliseconds: 400),
+                      child: Text(
+                        '${(contributors * animationValue).toInt()}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(Config.primaryColor),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            Row(
+              children: [
+                Icon(Icons.timer, color: const Color(Config.primaryColor).withOpacity(0.85), size: 20),
+                const SizedBox(width: 10),
+                AnimatedBuilder(
+                  animation: _itemControllers[4],
+                  builder: (context, child) => Opacity(
+                    opacity: _itemControllers[4].value,
+                    child: child,
+                  ),
+                  child: Text(
+                    'Temps total : ',
+                    style: const TextStyle(fontSize: 15, color: Color(Config.primaryColor)),
+                  ),
+                ),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 700),
+                  builder: (context, animationValue, child) {
+                    return AnimatedOpacity(
+                      opacity: animationValue,
+                      duration: const Duration(milliseconds: 400),
+                      child: Text(
+                        _formatTime((time * animationValue).toInt()),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(Config.primaryColor),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

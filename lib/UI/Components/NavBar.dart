@@ -83,7 +83,7 @@ class NavBar extends StatelessWidget {
 
           // Floating button
           Positioned(
-            top: -12, // Adjusted for new button size to keep it centered
+            top: -10, // Adjusted for new button size to keep it centered
             left: 0,
             right: 0,
             child: Center(
@@ -103,23 +103,22 @@ class NavBar extends StatelessWidget {
                             end: Alignment.bottomRight,
                           )
                         : LinearGradient(
-                            colors: [Colors.grey.shade300, Colors.grey.shade400],
+                            colors: [Colors.white, Colors.white],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                     border: Border.all(
                       color: Colors.white,
-                      width: 8,
+                      width: 6,
                     ),
                   ),
                   child: Center(
                     child: isMeasureActive
                         ? const Icon(Icons.stop_rounded, color: Colors.white, size: 32)
-                        : SvgPicture.asset(
-                            'assets/icons/dot-circle.svg',
-                            color: Colors.white,
-                            width: 32,
-                            height: 32,
+                        : Image.asset(
+                            'assets/pictures/LogoSimpleOutlined.png',
+                            width: 38,
+                            height: 38,
                           ),
                   ),
                 ),

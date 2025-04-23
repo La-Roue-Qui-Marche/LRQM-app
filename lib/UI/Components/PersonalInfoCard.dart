@@ -9,7 +9,6 @@ import 'ContributionGraph.dart';
 class PersonalInfoCard extends StatefulWidget {
   final bool isSessionActive;
   final bool isCountingInZone;
-  final String logoPath;
   final String bibNumber;
   final String userName;
   final String contribution;
@@ -20,7 +19,6 @@ class PersonalInfoCard extends StatefulWidget {
     super.key,
     required this.isSessionActive,
     required this.isCountingInZone,
-    required this.logoPath,
     required this.bibNumber,
     required this.userName,
     required this.contribution,
@@ -123,9 +121,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               ),
               const SizedBox(height: 12),
               _buildHeader(),
-              const SizedBox(height: 8),
-              const Divider(color: Color(Config.backgroundColor), thickness: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _buildInfoCards(),
               const SizedBox(height: 16),
               _buildFunMessage(),
@@ -138,7 +134,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
         ),
         Positioned(
           top: 72,
-          right: 28,
+          right: 16,
           child: _statusBadge(),
         ),
       ],
@@ -170,14 +166,6 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Container(
-                        child: Image.asset(
-                          widget.logoPath,
-                          width: 22,
-                          height: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
                       if (widget.userName.isNotEmpty)
                         Text(
                           widget.userName,
@@ -207,6 +195,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
             color: const Color(Config.primaryColor),
           ),
         ),
+        SizedBox(width: 16), // 16px horizontal space between the cards
         Expanded(
           child: _infoCard(
             label: 'Temps total',
@@ -243,18 +232,11 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

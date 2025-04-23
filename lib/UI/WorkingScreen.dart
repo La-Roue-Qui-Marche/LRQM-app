@@ -246,7 +246,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           child: PersonalInfoCard(
             isSessionActive: _isMeasureOngoing,
             isCountingInZone: _isCountingInZone,
-            logoPath: _isMeasureOngoing ? 'assets/pictures/LogoSimpleAnimated.gif' : 'assets/pictures/LogoSimple.png',
             bibNumber: _dossard.isNotEmpty ? _dossard : '',
             userName: _name.isNotEmpty ? _name : '',
             contribution: _distancePerso != null || _isMeasureOngoing
@@ -256,7 +255,10 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
             geolocation: _isMeasureOngoing ? _geolocation : null,
           ),
         ),
-        DynamicMapCard(geolocation: _geolocation),
+        DynamicMapCard(
+          geolocation: _geolocation,
+          followUser: _isMeasureOngoing,
+        ),
         if (!_isMeasureOngoing)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12.0),

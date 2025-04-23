@@ -233,25 +233,28 @@ class _EventProgressCardState extends State<EventProgressCard> {
                       : _buildShimmer(width: 100),
                 ],
               ),
-
+              // Percentage below, aligned left, with less space
+              if (_currentValue != null && _objectif != null && _objectif != '-1')
+                Padding(
+                  padding: const EdgeInsets.only(top: 2.0, bottom: 2.0), // reduced top padding
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${(_sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!) * 100).toStringAsFixed(1)}%',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
               // Progress Bar
               Row(
                 children: [
-                  if (_currentValue != null && _objectif != null && _objectif != '-1')
-                    Padding(
-                      padding: const EdgeInsets.only(right: 12.0),
-                      child: Text(
-                        '${(_sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!) * 100).toStringAsFixed(1)}%',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(16), // make progress bar edges rounder
                       child: LinearProgressIndicator(
                         value: _currentValue != null && _objectif != null && _objectif != '-1'
                             ? _sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!)
@@ -260,7 +263,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
                         valueColor: const AlwaysStoppedAnimation<Color>(
                           Color(Config.primaryColor),
                         ),
-                        minHeight: 6,
+                        minHeight: 12, // increased height
                       ),
                     ),
                   ),
@@ -272,23 +275,52 @@ class _EventProgressCardState extends State<EventProgressCard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Removed the label 'Temps restant' from _infoCard
-                  _infoCard(
-                    label: '', // Empty label now
+                  // Countdown with new style
+                  _countdownCard(
                     value: _formatRemainingTime(_remainingTime),
                     color: const Color(Config.primaryColor),
                   ),
-                  const SizedBox(height: 8),
-                  Divider(
-                    color: Color(Config.backgroundColor),
-                    thickness: 1,
-                  ),
-                  const SizedBox(height: 8),
-                  _infoCard(
-                    label: 'Participants ou groupe actifs sur le parcours',
-                    value: _participants,
-                    color: const Color(Config.primaryColor),
-                  ),
+                  const SizedBox(height: 16),
+                  // Participants active: green dot + number + text on same line, no divider
+                  if (_participants != null)
+                    Row(
+                      children: [
+                        if (int.tryParse(_participants!) != null)
+                          Container(
+                            width: 10,
+                            height: 10,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: int.parse(_participants!) > 1
+                                  ? Colors.green
+                                  : int.parse(_participants!) == 0
+                                      ? Colors.grey
+                                      : Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        Text(
+                          _participants!,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Expanded(
+                          child: Text(
+                            'participants ou groupe actifs sur le parcours',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    _buildShimmer(width: 120),
                 ],
               ),
             ],
@@ -346,7 +378,9 @@ class _EventProgressCardState extends State<EventProgressCard> {
               ? RegExp(r'[a-zA-Z]').hasMatch(value)
                   ? _styledValue(value, color: color)
                   : label.isEmpty || label.toLowerCase().contains("temps")
-                      ? styledCountdownTimer(value, color: color)
+                      ? Row(
+                          children: styledCountdownTimer(value, color: color),
+                        )
                       : _formatTimeWithLabels(value, color: color)
               : _buildShimmer(width: 60),
         ],
@@ -359,42 +393,66 @@ class _EventProgressCardState extends State<EventProgressCard> {
     return _styledValue(value, color: color);
   }
 
-  Widget styledCountdownTimer(String timeStr, {required Color color}) {
+  Widget _countdownCard({
+    String? value,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+          child: Text(
+            "Temps restant",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        value != null
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: styledCountdownTimer(value, color: color),
+              )
+            : _buildShimmer(width: 240),
+      ],
+    );
+  }
+
+  List<Widget> styledCountdownTimer(String timeStr, {required Color color}) {
     List<String> parts = timeStr.split(':');
     List<String> labels =
         parts.length == 4 ? ['jours', 'heures', 'minutes', 'secondes'] : ['heures', 'minutes', 'secondes'];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(parts.length, (index) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+    // Pad to always have 4 columns for layout consistency
+    if (parts.length == 3) {
+      parts = ['0', ...parts];
+      labels = ['jours', ...labels];
+    }
+
+    return List.generate(4, (index) {
+      return Expanded(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8), // more space between containers
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  parts[index],
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+              Text(
+                parts[index],
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 2),
               Text(
                 labels[index],
                 style: TextStyle(
@@ -405,9 +463,9 @@ class _EventProgressCardState extends State<EventProgressCard> {
               ),
             ],
           ),
-        );
-      }),
-    );
+        ),
+      );
+    });
   }
 
   Widget _styledValue(String value, {required Color color}) {
