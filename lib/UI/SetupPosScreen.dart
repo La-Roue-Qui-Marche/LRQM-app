@@ -294,10 +294,11 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
       ),
       builder: (_) {
+        final double modalHeight = MediaQuery.of(context).size.height * 0.50;
         return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
           child: SizedBox(
-            height: 520,
+            height: modalHeight,
             width: double.infinity,
             child: Stack(
               children: [
@@ -306,7 +307,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                   child: SingleChildScrollView(
                     physics: const NeverScrollableScrollPhysics(),
                     child: SizedBox(
-                      height: 540,
+                      height: modalHeight,
                       width: double.infinity,
                       child: DynamicMapCard(geolocation: widget.geolocation),
                     ),

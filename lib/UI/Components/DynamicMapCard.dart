@@ -186,9 +186,15 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
     return Column(
       children: [
         if (_isFetchingPosition)
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text("Chargement de la carte..."),
+          Container(
+            color: Colors.white,
+            height: MediaQuery.of(context).size.height * 0.5,
+            width: double.infinity,
+            alignment: Alignment.center,
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text("Chargement de la carte..."),
+            ),
           )
         else
           Stack(
@@ -196,7 +202,7 @@ class _DynamicMapCardState extends State<DynamicMapCard> with AutomaticKeepAlive
               AbsorbPointer(
                 absorbing: true,
                 child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
+                  height: MediaQuery.of(context).size.height * 0.5,
                   child: FlutterMap(
                     key: const ValueKey("main-map"),
                     mapController: _mapController,

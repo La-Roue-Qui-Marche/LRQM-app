@@ -118,7 +118,7 @@ class NavBar extends StatelessWidget {
                       child: canStartNewSession
                           ? (isMeasureActive
                               ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
-                              : const Icon(Icons.radio_button_on, color: Color.fromARGB(255, 53, 52, 52), size: 38))
+                              : const Icon(Icons.radio_button_on, color: Colors.white, size: 38))
                           : Icon(Icons.radio_button_on, color: Colors.grey.shade50, size: 38),
                     ),
                   ),
