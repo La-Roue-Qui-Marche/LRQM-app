@@ -4,21 +4,27 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 
-import 'Components/TopAppBar.dart';
-import 'Components/TextModal.dart';
-import 'SetupPosScreen.dart';
-import 'LoadingScreen.dart';
-import 'SummaryScreen.dart';
 import '../Utils/config.dart';
 import '../Geolocalisation/Geolocation.dart';
 import '../Data/EventData.dart';
 import '../Data/MeasureData.dart';
 import '../Data/ContributorsData.dart';
+import '../Data/DataUtils.dart';
+
+import 'Components/TopAppBar.dart';
+import 'Components/TextModal.dart';
 import 'Components/NavBar.dart';
 import 'Components/DynamicMapCard.dart';
 import 'Components/PersonalInfoCard.dart';
 import 'Components/EventProgressCard.dart';
 import 'Components/SupportCard.dart';
+import 'Components/app_toast.dart';
+
+import 'setup_pos_screen.dart';
+import 'LoadingScreen.dart';
+import 'SummaryScreen.dart';
+import 'LoginScreen.dart';
+import 'InfoScreen.dart';
 
 class WorkingScreen extends StatefulWidget {
   const WorkingScreen({super.key});
@@ -35,8 +41,10 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   int _currentPage = 0;
   bool _shouldShowEventModal = false;
-  late Geolocation _geolocation;
+  bool _showMainCards = true;
   Timer? _eventCheckTimer;
+
+  late Geolocation _geolocation;
 
   @override
   void initState() {
@@ -93,16 +101,13 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   Future<void> _checkEventStatus() async {
     final currentStatus = await EventData.getEventStatus();
     final previousStatus = _eventStatusNotifier.value;
-
     if (currentStatus == previousStatus) return;
 
     _eventStatusNotifier.value = currentStatus;
 
-    // Check specifically for transition from not started to in progress
     if (previousStatus == EventStatus.notStarted && currentStatus == EventStatus.inProgress) {
       _showEventStartedModal();
     }
-
     if (currentStatus == EventStatus.over && _isMeasureOngoingNotifier.value) {
       _shouldShowEventModal = true;
       await _forceStopAndShowSummary();
@@ -126,15 +131,24 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   Future<void> _forceStopAndShowSummary() async {
     Navigator.push(context, MaterialPageRoute(builder: (_) => LoadingScreen(text: 'On se repose un peu...')));
-
     int distance = 0, duration = 0;
+    bool stopSuccess = false;
     try {
       distance = _geolocation.currentDistance;
       duration = _geolocation.elapsedTimeInSeconds;
-      log("distance=$distance, time=$duration");
-      await _geolocation.stopListening();
+      stopSuccess = await _geolocation.stopListening();
     } catch (e) {
-      log("Erreur lors de l'arrêt : $e");
+      AppToast.showError("Erreur lors de l'arrêt de la mesure : $e");
+    }
+
+    if (!stopSuccess) {
+      if (mounted) {
+        AppToast.showError("Impossible d'arrêter la mesure, veuillez réessayer.");
+        Navigator.pop(context);
+      }
+      return;
+    } else {
+      AppToast.showSuccess("Mesure arrêtée et enregistrée !");
     }
 
     final contributors = await ContributorsData.getContributors() ?? 1;
@@ -178,93 +192,121 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       'Confirmation',
       'Arrêter la mesure en cours ?\n\nCela mettra fin à l\'enregistrement de ta distance et de ton temps.',
       showConfirmButton: true,
-      onConfirm: () => _forceStopAndShowSummary(),
+      onConfirm: _forceStopAndShowSummary,
       showDiscardButton: true,
     );
   }
 
-  void _showEventCompletionModal() {
+  void _handleInfoButton() => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen()));
+
+  void _handleLogoutButton() async {
     showTextModal(
       context,
-      'L\'Évènement est Terminé !',
-      "Merci pour ta participation !\n N'hésites pas à prendre une capture d'écran de ta contribution",
+      'Confirmation',
+      'Es-tu sûr de vouloir te déconnecter ?\n\nCela supprimera toutes les données locales et arrêtera toute mesure en cours.',
       showConfirmButton: true,
+      onConfirm: () async {
+        setState(() => _showMainCards = false);
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const LoadingScreen(text: "Déconnexion..."),
+            fullscreenDialog: true,
+          ),
+        );
+
+        await Future.delayed(const Duration(seconds: 2));
+        if (await MeasureData.isMeasureOngoing()) {
+          await _geolocation.stopListening();
+        }
+
+        final cleared = await DataUtils.deleteAllData();
+        if (cleared && mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const Login()),
+            (route) => false,
+          );
+        } else if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Échec de la suppression des données utilisateur")),
+          );
+        }
+      },
+      showDiscardButton: true,
     );
   }
 
-  void _showEventNotStartedModal() {
-    showTextModal(
-      context,
-      'L\'Évènement n\'a pas Commencé',
-      "Tu pourras démarrer une mesure dès le début de l'évènement.",
-      showConfirmButton: true,
-    );
-  }
-
-  void _showEventStartedModal() {
-    showTextModal(
-      context,
-      'L\'Évènement a Commencé !',
-      "Tu peux maintenant démarrer une session pour enregistrer ta contribution à l'évènement.",
-      showConfirmButton: true,
-    );
-  }
-
-  Widget _buildBody() {
+  Widget _buildMainContent() {
     return IndexedStack(
       index: _currentPage,
       children: [
-        SingleChildScrollView(
-          key: PageStorageKey('scrollPage0'),
-          controller: _scrollController,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ValueListenableBuilder(
-                valueListenable: _isMeasureOngoingNotifier,
-                builder: (_, isOngoing, __) => ValueListenableBuilder(
-                  valueListenable: _isCountingInZoneNotifier,
-                  builder: (_, inZone, __) => PersonalInfoCard(
-                    isSessionActive: isOngoing,
-                    isCountingInZone: inZone,
-                    geolocation: _geolocation,
-                  ),
-                ),
-              ),
-              ValueListenableBuilder(
-                valueListenable: _isMeasureOngoingNotifier,
-                builder: (_, isOngoing, __) => DynamicMapCard(
-                  geolocation: _geolocation,
-                  followUser: isOngoing,
-                ),
-              ),
-              ValueListenableBuilder(
-                valueListenable: _isMeasureOngoingNotifier,
-                builder: (_, isOngoing, __) => isOngoing
-                    ? SizedBox.shrink()
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        child: Center(
-                          child: Text(
-                            'Appuie sur le bouton orange pour démarrer une mesure !',
-                            style: TextStyle(fontSize: 14, color: Colors.black87),
-                          ),
-                        ),
-                      ),
-              ),
-              SizedBox(height: 40),
-            ],
-          ),
-        ),
-        SingleChildScrollView(
-          key: PageStorageKey('scrollPage1'),
-          controller: _scrollController,
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [EventProgressCard(), SupportCard()],
-          ),
-        ),
+        if (_showMainCards) _buildHomePage() else const SizedBox.shrink(),
+        if (_showMainCards) _buildEventPage() else const SizedBox.shrink(),
       ],
+    );
+  }
+
+  Widget _buildHomePage() {
+    return SingleChildScrollView(
+      key: PageStorageKey('scrollPage0'),
+      controller: _scrollController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ValueListenableBuilder(
+            valueListenable: _isMeasureOngoingNotifier,
+            builder: (_, isOngoing, __) => ValueListenableBuilder(
+              valueListenable: _isCountingInZoneNotifier,
+              builder: (_, inZone, __) => PersonalInfoCard(
+                key: const ValueKey('personalInfoCard'),
+                isSessionActive: isOngoing,
+                isCountingInZone: inZone,
+                geolocation: _geolocation,
+              ),
+            ),
+          ),
+          ValueListenableBuilder(
+            valueListenable: _isMeasureOngoingNotifier,
+            builder: (_, isOngoing, __) => DynamicMapCard(
+              geolocation: _geolocation,
+              followUser: isOngoing,
+            ),
+          ),
+          ValueListenableBuilder(
+            valueListenable: _isMeasureOngoingNotifier,
+            builder: (_, isOngoing, __) => isOngoing
+                ? SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Center(
+                      child: Text(
+                        'Appuie sur le bouton orange pour démarrer une mesure !',
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                      ),
+                    ),
+                  ),
+          ),
+          SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventPage() {
+    return SingleChildScrollView(
+      key: PageStorageKey('scrollPage1'),
+      controller: _scrollController,
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          EventProgressCard(key: ValueKey('eventProgressCard')),
+          SupportCard(),
+        ],
+      ),
     );
   }
 
@@ -284,6 +326,16 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     );
   }
 
+  void _showEventCompletionModal() => showTextModal(context, 'L\'Évènement est Terminé !',
+      "Merci pour ta participation !\n N'hésites pas à prendre une capture d'écran de ta contribution",
+      showConfirmButton: true);
+  void _showEventNotStartedModal() => showTextModal(
+      context, 'L\'Évènement n\'a pas Commencé', "Tu pourras démarrer une mesure dès le début de l'évènement.",
+      showConfirmButton: true);
+  void _showEventStartedModal() => showTextModal(context, 'L\'Évènement a Commencé !',
+      "Tu peux maintenant démarrer une session pour enregistrer ta contribution à l'évènement.",
+      showConfirmButton: true);
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -291,8 +343,15 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       onPopInvoked: (_) async {},
       child: Scaffold(
         backgroundColor: Color(Config.backgroundColor),
-        appBar: TopAppBar(title: 'Accueil', showInfoButton: true, showLogoutButton: true),
-        body: _buildBody(),
+        appBar: TopAppBar(
+          title: 'Accueil',
+          showInfoButton: true,
+          showLogoutButton: true,
+          geolocation: _geolocation,
+          onInfo: _handleInfoButton,
+          onLogout: _handleLogoutButton,
+        ),
+        body: _buildMainContent(),
         bottomNavigationBar: _buildBottomNavigation(),
       ),
     );

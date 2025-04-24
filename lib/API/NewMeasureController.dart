@@ -6,96 +6,98 @@ import '../Utils/config.dart';
 import '../Data/MeasureData.dart';
 
 class NewMeasureController {
-  static final http.Client _client = http.Client(); // Reusable HTTP client
+  static final http.Client _client = http.Client();
+  static const Duration _timeoutDuration = Duration(seconds: 10);
 
   /// Start a new measure for a user.
   static Future<Result<int>> startMeasure(int userId, {int? contributorsNumber}) async {
-    if (await MeasureData.isMeasureOngoing()) {
-      throw Exception("Cannot start a new measure while another measure is ongoing.");
+    try {
+      if (await MeasureData.isMeasureOngoing()) {
+        return Result(error: "Une mesure est déjà en cours.");
+      }
+
+      final uri = Uri.https(Config.apiUrl, '/measures/start');
+      final body = {
+        "user_id": userId,
+        if (contributorsNumber != null) "contributors_number": contributorsNumber,
+      };
+
+      debugPrint('[startMeasure] POST $uri');
+      debugPrint('[startMeasure] Body: $body');
+
+      final response = await _client
+          .post(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"}).timeout(_timeoutDuration);
+
+      debugPrint('[startMeasure] Response: ${response.statusCode} ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final measureId = data['id'];
+        if (measureId == null) return Result(error: "ID manquant dans la réponse.");
+        await MeasureData.saveMeasureId(measureId.toString());
+        return Result(value: measureId);
+      } else {
+        return Result(error: 'Erreur ${response.statusCode} : impossible de démarrer la mesure.');
+      }
+    } catch (e) {
+      debugPrint('[startMeasure] Exception: $e');
+      return Result(error: e.toString());
     }
-
-    final uri = Uri.https(Config.apiUrl, '/measures/start');
-    final body = {
-      "user_id": userId,
-      if (contributorsNumber != null) "contributors_number": contributorsNumber,
-    };
-
-    debugPrint('[startMeasure] POST $uri');
-    debugPrint('[startMeasure] Body: $body');
-
-    return _client
-        .post(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"})
-        .timeout(const Duration(seconds: 10))
-        .then((response) async {
-          debugPrint('[startMeasure] Response: ${response.statusCode} ${response.body}');
-          if (response.statusCode == 200) {
-            final responseData = jsonDecode(response.body);
-            int? measureId = responseData['id'];
-            if (measureId == null) {
-              throw Exception("id is null in the response.");
-            }
-
-            await MeasureData.saveMeasureId(measureId.toString());
-            return Result<int>(value: measureId);
-          } else {
-            throw Exception('Failed to start measure: ${response.statusCode}');
-          }
-        })
-        .onError((error, stackTrace) {
-          debugPrint('[startMeasure] Error: $error');
-          return Result<int>(error: error.toString());
-        });
   }
 
-  /// Edit the meters for a measure.
+  /// Update the meters for an ongoing measure.
   static Future<Result<bool>> editMeters(int meters) async {
-    if (!await MeasureData.isMeasureOngoing()) {
-      throw Exception("No ongoing measure found to edit meters.");
-    }
-
-    String? measureId = await MeasureData.getMeasureId();
-
-    final uri = Uri.https(Config.apiUrl, '/measures/$measureId');
-    final body = {"meters": meters};
-
-    debugPrint('[editMeters] PUT $uri');
-    debugPrint('[editMeters] Body: $body');
-
-    return _client.put(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"}).then((response) {
-      debugPrint('[editMeters] Response: ${response.statusCode} ${response.body}');
-      if (response.statusCode == 200) {
-        return Result<bool>(value: true);
-      } else {
-        throw Exception('Failed to edit meters: ${response.statusCode}');
+    try {
+      if (!await MeasureData.isMeasureOngoing()) {
+        return Result(error: "Aucune mesure en cours à modifier.");
       }
-    }).onError((error, stackTrace) {
-      debugPrint('[editMeters] Error: $error');
-      return Result<bool>(error: error.toString());
-    });
+
+      final measureId = await MeasureData.getMeasureId();
+      final uri = Uri.https(Config.apiUrl, '/measures/$measureId');
+      final body = {"meters": meters};
+
+      debugPrint('[editMeters] PUT $uri');
+      debugPrint('[editMeters] Body: $body');
+
+      final response = await _client
+          .put(uri, body: jsonEncode(body), headers: {"Content-Type": "application/json"}).timeout(_timeoutDuration);
+
+      debugPrint('[editMeters] Response: ${response.statusCode} ${response.body}');
+
+      return response.statusCode == 200
+          ? Result(value: true)
+          : Result(error: 'Erreur ${response.statusCode} : échec de la mise à jour.');
+    } catch (e) {
+      debugPrint('[editMeters] Exception: $e');
+      return Result(error: e.toString());
+    }
   }
 
-  /// Stop a measure.
+  /// Stop an ongoing measure.
   static Future<Result<bool>> stopMeasure() async {
-    if (!await MeasureData.isMeasureOngoing()) {
-      throw Exception("No ongoing measure found to stop.");
-    }
-
-    String? measureId = await MeasureData.getMeasureId();
-
-    final uri = Uri.https(Config.apiUrl, '/measures/$measureId/stop');
-
-    debugPrint('[stopMeasure] PUT $uri');
-
-    return _client.put(uri).then((response) async {
-      debugPrint('[stopMeasure] Response: ${response.statusCode} ${response.body}');
-      if (response.statusCode == 200) {
-        return Result<bool>(value: true);
-      } else {
-        throw Exception('Failed to stop measure: ${response.statusCode}');
+    try {
+      if (!await MeasureData.isMeasureOngoing()) {
+        return Result(error: "Aucune mesure en cours à arrêter.");
       }
-    }).onError((error, stackTrace) {
-      debugPrint('[stopMeasure] Error: $error');
-      return Result<bool>(error: error.toString());
-    });
+
+      final measureId = await MeasureData.getMeasureId();
+      final uri = Uri.https(Config.apiUrl, '/measures/$measureId/stop');
+
+      debugPrint('[stopMeasure] PUT $uri');
+
+      final response = await _client.put(uri).timeout(_timeoutDuration);
+
+      debugPrint('[stopMeasure] Response: ${response.statusCode} ${response.body}');
+
+      if (response.statusCode == 200) {
+        await MeasureData.clearMeasureId();
+        return Result(value: true);
+      } else {
+        return Result(error: 'Erreur ${response.statusCode} : échec de l\'arrêt de la mesure.');
+      }
+    } catch (e) {
+      debugPrint('[stopMeasure] Exception: $e');
+      return Result(error: e.toString());
+    }
   }
 }

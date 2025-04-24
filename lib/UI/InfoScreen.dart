@@ -86,7 +86,7 @@ class InfoScreen extends StatelessWidget {
                               "Plus d'information sur le site de la manifestation: ici",
                               style: const TextStyle(
                                 fontSize: 16,
-                                color: Colors.blue,
+                                color: Color(Config.primaryColor),
                                 decoration: TextDecoration.underline,
                               ),
                               textAlign: TextAlign.center,

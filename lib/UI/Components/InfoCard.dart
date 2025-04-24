@@ -176,13 +176,13 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                         IconButton(
                           icon: actionItem.icon, // Updated to use Widget
                           onPressed: actionItem.onPressed,
-                          color: Colors.black54, // Updated color
+                          color: Colors.black87, // Updated color
                         ),
                         Text(
                           actionItem.label,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: Colors.black54, // Updated color
+                            color: Colors.black87, // Updated color
                           ),
                         ),
                       ],

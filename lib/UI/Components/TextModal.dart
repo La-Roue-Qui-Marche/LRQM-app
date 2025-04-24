@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Utils/config.dart';
-import 'ActionButton.dart';
-import 'DiscardButton.dart';
+import 'button_action.dart';
+import 'button_discard.dart';
 
 void showTextModal(
   BuildContext context,
@@ -84,8 +84,8 @@ class _TextModalContent extends StatefulWidget {
     this.countdownStartDate,
     this.externalUrl,
     this.externalUrlLabel,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _TextModalContentState createState() => _TextModalContentState();
@@ -271,7 +271,7 @@ class _TextModalContentState extends State<_TextModalContent> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start, // Align left
                   children: [
-                    Icon(Icons.open_in_new, color: Color(Config.primaryColor)),
+                    const Icon(Icons.open_in_new, color: Color(Config.primaryColor)),
                     const SizedBox(width: 12),
                     Flexible(
                       child: Text(
@@ -300,7 +300,7 @@ class _TextModalContentState extends State<_TextModalContent> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                    child: DiscardButton(
+                    child: ButtonDiscard(
                       text: "Annuler",
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -315,7 +315,7 @@ class _TextModalContentState extends State<_TextModalContent> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                    child: ActionButton(
+                    child: ButtonAction(
                       text: "OK",
                       onPressed: () {
                         Navigator.of(context).pop();

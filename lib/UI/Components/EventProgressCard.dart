@@ -87,7 +87,9 @@ class _EventProgressCardState extends State<EventProgressCard> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    _countdownTimer = null;
     _refreshTimer?.cancel();
+    _refreshTimer = null;
     // Dispose all ValueNotifiers
     _objectifNotifier.dispose();
     _currentValueNotifier.dispose();
@@ -527,8 +529,8 @@ class _EventProgressCardState extends State<EventProgressCard> {
       widgets.add(
         Expanded(
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(8),

@@ -6,8 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:pinput/pinput.dart';
 import '../Data/UserData.dart';
 import 'WorkingScreen.dart';
-import 'Components/ActionButton.dart';
-import 'Components/DiscardButton.dart';
+import 'Components/button_action.dart';
+import 'Components/button_discard.dart';
 import '../Utils/config.dart';
 
 class ConfirmScreen extends StatelessWidget {
@@ -208,7 +208,7 @@ class ConfirmScreen extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: DiscardButton(
+                              child: ButtonDiscard(
                                 text: "Annuler",
                                 onPressed: () {
                                   Navigator.of(context).pop();
@@ -217,7 +217,7 @@ class ConfirmScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: ActionButton(
+                              child: ButtonAction(
                                 icon: Icons.refresh,
                                 text: "Réessayer",
                                 onPressed: () {
@@ -318,7 +318,7 @@ class ConfirmScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 24), // Add nice spacing above gesture area
                   child: Column(
                     children: [
-                      ActionButton(
+                      ButtonAction(
                         icon: Icons.check,
                         text: 'Oui',
                         onPressed: () async {
@@ -330,7 +330,7 @@ class ConfirmScreen extends StatelessWidget {
                         },
                       ),
                       const SizedBox(height: 6),
-                      DiscardButton(
+                      ButtonDiscard(
                         icon: Icons.close,
                         text: 'Non',
                         onPressed: () {

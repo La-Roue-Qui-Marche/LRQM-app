@@ -187,7 +187,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     return Stack(
       children: [
         Container(
-          margin: const EdgeInsets.only(bottom: 1.0, right: 0.0, left: 0.0, top: 6.0),
+          margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 6.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,

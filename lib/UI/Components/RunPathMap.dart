@@ -97,11 +97,11 @@ class _RunPathMapState extends State<RunPathMap> {
     final LatLng center = LatLng((minLat + maxLat) / 2, (minLng + maxLng) / 2);
 
     // Calculate zoom to fit bounds
-    double _latToY(double lat) => log(tan((lat * pi / 180) / 2 + pi / 4));
+    double latToY(double lat) => log(tan((lat * pi / 180) / 2 + pi / 4));
     double worldMapWidth = MediaQuery.of(context).size.width;
     double worldMapHeight = MediaQuery.of(context).size.height * 0.6;
 
-    double latFraction = (_latToY(maxLat) - _latToY(minLat)) / pi;
+    double latFraction = (latToY(maxLat) - latToY(minLat)) / pi;
     double lngDiff = maxLng - minLng;
     double lngFraction = ((lngDiff < 0 ? lngDiff + 360 : lngDiff) / 360);
 

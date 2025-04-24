@@ -22,7 +22,7 @@ class TapCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isSelected ? Color(Config.accentColor) : Colors.white,
+          color: isSelected ? const Color(Config.accentColor) : Colors.white,
           borderRadius: BorderRadius.circular(8.0),
         ),
         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),

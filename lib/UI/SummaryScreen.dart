@@ -14,12 +14,12 @@ class SummaryScreen extends StatefulWidget {
   final int contributors;
 
   const SummaryScreen({
-    Key? key,
+    super.key,
     required this.distanceAdded,
     required this.timeAdded,
     required this.percentageAdded,
     required this.contributors,
-  }) : super(key: key);
+  });
 
   @override
   State<SummaryScreen> createState() => _SummaryScreenState();
