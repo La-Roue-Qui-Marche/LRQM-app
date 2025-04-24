@@ -1,129 +1,189 @@
 import 'DataManagement.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
+import 'package:flutter/foundation.dart';
 
-/// Class to manage event-related data.
+enum EventStatus { notStarted, inProgress, over }
+
 class EventData {
-  /// Singleton instance of the DataManagement class.
   static final DataManagement _dataManagement = DataManagement();
+  static const int endBufferSeconds = 60;
 
-  /// Save all event details in the shared preferences.
+  // ---- Save event ----
+
   static Future<bool> saveEvent(Map<String, dynamic> event) async {
-    bool idSaved = await _dataManagement.saveInt('event_id', event['id']);
-    bool nameSaved = await _dataManagement.saveString('event_name', event['name']);
-    bool startDateSaved = await _dataManagement.saveString('event_start_date', event['start_date']);
-    bool endDateSaved = await _dataManagement.saveString('event_end_date', event['end_date']);
-    bool metersGoalSaved = await _dataManagement.saveInt('event_meters_goal', event['meters_goal']);
+    final saves = [
+      _dataManagement.saveInt('event_id', event['id']),
+      _dataManagement.saveString('event_name', event['name']),
+      _dataManagement.saveString('event_start_date', event['start_date']),
+      _dataManagement.saveString('event_end_date', event['end_date']),
+      _dataManagement.saveInt('event_meters_goal', event['meters_goal']),
+      _saveOptionalDouble('event_meeting_point_lat', event['meeting_point_lat']),
+      _saveOptionalDouble('event_meeting_point_lng', event['meeting_point_lng']),
+      _saveOptionalDouble('event_site_left_up_lat', event['site_left_up_lat']),
+      _saveOptionalDouble('event_site_left_up_lng', event['site_left_up_lng']),
+      _saveOptionalDouble('event_site_right_down_lat', event['site_right_down_lat']),
+      _saveOptionalDouble('event_site_right_down_lng', event['site_right_down_lng']),
+    ];
 
-    // Save meeting point as flat values
-    bool meetingPointLatSaved = event['meeting_point_lat'] != null
-        ? await _dataManagement.saveDouble('event_meeting_point_lat', event['meeting_point_lat'])
-        : true;
-    bool meetingPointLngSaved = event['meeting_point_lng'] != null
-        ? await _dataManagement.saveDouble('event_meeting_point_lng', event['meeting_point_lng'])
-        : true;
-
-    // Save site coordinates as flat values
-    bool siteLeftUpLatSaved = event['site_left_up_lat'] != null
-        ? await _dataManagement.saveDouble('event_site_left_up_lat', event['site_left_up_lat'])
-        : true;
-    bool siteLeftUpLngSaved = event['site_left_up_lng'] != null
-        ? await _dataManagement.saveDouble('event_site_left_up_lng', event['site_left_up_lng'])
-        : true;
-    bool siteRightDownLatSaved = event['site_right_down_lat'] != null
-        ? await _dataManagement.saveDouble('event_site_right_down_lat', event['site_right_down_lat'])
-        : true;
-    bool siteRightDownLngSaved = event['site_right_down_lng'] != null
-        ? await _dataManagement.saveDouble('event_site_right_down_lng', event['site_right_down_lng'])
-        : true;
-
-    return idSaved &&
-        nameSaved &&
-        startDateSaved &&
-        endDateSaved &&
-        metersGoalSaved &&
-        meetingPointLatSaved &&
-        meetingPointLngSaved &&
-        siteLeftUpLatSaved &&
-        siteLeftUpLngSaved &&
-        siteRightDownLatSaved &&
-        siteRightDownLngSaved;
+    final results = await Future.wait(saves);
+    return results.every((res) => res);
   }
 
-  /// Get the event ID from the shared preferences.
-  static Future<int?> getEventId() async {
-    return _dataManagement.getInt('event_id');
+  static Future<bool> _saveOptionalDouble(String key, dynamic value) async {
+    return value != null ? await _dataManagement.saveDouble(key, value) : true;
   }
 
-  /// Get the event name from the shared preferences.
-  static Future<String?> getEventName() async {
-    return _dataManagement.getString('event_name');
-  }
+  // ---- Getters ----
 
-  /// Get the event start date from the shared preferences.
-  static Future<String?> getStartDate() async {
-    return _dataManagement.getString('event_start_date');
-  }
+  static Future<int?> getEventId() => _dataManagement.getInt('event_id');
+  static Future<String?> getEventName() => _dataManagement.getString('event_name');
+  static Future<String?> getStartDate() => _dataManagement.getString('event_start_date');
+  static Future<String?> getEndDate() => _dataManagement.getString('event_end_date');
+  static Future<int?> getMetersGoal() => _dataManagement.getInt('event_meters_goal');
 
-  /// Get the event end date from the shared preferences.
-  static Future<String?> getEndDate() async {
-    return _dataManagement.getString('event_end_date');
-  }
-
-  /// Get the event meters goal from the shared preferences.
-  static Future<int?> getMetersGoal() async {
-    return _dataManagement.getInt('event_meters_goal');
-  }
-
-  /// Get the event meeting point as a List<mp.LatLng> (2 identical points for compatibility)
   static Future<List<mp.LatLng>?> getMeetingPointLatLngList() async {
     final lat = await _dataManagement.getDouble('event_meeting_point_lat');
     final lng = await _dataManagement.getDouble('event_meeting_point_lng');
-    if (lat == null || lng == null) return null;
-    return [
-      mp.LatLng(lat, lng),
-      mp.LatLng(lat, lng),
-    ];
+    return (lat != null && lng != null) ? [mp.LatLng(lat, lng), mp.LatLng(lat, lng)] : null;
   }
 
-  /// Get the event site coordinates as a List<mp.LatLng> (same order as ZONE_EVENT)
   static Future<List<mp.LatLng>?> getSiteCoordLatLngList() async {
-    final leftUpLat = await _dataManagement.getDouble('event_site_left_up_lat');
-    final leftUpLng = await _dataManagement.getDouble('event_site_left_up_lng');
-    final rightDownLat = await _dataManagement.getDouble('event_site_right_down_lat');
-    final rightDownLng = await _dataManagement.getDouble('event_site_right_down_lng');
-    if (leftUpLat == null || leftUpLng == null || rightDownLat == null || rightDownLng == null) return null;
-    return [
-      mp.LatLng(leftUpLat, leftUpLng),
-      mp.LatLng(rightDownLat, leftUpLng),
-      mp.LatLng(rightDownLat, rightDownLng),
-      mp.LatLng(leftUpLat, rightDownLng),
-    ];
+    final lat1 = await _dataManagement.getDouble('event_site_left_up_lat');
+    final lng1 = await _dataManagement.getDouble('event_site_left_up_lng');
+    final lat2 = await _dataManagement.getDouble('event_site_right_down_lat');
+    final lng2 = await _dataManagement.getDouble('event_site_right_down_lng');
+
+    return (lat1 != null && lng1 != null && lat2 != null && lng2 != null)
+        ? [mp.LatLng(lat1, lng1), mp.LatLng(lat2, lng1), mp.LatLng(lat2, lng2), mp.LatLng(lat1, lng2)]
+        : null;
   }
 
-  /// Remove all event-related data from the shared preferences.
+  // ---- Status and timing ----
+
+  static Future<bool> hasEventStarted() async {
+    final start = await getStartDate();
+    if (start == null) return false;
+
+    try {
+      return DateTime.now().isAfter(DateTime.parse(start));
+    } catch (e) {
+      debugPrint('Error parsing start date: $e');
+      return false;
+    }
+  }
+
+  static Future<String?> getEndDateBuffer() async {
+    final end = await getEndDate();
+    if (end == null) return null;
+
+    try {
+      final endDateTime = DateTime.parse(end);
+      final bufferedEndDate = endDateTime.subtract(const Duration(seconds: endBufferSeconds));
+      return bufferedEndDate.toIso8601String();
+    } catch (e) {
+      debugPrint('Error in getEndDateBuffer: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> isEventOver() async {
+    final bufferedEnd = await getEndDateBuffer();
+    return bufferedEnd != null && DateTime.now().isAfter(DateTime.parse(bufferedEnd));
+  }
+
+  static Future<EventStatus> getEventStatus() async {
+    if (await isEventOver()) return EventStatus.over;
+    if (await hasEventStarted()) return EventStatus.inProgress;
+    return EventStatus.notStarted;
+  }
+
+  static Future<int> getTimeUntilStartInSeconds() async {
+    final start = await getStartDate();
+    return start == null ? 0 : DateTime.parse(start).difference(DateTime.now()).inSeconds;
+  }
+
+  static Future<int> getRemainingTimeInSeconds() async {
+    final bufferedEnd = await getEndDateBuffer();
+    if (bufferedEnd == null) return 0;
+
+    final now = DateTime.now();
+    final endDateTime = DateTime.parse(bufferedEnd);
+    int seconds = endDateTime.difference(now).inSeconds;
+    return seconds < 0 ? 0 : seconds; // Return 0 if negative
+  }
+
+  static Future<int> getRemainingTimeUntilEndInSeconds() async {
+    final bufferedEnd = await getEndDateBuffer();
+    if (bufferedEnd == null) return 0;
+
+    return DateTime.parse(bufferedEnd).difference(DateTime.now()).inSeconds;
+  }
+
+  // ---- Time Formatting ----
+
+  static String _formatDuration(int seconds) {
+    final days = seconds ~/ 86400;
+    final hours = (seconds % 86400) ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (days > 0) {
+      return "$days:${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+    }
+    return "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+  }
+
+  static Future<String> getFormattedTimeUntilStart() async {
+    final seconds = await getTimeUntilStartInSeconds();
+    return seconds <= 0 ? "L'évènement a commencé !" : _formatDuration(seconds);
+  }
+
+  static Future<String> getFormattedRemainingTime() async {
+    final seconds = await getRemainingTimeInSeconds();
+    if (seconds < 0) return "L'évènement est terminé !";
+
+    final start = await getStartDate();
+    if (start == null || DateTime.now().isBefore(DateTime.parse(start))) {
+      return "L'évènement n'a pas encore commencé !";
+    }
+
+    return _formatDuration(seconds);
+  }
+
+  static Future<double> getEventCompletionPercentage() async {
+    final start = await getStartDate();
+    final end = await getEndDate();
+    if (start == null || end == null) return 0.0;
+
+    final startDate = DateTime.parse(start);
+    final endDate = DateTime.parse(end);
+    final now = DateTime.now();
+
+    if (now.isBefore(startDate)) return 0.0;
+    if (now.isAfter(endDate)) return 100.0;
+
+    final total = endDate.difference(startDate).inSeconds;
+    final elapsed = now.difference(startDate).inSeconds;
+    return (elapsed / total) * 100;
+  }
+
+  // ---- Clear ----
+
   static Future<bool> clearEventData() async {
-    bool idRemoved = await _dataManagement.removeData('event_id');
-    bool nameRemoved = await _dataManagement.removeData('event_name');
-    bool startDateRemoved = await _dataManagement.removeData('event_start_date');
-    bool endDateRemoved = await _dataManagement.removeData('event_end_date');
-    bool metersGoalRemoved = await _dataManagement.removeData('event_meters_goal');
-    // Remove flat fields
-    bool meetingPointLatRemoved = await _dataManagement.removeData('event_meeting_point_lat');
-    bool meetingPointLngRemoved = await _dataManagement.removeData('event_meeting_point_lng');
-    bool siteLeftUpLatRemoved = await _dataManagement.removeData('event_site_left_up_lat');
-    bool siteLeftUpLngRemoved = await _dataManagement.removeData('event_site_left_up_lng');
-    bool siteRightDownLatRemoved = await _dataManagement.removeData('event_site_right_down_lat');
-    bool siteRightDownLngRemoved = await _dataManagement.removeData('event_site_right_down_lng');
-    return idRemoved &&
-        nameRemoved &&
-        startDateRemoved &&
-        endDateRemoved &&
-        metersGoalRemoved &&
-        meetingPointLatRemoved &&
-        meetingPointLngRemoved &&
-        siteLeftUpLatRemoved &&
-        siteLeftUpLngRemoved &&
-        siteRightDownLatRemoved &&
-        siteRightDownLngRemoved;
+    final keys = [
+      'event_id',
+      'event_name',
+      'event_start_date',
+      'event_end_date',
+      'event_meters_goal',
+      'event_meeting_point_lat',
+      'event_meeting_point_lng',
+      'event_site_left_up_lat',
+      'event_site_left_up_lng',
+      'event_site_right_down_lat',
+      'event_site_right_down_lng',
+    ];
+    final results = await Future.wait(keys.map(_dataManagement.removeData));
+    return results.every((res) => res);
   }
 }

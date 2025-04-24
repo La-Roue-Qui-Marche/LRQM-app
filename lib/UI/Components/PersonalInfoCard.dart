@@ -6,9 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../Utils/config.dart';
 import '../../Geolocalisation/Geolocation.dart';
 import '../../Data/UserData.dart';
-import '../../Data/MeasureData.dart';
 import '../../API/NewUserController.dart';
-import '../../Utils/Result.dart';
 import 'ContributionGraph.dart';
 
 class PersonalInfoCard extends StatefulWidget {
@@ -28,27 +26,28 @@ class PersonalInfoCard extends StatefulWidget {
 }
 
 class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
-  // State variables
-  late int _currentContribution;
-  final List<Widget> _particles = [];
+  // Replace state variables with ValueNotifiers
+  final ValueNotifier<int> _currentContributionNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<List<Widget>> _particlesNotifier = ValueNotifier<List<Widget>>([]);
 
-  // User data
-  String _bibNumber = "";
-  String _userName = "";
-  int _totalDistance = 0;
-  int _totalTime = 0;
+  // User data as ValueNotifiers
+  final ValueNotifier<String> _bibNumberNotifier = ValueNotifier<String>("");
+  final ValueNotifier<String> _userNameNotifier = ValueNotifier<String>("");
+  final ValueNotifier<int> _totalDistanceNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> _totalTimeNotifier = ValueNotifier<int>(0);
 
-  // Session data
-  int _sessionDistance = 0;
-  int _sessionTime = 0;
+  // Session data as ValueNotifiers
+  final ValueNotifier<int> _sessionDistanceNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> _sessionTimeNotifier = ValueNotifier<int>(0);
 
-  bool _isLoading = true;
+  final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(true);
+
   StreamSubscription? _geoSubscription;
 
   @override
   void initState() {
     super.initState();
-    _currentContribution = 0;
+    _currentContributionNotifier.value = 0;
     _loadUserData();
     _setupGeolocationListener();
   }
@@ -56,64 +55,57 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   @override
   void dispose() {
     _geoSubscription?.cancel();
+    // Dispose all ValueNotifiers
+    _currentContributionNotifier.dispose();
+    _particlesNotifier.dispose();
+    _bibNumberNotifier.dispose();
+    _userNameNotifier.dispose();
+    _totalDistanceNotifier.dispose();
+    _totalTimeNotifier.dispose();
+    _sessionDistanceNotifier.dispose();
+    _sessionTimeNotifier.dispose();
+    _isLoadingNotifier.dispose();
     super.dispose();
   }
 
   Future<void> _loadUserData() async {
-    setState(() {
-      _isLoading = true;
-    });
+    _isLoadingNotifier.value = true;
 
     try {
       // Get bib ID
       final bibId = await UserData.getBibId();
-      if (bibId != null && mounted) {
-        setState(() {
-          _bibNumber = bibId;
-        });
+      if (bibId != null) {
+        _bibNumberNotifier.value = bibId;
       }
 
       // Get username
       final username = await UserData.getUsername();
-      if (username != null && mounted) {
-        setState(() {
-          _userName = username;
-        });
+      if (username != null) {
+        _userNameNotifier.value = username;
       }
 
       // Get user ID for distance and time
       final userId = await UserData.getUserId();
-      if (userId != null && mounted) {
+      if (userId != null) {
         // Get total distance
         final distanceResult = await NewUserController.getUserTotalMeters(userId);
-        if (!distanceResult.hasError && mounted) {
-          setState(() {
-            _totalDistance = distanceResult.value ?? 0;
-            // Set current contribution to total distance initially
-            // If session is active, it will be updated by the geolocation stream
-            _currentContribution = _totalDistance;
-          });
+        if (!distanceResult.hasError) {
+          final totalDistance = distanceResult.value ?? 0;
+          _totalDistanceNotifier.value = totalDistance;
+          // Set current contribution to total distance initially
+          _currentContributionNotifier.value = totalDistance;
         }
 
         // Get total time
         final timeResult = await NewUserController.getUserTotalTime(userId);
-        if (!timeResult.hasError && mounted) {
-          setState(() {
-            _totalTime = timeResult.value ?? 0;
-          });
+        if (!timeResult.hasError) {
+          _totalTimeNotifier.value = timeResult.value ?? 0;
         }
       }
-
-      // For active sessions, initial values come from geolocation stream
-      // Don't need to fetch them here since they will be updated by the listener
     } catch (e) {
       developer.log("Error loading user data: $e");
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      _isLoadingNotifier.value = false;
     }
   }
 
@@ -123,22 +115,18 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
     if (widget.geolocation != null && widget.isSessionActive) {
       _geoSubscription = widget.geolocation!.stream.listen((event) {
-        if (mounted) {
-          // Add null checks for the distance and time
-          final int newDistance = (event["distance"] as num?)?.toInt() ?? 0;
-          final int newTime = (event["time"] as num?)?.toInt() ?? 0;
+        // Add null checks for the distance and time
+        final int newDistance = (event["distance"] as num?)?.toInt() ?? 0;
+        final int newTime = (event["time"] as num?)?.toInt() ?? 0;
 
-          setState(() {
-            _sessionDistance = newDistance;
-            _sessionTime = newTime;
+        _sessionDistanceNotifier.value = newDistance;
+        _sessionTimeNotifier.value = newTime;
 
-            // Check for distance increase
-            if (_sessionDistance > _currentContribution) {
-              final int diff = _sessionDistance - _currentContribution;
-              _spawnParticle("+$diff m");
-              _currentContribution = _sessionDistance;
-            }
-          });
+        // Check for distance increase
+        if (newDistance > _currentContributionNotifier.value) {
+          final int diff = newDistance - _currentContributionNotifier.value;
+          _spawnParticle("+$diff m");
+          _currentContributionNotifier.value = newDistance;
         }
       });
     }
@@ -169,35 +157,33 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       label: label,
     );
 
-    setState(() {
-      _particles.add(particle);
-    });
+    final currentParticles = List<Widget>.from(_particlesNotifier.value);
+    currentParticles.add(particle);
+    _particlesNotifier.value = currentParticles;
 
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _particles.remove(particle);
-        });
-      }
+      final updatedParticles = List<Widget>.from(_particlesNotifier.value);
+      updatedParticles.remove(particle);
+      _particlesNotifier.value = updatedParticles;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Use current session values when session is active, otherwise use totals
-    // Add null safety
-    final int displayedDistance = widget.isSessionActive ? _sessionDistance : _totalDistance;
-    final int displayedTime = widget.isSessionActive ? _sessionTime : _totalTime;
-
-    return Stack(
-      children: [
-        _buildCard(displayedDistance, displayedTime),
-        ..._particles,
-      ],
+    return ValueListenableBuilder<List<Widget>>(
+      valueListenable: _particlesNotifier,
+      builder: (context, particles, _) {
+        return Stack(
+          children: [
+            _buildCard(),
+            ...particles,
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildCard(int displayedDistance, int displayedTime) {
+  Widget _buildCard() {
     return Stack(
       children: [
         Container(
@@ -221,9 +207,9 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               const SizedBox(height: 12),
               _buildHeader(),
               const SizedBox(height: 12),
-              _buildInfoCards(displayedDistance, displayedTime),
+              _buildInfoCards(),
               const SizedBox(height: 16),
-              _buildFunMessage(displayedDistance),
+              _buildFunMessage(),
               if (widget.isSessionActive) const SizedBox(height: 8),
               if (widget.isSessionActive) const Divider(color: Color(Config.backgroundColor), thickness: 1),
               if (widget.isSessionActive) const SizedBox(height: 8),
@@ -256,25 +242,45 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                         '№ de dossard: ',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
                       ),
-                      _isLoading || _bibNumber.isEmpty
-                          ? _buildShimmer(width: 40)
-                          : Text(
-                              _bibNumber,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
-                            ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _isLoadingNotifier,
+                        builder: (context, isLoading, _) {
+                          return ValueListenableBuilder<String>(
+                            valueListenable: _bibNumberNotifier,
+                            builder: (context, bibNumber, _) {
+                              return isLoading || bibNumber.isEmpty
+                                  ? _buildShimmer(width: 40)
+                                  : Text(
+                                      bibNumber,
+                                      style: const TextStyle(
+                                          fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                                    );
+                            },
+                          );
+                        },
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      if (_isLoading)
-                        _buildShimmer(width: 100)
-                      else if (_userName.isNotEmpty)
-                        Text(
-                          _userName,
-                          style: const TextStyle(fontSize: 18, color: Colors.black87),
-                        ),
-                    ],
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _isLoadingNotifier,
+                    builder: (context, isLoading, _) {
+                      return ValueListenableBuilder<String>(
+                        valueListenable: _userNameNotifier,
+                        builder: (context, userName, _) {
+                          if (isLoading) {
+                            return _buildShimmer(width: 100);
+                          } else if (userName.isNotEmpty) {
+                            return Text(
+                              userName,
+                              style: const TextStyle(fontSize: 18, color: Colors.black87),
+                            );
+                          } else {
+                            return const SizedBox.shrink();
+                          }
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
@@ -285,40 +291,69 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     );
   }
 
-  Widget _buildInfoCards(int displayedDistance, int displayedTime) {
+  Widget _buildInfoCards() {
     return Row(
       children: [
         Expanded(
-          child: _infoCard(
-            label: 'Distance',
-            value: _isLoading ? null : "${_formatDistance(displayedDistance)} m",
-            color: const Color(Config.primaryColor),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isLoadingNotifier,
+            builder: (context, isLoading, _) {
+              return ValueListenableBuilder<int>(
+                valueListenable: widget.isSessionActive ? _sessionDistanceNotifier : _totalDistanceNotifier,
+                builder: (context, displayedDistance, _) {
+                  return _infoCard(
+                    label: 'Distance',
+                    value: isLoading ? null : "${_formatDistance(displayedDistance)} m",
+                    color: const Color(Config.primaryColor),
+                  );
+                },
+              );
+            },
           ),
         ),
-        const SizedBox(width: 16), // 16px horizontal space between the cards
+        const SizedBox(width: 16),
         Expanded(
-          child: _infoCard(
-            label: 'Temps total',
-            value: _isLoading ? null : _formatModernTime(displayedTime),
-            color: const Color(Config.primaryColor),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isLoadingNotifier,
+            builder: (context, isLoading, _) {
+              return ValueListenableBuilder<int>(
+                valueListenable: widget.isSessionActive ? _sessionTimeNotifier : _totalTimeNotifier,
+                builder: (context, displayedTime, _) {
+                  return _infoCard(
+                    label: 'Temps total',
+                    value: isLoading ? null : _formatModernTime(displayedTime),
+                    color: const Color(Config.primaryColor),
+                  );
+                },
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFunMessage(int displayedDistance) {
-    if (_isLoading) {
-      return _buildShimmer(width: double.infinity, height: 16);
-    }
-    return Text(
-      _getDistanceMessage(displayedDistance),
-      style: const TextStyle(fontSize: 16, color: Colors.black87),
+  Widget _buildFunMessage() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isLoadingNotifier,
+      builder: (context, isLoading, _) {
+        if (isLoading) {
+          return _buildShimmer(width: double.infinity, height: 16);
+        }
+        return ValueListenableBuilder<int>(
+          valueListenable: widget.isSessionActive ? _sessionDistanceNotifier : _totalDistanceNotifier,
+          builder: (context, displayedDistance, _) {
+            return Text(
+              _getDistanceMessage(displayedDistance),
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _infoCard({required String label, String? value, required Color color}) {
-    // Extract value and unit if possible
     String mainValue = '';
     String unit = '';
     if (value != null && value.isNotEmpty) {
@@ -335,7 +370,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -419,7 +454,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
           Icon(
             Icons.circle,
             size: 10,
-            color: !widget.isSessionActive ? Colors.black87 : Colors.white, // Change to black if "En pause"
+            color: !widget.isSessionActive ? Colors.black87 : Colors.white,
           ),
           const SizedBox(width: 6),
           Text(

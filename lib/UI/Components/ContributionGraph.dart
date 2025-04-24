@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../../Utils/config.dart';
 import '../../Geolocalisation/Geolocation.dart';
@@ -81,8 +82,8 @@ class ContributionGraphState extends State<ContributionGraph> {
       // Calculate speed in m/s
       final calculatedSpeed = distanceDelta / timeDelta;
 
-      print("Distance delta: $distanceDelta m in $timeDelta seconds");
-      print("Calculated speed: $calculatedSpeed m/s");
+      debugPrint("Distance delta: $distanceDelta m in $timeDelta seconds");
+      debugPrint("Calculated speed: $calculatedSpeed m/s");
 
       // Plot the calculated speed
       _addContributionValue(calculatedSpeed);

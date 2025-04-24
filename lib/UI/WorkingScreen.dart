@@ -27,31 +27,30 @@ class WorkingScreen extends StatefulWidget {
 }
 
 class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProviderStateMixin {
-  DateTime? _eventEnd;
+  final _scrollController = ScrollController();
+
+  final _eventStatusNotifier = ValueNotifier<EventStatus>(EventStatus.inProgress);
+  final _isMeasureOngoingNotifier = ValueNotifier<bool>(false);
+  final _isCountingInZoneNotifier = ValueNotifier<bool>(true);
+
   int _currentPage = 0;
-  bool _isEventOver = false;
-  bool _isMeasureOngoing = false;
-  bool _isCountingInZone = true;
   bool _shouldShowEventModal = false;
-  final ScrollController _scrollController = ScrollController();
   late Geolocation _geolocation;
   Timer? _eventCheckTimer;
 
   @override
   void initState() {
     super.initState();
-    _initGeolocation();
-    _initializeData();
-    _eventCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) => _checkIfEventIsOver());
+    _initializeGeolocation();
+    _initializeState();
+    _startEventStatusTimer();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Show the event modal if needed after returning from summary
     if (_shouldShowEventModal) {
       _shouldShowEventModal = false;
-      // Use a post-frame callback to avoid build context issues
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showEventCompletionModal();
       });
@@ -62,215 +61,240 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void dispose() {
     _eventCheckTimer?.cancel();
     _geolocation.stopListening();
+    _eventStatusNotifier.dispose();
+    _isMeasureOngoingNotifier.dispose();
+    _isCountingInZoneNotifier.dispose();
     super.dispose();
   }
 
-  void _initGeolocation() {
-    final geoConfig = GeolocationConfig(
-      locationUpdateInterval: Config.locationUpdateInterval,
-      locationDistanceFilter: Config.locationDistanceFilter,
-      accuracyThreshold: Config.accuracyThreshold,
-      distanceThreshold: Config.distanceThreshold,
-      speedThreshold: Config.speedThreshold,
-      apiInterval: Config.apiInterval,
-      outsideCounterMax: Config.outsideCounterMax,
+  void _initializeGeolocation() {
+    _geolocation = Geolocation(
+      config: GeolocationConfig(
+        locationUpdateInterval: Config.locationUpdateInterval,
+        locationDistanceFilter: Config.locationDistanceFilter,
+        accuracyThreshold: Config.accuracyThreshold,
+        distanceThreshold: Config.distanceThreshold,
+        speedThreshold: Config.speedThreshold,
+        apiInterval: Config.apiInterval,
+        outsideCounterMax: Config.outsideCounterMax,
+      ),
     );
-    _geolocation = Geolocation(config: geoConfig);
   }
 
-  void _initializeData() {
-    _updateMeasureStatus();
-    EventData.getEndDate().then((endDate) {
-      if (endDate != null && mounted) {
-        setState(() {
-          _eventEnd = DateTime.parse(endDate);
-        });
-        _checkIfEventIsOver();
+  void _initializeState() {
+    _checkEventStatus();
+    _syncMeasureStatus();
+  }
+
+  void _startEventStatusTimer() {
+    _eventCheckTimer = Timer.periodic(Duration(seconds: 1), (_) => _checkEventStatus());
+  }
+
+  Future<void> _checkEventStatus() async {
+    final currentStatus = await EventData.getEventStatus();
+    final previousStatus = _eventStatusNotifier.value;
+
+    if (currentStatus == previousStatus) return;
+
+    _eventStatusNotifier.value = currentStatus;
+
+    // Check specifically for transition from not started to in progress
+    if (previousStatus == EventStatus.notStarted && currentStatus == EventStatus.inProgress) {
+      _showEventStartedModal();
+    }
+
+    if (currentStatus == EventStatus.over && _isMeasureOngoingNotifier.value) {
+      _shouldShowEventModal = true;
+      await _forceStopAndShowSummary();
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (currentStatus == EventStatus.notStarted && previousStatus != EventStatus.notStarted) {
+        _showEventNotStartedModal();
+      } else if (currentStatus == EventStatus.over && previousStatus != EventStatus.over) {
+        _showEventCompletionModal();
       }
     });
   }
 
-  void _checkIfEventIsOver() async {
-    if (_eventEnd == null || !mounted) return;
-    final isOver = _isEventCurrentlyOver();
-    if (isOver != _isEventOver) {
-      setState(() => _isEventOver = isOver);
-      if (isOver) {
-        if (_isMeasureOngoing) {
-          // Show summary, then set flag to show modal after returning
-          _shouldShowEventModal = true;
-          await _forceStopAndShowSummary();
-        } else {
-          // No summary, show modal directly
-          _showEventCompletionModal();
-        }
-      }
-    }
-  }
-
-  // --- Navigation ---
-  void _navigateToScreen(Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
-  }
-
-  void _startSetupPosScreen() => _navigateToScreen(SetupPosScreen(geolocation: _geolocation));
-
-  // --- UI Builders ---
-  Widget _buildPersonalInfoContent() => Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0.0),
-            child: PersonalInfoCard(
-              isSessionActive: _isMeasureOngoing,
-              isCountingInZone: _isCountingInZone,
-              geolocation: _geolocation,
-            ),
-          ),
-          DynamicMapCard(
-            geolocation: _geolocation,
-            followUser: _isMeasureOngoing,
-          ),
-          if (!_isMeasureOngoing)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12.0),
-              child: Center(
-                child: Text(
-                  'Appuie sur le bouton orange pour démarrer une mesure !',
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
-                ),
-              ),
-            ),
-          const SizedBox(height: 40),
-        ],
-      );
-
-  Widget _buildEventInfoContent() => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 0.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            EventProgressCard(),
-            SupportCard(),
-          ],
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (bool didPop) async {},
-      child: Scaffold(
-        backgroundColor: const Color(Config.backgroundColor),
-        appBar: TopAppBar(
-          title: 'Accueil',
-          showInfoButton: true,
-          showLogoutButton: true,
-        ),
-        body: IndexedStack(
-          index: _currentPage,
-          children: [
-            SingleChildScrollView(
-              key: const PageStorageKey('scrollPage0'),
-              controller: _scrollController,
-              child: _buildPersonalInfoContent(),
-            ),
-            SingleChildScrollView(
-              key: const PageStorageKey('scrollPage1'),
-              controller: _scrollController,
-              child: _buildEventInfoContent(),
-            ),
-          ],
-        ),
-        bottomNavigationBar: NavBar(
-          currentPage: _currentPage,
-          onPageSelected: (int page) => setState(() => _currentPage = page),
-          isMeasureActive: _isMeasureOngoing,
-          canStartNewSession: !_isEventOver,
-          onStartStopPressed: () {
-            if (_isMeasureOngoing) {
-              _confirmStopMeasure(context);
-            } else {
-              _startSetupPosScreen();
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  // --- Utility methods ---
-  bool _isEventCurrentlyOver() {
-    return _eventEnd != null && DateTime.now().isAfter(_eventEnd!);
-  }
-
-  Future<void> _updateMeasureStatus() async {
-    final isOngoing = await MeasureData.isMeasureOngoing();
-    if (!mounted) return;
-    setState(() => _isMeasureOngoing = isOngoing);
-    if (isOngoing) _geolocation.startListening();
+  Future<void> _syncMeasureStatus() async {
+    final ongoing = await MeasureData.isMeasureOngoing();
+    _isMeasureOngoingNotifier.value = ongoing;
+    if (ongoing) _geolocation.startListening();
   }
 
   Future<void> _forceStopAndShowSummary() async {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const LoadingScreen(text: 'On se repose un peu...'),
-      ),
-    );
-    int currentDistance = 0;
-    int currentTime = 0;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => LoadingScreen(text: 'On se repose un peu...')));
+
+    int distance = 0, duration = 0;
     try {
-      currentDistance = _geolocation.currentDistance;
-      currentTime = _geolocation.elapsedTimeInSeconds;
-      log("Retrieved from geolocation: distance=$currentDistance, time=$currentTime");
+      distance = _geolocation.currentDistance;
+      duration = _geolocation.elapsedTimeInSeconds;
+      log("distance=$distance, time=$duration");
       await _geolocation.stopListening();
     } catch (e) {
-      log("Failed to get measure data: $e");
+      log("Erreur lors de l'arrêt : $e");
     }
+
     final contributors = await ContributorsData.getContributors() ?? 1;
-    final metersGoal = await EventData.getMetersGoal() ?? 1;
-    Navigator.of(context).pop();
-    if (mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => SummaryScreen(
-            distanceAdded: currentDistance,
-            timeAdded: currentTime,
-            percentageAdded: (currentDistance * contributors / metersGoal) * 100,
-            contributors: contributors,
-          ),
+    final goal = await EventData.getMetersGoal() ?? 1;
+    final contribution = (distance * contributors / goal) * 100;
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SummaryScreen(
+          distanceAdded: distance,
+          timeAdded: duration,
+          percentageAdded: contribution,
+          contributors: contributors,
         ),
-      );
+      ),
+    );
+  }
+
+  void _onStartStopPressed(EventStatus status, bool isOngoing) {
+    if (isOngoing) {
+      _confirmStopMeasure();
+    } else if (status == EventStatus.notStarted) {
+      _showEventNotStartedModal();
+    } else if (status == EventStatus.over) {
+      _showEventCompletionModal();
+    } else {
+      _navigateToSetupScreen();
     }
+  }
+
+  void _navigateToSetupScreen() {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => SetupPosScreen(geolocation: _geolocation)));
+  }
+
+  void _confirmStopMeasure() {
+    showTextModal(
+      context,
+      'Confirmation',
+      'Arrêter la mesure en cours ?\n\nCela mettra fin à l\'enregistrement de ta distance et de ton temps.',
+      showConfirmButton: true,
+      onConfirm: () => _forceStopAndShowSummary(),
+      showDiscardButton: true,
+    );
   }
 
   void _showEventCompletionModal() {
     showTextModal(
       context,
       'L\'Évènement est Terminé !',
-      "Merci d'avoir participé à cet évènement !\n\n"
-          "N'hésite pas à prendre une capture d'écran de ton résultat.",
+      "Merci pour ta participation !\n N'hésites pas à prendre une capture d'écran de ta contribution",
       showConfirmButton: true,
     );
   }
 
-  void _confirmStopMeasure(BuildContext context) {
+  void _showEventNotStartedModal() {
     showTextModal(
       context,
-      'Confirmation',
-      'Arrêter la mesure en cours ?\n\n'
-          'Cela mettra fin à l\'enregistrement de ta distance et de ton temps. '
-          'Si tu veux continuer plus tard, tu devras redémarrer une nouvelle mesure.\n\n'
-          'Prends une pause si nécessaire, mais n\'oublie pas de revenir pour continuer '
-          'à contribuer à l\'événement !',
+      'L\'Évènement n\'a pas Commencé',
+      "Tu pourras démarrer une mesure dès le début de l'évènement.",
       showConfirmButton: true,
-      onConfirm: () async {
-        await _forceStopAndShowSummary();
-      },
-      showDiscardButton: true,
+    );
+  }
+
+  void _showEventStartedModal() {
+    showTextModal(
+      context,
+      'L\'Évènement a Commencé !',
+      "Tu peux maintenant démarrer une session pour enregistrer ta contribution à l'évènement.",
+      showConfirmButton: true,
+    );
+  }
+
+  Widget _buildBody() {
+    return IndexedStack(
+      index: _currentPage,
+      children: [
+        SingleChildScrollView(
+          key: PageStorageKey('scrollPage0'),
+          controller: _scrollController,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ValueListenableBuilder(
+                valueListenable: _isMeasureOngoingNotifier,
+                builder: (_, isOngoing, __) => ValueListenableBuilder(
+                  valueListenable: _isCountingInZoneNotifier,
+                  builder: (_, inZone, __) => PersonalInfoCard(
+                    isSessionActive: isOngoing,
+                    isCountingInZone: inZone,
+                    geolocation: _geolocation,
+                  ),
+                ),
+              ),
+              ValueListenableBuilder(
+                valueListenable: _isMeasureOngoingNotifier,
+                builder: (_, isOngoing, __) => DynamicMapCard(
+                  geolocation: _geolocation,
+                  followUser: isOngoing,
+                ),
+              ),
+              ValueListenableBuilder(
+                valueListenable: _isMeasureOngoingNotifier,
+                builder: (_, isOngoing, __) => isOngoing
+                    ? SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Center(
+                          child: Text(
+                            'Appuie sur le bouton orange pour démarrer une mesure !',
+                            style: TextStyle(fontSize: 14, color: Colors.black87),
+                          ),
+                        ),
+                      ),
+              ),
+              SizedBox(height: 40),
+            ],
+          ),
+        ),
+        SingleChildScrollView(
+          key: PageStorageKey('scrollPage1'),
+          controller: _scrollController,
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [EventProgressCard(), SupportCard()],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigation() {
+    return ValueListenableBuilder<EventStatus>(
+      valueListenable: _eventStatusNotifier,
+      builder: (_, status, __) => ValueListenableBuilder<bool>(
+        valueListenable: _isMeasureOngoingNotifier,
+        builder: (_, isOngoing, __) => NavBar(
+          currentPage: _currentPage,
+          onPageSelected: (int page) => setState(() => _currentPage = page),
+          isMeasureActive: isOngoing,
+          canStartNewSession: status == EventStatus.inProgress,
+          onStartStopPressed: () => _onStartStopPressed(status, isOngoing),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (_) async {},
+      child: Scaffold(
+        backgroundColor: Color(Config.backgroundColor),
+        appBar: TopAppBar(title: 'Accueil', showInfoButton: true, showLogoutButton: true),
+        body: _buildBody(),
+        bottomNavigationBar: _buildBottomNavigation(),
+      ),
     );
   }
 }

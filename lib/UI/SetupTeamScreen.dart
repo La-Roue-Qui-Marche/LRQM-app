@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'dart:typed_data';
 import 'package:transparent_image/transparent_image.dart';
 import '../Utils/config.dart';
 import 'Components/InfoCard.dart';

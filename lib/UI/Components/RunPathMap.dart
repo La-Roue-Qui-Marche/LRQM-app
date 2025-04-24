@@ -126,7 +126,7 @@ class _RunPathMapState extends State<RunPathMap> {
 
     if (_fullPath.length < 2) return;
 
-    _animationTimer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
+    _animationTimer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
       if (_currentIndex >= _fullPath.length) {
         timer.cancel();
         return;

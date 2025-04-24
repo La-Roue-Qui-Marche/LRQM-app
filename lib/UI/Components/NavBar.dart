@@ -105,7 +105,7 @@ class NavBar extends StatelessWidget {
                               end: Alignment.bottomRight,
                             )
                           : LinearGradient(
-                              colors: [Colors.grey.shade300, Colors.grey.shade400],
+                              colors: [Colors.grey.shade100, Colors.grey.shade200],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -118,8 +118,8 @@ class NavBar extends StatelessWidget {
                       child: canStartNewSession
                           ? (isMeasureActive
                               ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
-                              : const Icon(Icons.radio_button_on, color: Colors.white, size: 38))
-                          : Icon(Icons.radio_button_on, color: Colors.grey.shade100, size: 38),
+                              : const Icon(Icons.radio_button_on, color: Color.fromARGB(255, 53, 52, 52), size: 38))
+                          : Icon(Icons.radio_button_on, color: Colors.grey.shade50, size: 38),
                     ),
                   ),
                 ),

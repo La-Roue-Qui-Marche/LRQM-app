@@ -18,22 +18,69 @@ class EventProgressCard extends StatefulWidget {
 }
 
 class _EventProgressCardState extends State<EventProgressCard> {
-  String? _objectif;
-  String? _currentValue;
-  double? _percentage;
-  String? _remainingTime;
-  String? _participants;
+  // Using ValueNotifier instead of regular state variables
+  final ValueNotifier<String?> _objectifNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<String?> _currentValueNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<double?> _percentageNotifier = ValueNotifier<double?>(null);
+  final ValueNotifier<String?> _remainingTimeNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<String?> _participantsNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<String?> _eventNameNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<EventStatus> _eventStatusNotifier = ValueNotifier<EventStatus>(EventStatus.inProgress);
+  final ValueNotifier<String?> _countdownLabelNotifier = ValueNotifier<String?>("Temps restant");
+  final ValueNotifier<String?> _countdownValueNotifier = ValueNotifier<String?>(null);
+
+  // Colors for different event statuses
+  final Color _notStartedColor = Colors.green;
+  final Color _inProgressColor = Colors.black87;
+  final Color _overColor = Colors.red.shade700;
+
   Timer? _countdownTimer;
   Timer? _refreshTimer;
-  DateTime? _startDate;
-  DateTime? _endDate;
   String? _eventId;
+
+  // Event status messages moved from EventData
+  String getEventStatusMessage(EventStatus status) {
+    switch (status) {
+      case EventStatus.notStarted:
+        return "L'évènement n'a pas encore commencé !";
+      case EventStatus.inProgress:
+        return "L'évènement est en cours";
+      case EventStatus.over:
+        return "L'évènement est terminé !";
+    }
+  }
+
+  // New method to get colored event status text
+  Widget getColoredEventStatusText(EventStatus status) {
+    String message = getEventStatusMessage(status);
+    Color textColor;
+
+    switch (status) {
+      case EventStatus.notStarted:
+        textColor = _notStartedColor;
+        break;
+      case EventStatus.inProgress:
+        textColor = _inProgressColor;
+        break;
+      case EventStatus.over:
+        textColor = _overColor;
+        break;
+    }
+
+    return Text(
+      message,
+      style: TextStyle(
+        fontSize: 16,
+        color: textColor,
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    // Load event dates and start timers
-    _loadEventDates();
+    // Load initial data and start timers
+    _loadEventData();
     _startTimers();
   }
 
@@ -41,90 +88,135 @@ class _EventProgressCardState extends State<EventProgressCard> {
   void dispose() {
     _countdownTimer?.cancel();
     _refreshTimer?.cancel();
+    // Dispose all ValueNotifiers
+    _objectifNotifier.dispose();
+    _currentValueNotifier.dispose();
+    _percentageNotifier.dispose();
+    _remainingTimeNotifier.dispose();
+    _participantsNotifier.dispose();
+    _eventNameNotifier.dispose();
+    _eventStatusNotifier.dispose();
+    _countdownLabelNotifier.dispose();
+    _countdownValueNotifier.dispose();
     super.dispose();
   }
 
-  void _loadEventDates() async {
-    final startDate = await EventData.getStartDate();
-    final endDate = await EventData.getEndDate();
+  void _loadEventData() async {
     final eventId = await EventData.getEventId();
+    _eventId = eventId?.toString(); // Convert int to String
 
-    if (mounted) {
-      setState(() {
-        _startDate = startDate != null ? DateTime.parse(startDate) : null;
-        _endDate = endDate != null ? DateTime.parse(endDate) : null;
-        _eventId = eventId?.toString(); // Convert int to String
-      });
+    // Load event name once
+    final eventName = await EventData.getEventName();
+    _eventNameNotifier.value = eventName;
 
-      // Start countdown once we have dates
-      if (_startDate != null && _endDate != null) {
-        _countdown();
-      }
+    // Check initial event status and update UI
+    await _updateEventStatus();
 
-      // Refresh data immediately after loading dates
-      _refreshEventValues();
+    // Refresh data immediately after loading event ID
+    _refreshEventValues();
+    _updateEventTimeDisplay();
+  }
+
+  Future<void> _updateEventStatus() async {
+    // Get event status from centralized EventData class
+    final status = await EventData.getEventStatus();
+    _eventStatusNotifier.value = status;
+
+    // Update countdown label based on status
+    switch (status) {
+      case EventStatus.notStarted:
+        _countdownLabelNotifier.value = "L'évènement commence dans";
+        break;
+      case EventStatus.inProgress:
+        _countdownLabelNotifier.value = "Temps restant";
+        break;
+      case EventStatus.over:
+        _countdownLabelNotifier.value = "L'évènement est terminé";
+        break;
     }
   }
 
   void _startTimers() {
     // Timer for countdown (every second)
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_startDate != null && _endDate != null) {
-        _countdown();
-      }
+      _updateEventTimeDisplay();
     });
 
     // Timer for API refresh (every 10 seconds)
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       _refreshEventValues();
+      _updateEventStatus();
     });
   }
 
-  void _countdown() {
-    if (_startDate == null || _endDate == null) return;
+  void _updateEventTimeDisplay() async {
+    final eventStatus = _eventStatusNotifier.value;
 
-    DateTime now = DateTime.now();
-    Duration remaining = _endDate!.difference(now);
-
-    // Calculate percentage of event completion
-    Duration totalDuration = _endDate!.difference(_startDate!);
-    Duration elapsed = now.difference(_startDate!);
-    double newPercentage = elapsed.inSeconds / totalDuration.inSeconds * 100;
-
-    if (remaining.isNegative) {
-      // Event is over
-      String newRemainingTime = "L'évènement est terminé !";
-      if (_remainingTime != newRemainingTime) {
-        if (mounted) {
-          setState(() {
-            _remainingTime = newRemainingTime;
-            _percentage = 100.0;
-          });
+    switch (eventStatus) {
+      case EventStatus.notStarted:
+        // For event not started, show countdown until start
+        final timeUntilStart = await EventData.getFormattedTimeUntilStart();
+        // Skip transitional text and directly show countdown
+        if (!timeUntilStart.contains("L'évènement")) {
+          _countdownValueNotifier.value = timeUntilStart;
+        } else {
+          // If we get a message instead of a countdown format, convert to countdown
+          final secondsUntilStart = await EventData.getTimeUntilStartInSeconds();
+          if (secondsUntilStart > 0) {
+            _countdownValueNotifier.value = _formatTime(secondsUntilStart);
+          } else {
+            _countdownValueNotifier.value = "00:00:00";
+          }
         }
-      }
-    } else if (now.isBefore(_startDate!)) {
-      // Event hasn't started yet
-      String newRemainingTime = "L'évènement n'a pas encore commencé !";
-      if (_remainingTime != newRemainingTime) {
-        if (mounted) {
-          setState(() {
-            _remainingTime = newRemainingTime;
-            _percentage = 0.0;
-          });
+        _percentageNotifier.value = 0.0;
+        break;
+
+      case EventStatus.inProgress:
+        // For event in progress, show countdown until end
+        final remainingSeconds = await EventData.getRemainingTimeInSeconds();
+        if (remainingSeconds > 0) {
+          _countdownValueNotifier.value = _formatTime(remainingSeconds);
+        } else {
+          _countdownValueNotifier.value = "00:00:00";
         }
-      }
+        // Update percentage
+        final percentage = await EventData.getEventCompletionPercentage();
+        _percentageNotifier.value = percentage;
+        break;
+
+      case EventStatus.over:
+        // For event over, show all zeros in countdown
+        _countdownValueNotifier.value = "00:00:00";
+        _percentageNotifier.value = 100.0;
+        break;
+    }
+  }
+
+  // Format time in seconds to DD:HH:MM:SS or HH:MM:SS
+  String _formatTime(int seconds) {
+    if (seconds <= 0) return "00:00:00";
+
+    final days = seconds ~/ 86400;
+    final hours = (seconds % 86400) ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (days > 0) {
+      return "$days:${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
     } else {
-      // Event is ongoing
-      String newRemainingTime = _formatModernTime(remaining.inSeconds);
-      if (_remainingTime != newRemainingTime ||
-          (_percentage?.toStringAsFixed(1) ?? '') != newPercentage.toStringAsFixed(1)) {
-        if (mounted) {
-          setState(() {
-            _remainingTime = newRemainingTime;
-            _percentage = newPercentage;
-          });
-        }
-      }
+      return "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+    }
+  }
+
+  // Get color based on current event status
+  Color _getStatusColor(EventStatus status) {
+    switch (status) {
+      case EventStatus.notStarted:
+        return _notStartedColor;
+      case EventStatus.inProgress:
+        return _inProgressColor;
+      case EventStatus.over:
+        return _overColor;
     }
   }
 
@@ -134,26 +226,20 @@ class _EventProgressCardState extends State<EventProgressCard> {
     try {
       // Get the total distance
       final metersResult = await NewEventController.getTotalMeters(int.parse(_eventId!));
-      if (!metersResult.hasError && mounted) {
-        setState(() {
-          _currentValue = '${_formatDistance(metersResult.value!)} m';
-        });
+      if (!metersResult.hasError) {
+        _currentValueNotifier.value = '${_formatDistance(metersResult.value!)} m';
       }
 
       // Get the number of participants
       final participantsResult = await NewEventController.getActiveUsers(int.parse(_eventId!));
-      if (!participantsResult.hasError && mounted) {
-        setState(() {
-          _participants = '${participantsResult.value}';
-        });
+      if (!participantsResult.hasError) {
+        _participantsNotifier.value = '${participantsResult.value}';
       }
 
       // Get meters goal
       final metersGoal = await EventData.getMetersGoal();
-      if (metersGoal != null && mounted) {
-        setState(() {
-          _objectif = '${_formatDistance(metersGoal)} m';
-        });
+      if (metersGoal != null) {
+        _objectifNotifier.value = '${_formatDistance(metersGoal)} m';
       }
     } catch (e) {
       log("Error refreshing event values: $e");
@@ -191,12 +277,15 @@ class _EventProgressCardState extends State<EventProgressCard> {
                 ),
               ),
               const SizedBox(height: 12),
-              FutureBuilder<String?>(
-                future: EventData.getEventName(),
-                builder: (context, snapshot) {
-                  final eventName = snapshot.data ?? 'Nom de l\'événement';
+
+              // Event status with colored text
+
+              // Event name using ValueListenableBuilder
+              ValueListenableBuilder<String?>(
+                valueListenable: _eventNameNotifier,
+                builder: (context, eventName, _) {
                   return Text(
-                    eventName,
+                    eventName ?? 'Nom de l\'événement',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -205,9 +294,16 @@ class _EventProgressCardState extends State<EventProgressCard> {
                   );
                 },
               ),
+              ValueListenableBuilder<EventStatus>(
+                valueListenable: _eventStatusNotifier,
+                builder: (context, status, _) {
+                  return getColoredEventStatusText(status);
+                },
+              ),
+
               const SizedBox(height: 16),
 
-              // Objectif Info
+              // Objectif Info using ValueListenableBuilder
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -215,112 +311,197 @@ class _EventProgressCardState extends State<EventProgressCard> {
                     'Objectif',
                     style: TextStyle(fontSize: 16, color: Colors.black87),
                   ),
-                  _currentValue != null && _objectif != null && _objectif != '-1'
-                      ? Row(
-                          children: [
-                            _styledValue(_currentValue!, color: const Color(Config.primaryColor)),
-                            const Text(
-                              ' / ',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal,
+                  ValueListenableBuilder<String?>(
+                    valueListenable: _currentValueNotifier,
+                    builder: (context, currentValue, _) {
+                      return ValueListenableBuilder<String?>(
+                        valueListenable: _objectifNotifier,
+                        builder: (context, objectif, _) {
+                          if (currentValue != null && objectif != null && objectif != '-1') {
+                            return Row(
+                              children: [
+                                _styledValue(currentValue, color: const Color(Config.primaryColor)),
+                                const Text(
+                                  ' / ',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                _styledValue(objectif, color: Colors.black54),
+                              ],
+                            );
+                          } else {
+                            return _buildShimmer(width: 100);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+
+              // Percentage using ValueListenableBuilder
+              ValueListenableBuilder<String?>(
+                valueListenable: _currentValueNotifier,
+                builder: (context, currentValue, _) {
+                  return ValueListenableBuilder<String?>(
+                    valueListenable: _objectifNotifier,
+                    builder: (context, objectif, _) {
+                      if (currentValue != null && objectif != null && objectif != '-1') {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 2.0, bottom: 2.0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${(_sanitizeValue(currentValue) / _sanitizeValue(objectif) * 100).toStringAsFixed(1)}%',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
                             ),
-                            _styledValue(_objectif!, color: Colors.black54),
-                          ],
-                        )
-                      : _buildShimmer(width: 100),
-                ],
+                          ),
+                        );
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                  );
+                },
               ),
-              // Percentage below, aligned left, with less space
-              if (_currentValue != null && _objectif != null && _objectif != '-1')
-                Padding(
-                  padding: const EdgeInsets.only(top: 2.0, bottom: 2.0), // reduced top padding
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${(_sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!) * 100).toStringAsFixed(1)}%',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
+
               // Progress Bar
-              Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16), // make progress bar edges rounder
-                      child: LinearProgressIndicator(
-                        value: _currentValue != null && _objectif != null && _objectif != '-1'
-                            ? _sanitizeValue(_currentValue!) / _sanitizeValue(_objectif!)
-                            : 0.0,
-                        backgroundColor: Color(Config.backgroundColor),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(Config.primaryColor),
-                        ),
-                        minHeight: 12, // increased height
-                      ),
-                    ),
-                  ),
-                ],
+              ValueListenableBuilder<String?>(
+                valueListenable: _currentValueNotifier,
+                builder: (context, currentValue, _) {
+                  return ValueListenableBuilder<String?>(
+                    valueListenable: _objectifNotifier,
+                    builder: (context, objectif, _) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: LinearProgressIndicator(
+                                value: currentValue != null && objectif != null && objectif != '-1'
+                                    ? _sanitizeValue(currentValue) / _sanitizeValue(objectif)
+                                    : 0.0,
+                                backgroundColor: Color(Config.backgroundColor),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  Color(Config.primaryColor),
+                                ),
+                                minHeight: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
-              // Time and Participants (stacked vertically)
+              // Time and Participants section
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Countdown with new style
-                  _countdownCard(
-                    value: _formatRemainingTime(_remainingTime),
-                    color: const Color(Config.primaryColor),
+                  // Countdown with dynamic label and value
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+                        child: ValueListenableBuilder<String?>(
+                          valueListenable: _countdownLabelNotifier,
+                          builder: (context, label, _) {
+                            return Text(
+                              label ?? "Temps restant",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      ValueListenableBuilder<String?>(
+                        valueListenable: _countdownValueNotifier,
+                        builder: (context, countdownValue, _) {
+                          return ValueListenableBuilder<EventStatus>(
+                            valueListenable: _eventStatusNotifier,
+                            builder: (context, status, _) {
+                              // Get the appropriate color based on event status
+                              final statusColor = _getStatusColor(status);
+
+                              // For standard countdown format
+                              if (countdownValue != null) {
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: _buildCountdownTimer(
+                                    countdownValue,
+                                    color: statusColor,
+                                  ),
+                                );
+                              } else {
+                                return _buildShimmer(width: 240);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
-                  // Participants active: green dot + number + text on same line, no divider
-                  if (_participants != null)
-                    Row(
-                      children: [
-                        if (int.tryParse(_participants!) != null)
-                          Container(
-                            width: 10,
-                            height: 10,
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: BoxDecoration(
-                              color: int.parse(_participants!) > 1
-                                  ? Colors.green
-                                  : int.parse(_participants!) == 0
-                                      ? Colors.grey
-                                      : Colors.green,
-                              shape: BoxShape.circle,
+
+                  // Participants active
+                  ValueListenableBuilder<String?>(
+                    valueListenable: _participantsNotifier,
+                    builder: (context, participants, _) {
+                      if (participants != null) {
+                        return Row(
+                          children: [
+                            if (int.tryParse(participants) != null)
+                              Container(
+                                width: 10,
+                                height: 10,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  color: int.parse(participants) > 1
+                                      ? Colors.green
+                                      : int.parse(participants) == 0
+                                          ? Colors.grey
+                                          : Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            Text(
+                              participants,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
                             ),
-                          ),
-                        Text(
-                          _participants!,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Expanded(
-                          child: Text(
-                            'participants ou groupe actifs sur le parcours',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
+                            const SizedBox(width: 4),
+                            const Expanded(
+                              child: Text(
+                                'participants ou groupe actifs sur le parcours',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    _buildShimmer(width: 120),
+                          ],
+                        );
+                      } else {
+                        return _buildShimmer(width: 120);
+                      }
+                    },
+                  ),
                 ],
               ),
             ],
@@ -330,97 +511,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
     );
   }
 
-  String? _formatRemainingTime(String? value) {
-    if (value == null) return null;
-    // If value contains letters (like "L'évènement est terminé"), return as is
-    if (RegExp(r'[a-zA-Z]').hasMatch(value)) return value;
-    // Try to parse as int (seconds)
-    if (value.contains(':')) return value; // Already formatted
-    final seconds = int.tryParse(value);
-    if (seconds == null) return value;
-    return _formatModernTime(seconds);
-  }
-
-  String _formatModernTime(int seconds) {
-    final days = seconds ~/ 86400;
-    final hours = (seconds % 86400) ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-
-    // Format with days if more than 24 hours
-    if (days > 0) {
-      return "$days:${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
-    } else {
-      return "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
-    }
-  }
-
-  Widget _infoCard({
-    required String label,
-    String? value,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (label.isNotEmpty)
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-          if (label.isNotEmpty) const SizedBox(height: 4),
-          value != null
-              ? RegExp(r'[a-zA-Z]').hasMatch(value)
-                  ? _styledValue(value, color: color)
-                  : label.isEmpty || label.toLowerCase().contains("temps")
-                      ? Row(
-                          children: styledCountdownTimer(value, color: color),
-                        )
-                      : _formatTimeWithLabels(value, color: color)
-              : _buildShimmer(width: 60),
-        ],
-      ),
-    );
-  }
-
-  Widget _formatTimeWithLabels(String value, {required Color color}) {
-    // Format the value (usually for participants count)
-    return _styledValue(value, color: color);
-  }
-
-  Widget _countdownCard({
-    String? value,
-    required Color color,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
-          child: Text(
-            "Temps restant",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-        value != null
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: styledCountdownTimer(value, color: color),
-              )
-            : _buildShimmer(width: 240),
-      ],
-    );
-  }
-
-  List<Widget> styledCountdownTimer(String timeStr, {required Color color}) {
+  List<Widget> _buildCountdownTimer(String timeStr, {required Color color}) {
     List<String> parts = timeStr.split(':');
     List<String> labels =
         parts.length == 4 ? ['jours', 'heures', 'minutes', 'secondes'] : ['heures', 'minutes', 'secondes'];
@@ -436,11 +527,13 @@ class _EventProgressCardState extends State<EventProgressCard> {
       widgets.add(
         Expanded(
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Colors.grey[50],
               borderRadius: BorderRadius.circular(8),
+              // Add a subtle border with the status color
+              border: Border.all(color: color.withOpacity(0.3), width: 1.5),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -458,7 +551,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
                 Text(
                   labels[i],
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: color.withOpacity(0.75),
                   ),
@@ -489,8 +582,6 @@ class _EventProgressCardState extends State<EventProgressCard> {
   }
 
   Widget _styledValue(String value, {required Color color}) {
-    // If it's a time format, use the dedicated formatter
-
     // Extract value and unit if possible
     String mainValue = '';
     String unit = '';

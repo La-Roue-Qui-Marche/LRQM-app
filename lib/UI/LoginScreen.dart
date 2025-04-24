@@ -80,29 +80,9 @@ class _LoginState extends State<Login> {
     await EventData.saveEvent(event);
     _loadSavedEvent();
 
-    DateTime startDate = DateTime.parse(event['start_date']);
-    DateTime endDate = DateTime.parse(event['end_date']);
-    DateTime now = DateTime.now();
-
     setState(() {
       _isEventActive = true;
     });
-
-    if (now.isBefore(startDate)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(
-          context,
-          "C'est bientôt l'heure !",
-          "L'évènement \"${_selectedEvent['name']}\" n'a pas encore démarré. "
-              "Pas de stress, on compte les secondes ensemble jusqu'au top départ !",
-          countdownStartDate: startDate, // Use countdown functionality
-        );
-      });
-    } else if (now.isAfter(endDate)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(context, "C'est fini !", "Malheureusement, l'évènement est terminé.");
-      });
-    }
   }
 
   void _showErrorModal(String message) {
