@@ -63,7 +63,7 @@ class NavBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 88), // Space for center button, matches floating button size
+                const SizedBox(width: 100), // Space for center button, matches floating button size
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
