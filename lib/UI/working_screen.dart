@@ -42,6 +42,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   bool _shouldShowEventModal = false;
   bool _showMainCards = true;
   Timer? _eventCheckTimer;
+  bool _isDisposed = false;
 
   late Geolocation _geolocation;
 
@@ -66,6 +67,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   @override
   void dispose() {
+    _isDisposed = true;
     _eventCheckTimer?.cancel();
     _geolocation.stopListening();
     _eventStatusNotifier.dispose();
@@ -94,10 +96,13 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   }
 
   void _startEventStatusTimer() {
-    _eventCheckTimer = Timer.periodic(Duration(seconds: 1), (_) => _checkEventStatus());
+    _eventCheckTimer = Timer.periodic(Duration(seconds: 1), (_) {
+      if (!_isDisposed) _checkEventStatus();
+    });
   }
 
   Future<void> _checkEventStatus() async {
+    if (_isDisposed) return;
     final currentStatus = await EventData.getEventStatus();
     final previousStatus = _eventStatusNotifier.value;
     if (currentStatus == previousStatus) return;
@@ -205,6 +210,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       'Es-tu sûr de vouloir te déconnecter ?\n\nCela supprimera toutes les données locales et arrêtera toute mesure en cours.',
       showConfirmButton: true,
       onConfirm: () async {
+        _isDisposed = true; // Prevent further timer/event checks
         setState(() => _showMainCards = false);
         await Future.delayed(const Duration(milliseconds: 100));
 
