@@ -25,14 +25,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
-  background_location:
+  background_location_2:
     dependency: "direct main"
     description:
-      name: background_location
-      sha256: fbb83ceb8cefcc6793f0a362f12773c28fc290a5e2c76cb593ee592ec7b6cb32
+      name: background_location_2
+      sha256: "4979405c806d08de36ada81da9ecc1d0859f2535fa562f2f05ea9c78a3bb50af"
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.0"
+    version: "0.16.2"
   boolean_selector:
     dependency: transitive
     description:

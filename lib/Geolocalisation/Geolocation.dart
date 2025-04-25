@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart' as geo;
-import 'package:background_location/background_location.dart' as bg;
+import 'package:background_location_2/background_location.dart' as bg;
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
 import 'package:lrqm/API/NewMeasureController.dart';
 import 'package:lrqm/Utils/LogHelper.dart';
