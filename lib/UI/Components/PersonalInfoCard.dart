@@ -11,13 +11,11 @@ import 'ContributionGraph.dart';
 
 class PersonalInfoCard extends StatefulWidget {
   final bool isSessionActive;
-  final bool isCountingInZone;
   final Geolocation? geolocation;
 
   const PersonalInfoCard({
     super.key,
     required this.isSessionActive,
-    required this.isCountingInZone,
     this.geolocation,
   });
 
@@ -42,7 +40,11 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(true);
 
+  // Internal state for zone as ValueNotifiers
+  final ValueNotifier<bool> _isCountingInZoneNotifier = ValueNotifier<bool>(true);
+
   StreamSubscription? _geoSubscription;
+  StreamSubscription? _zoneSubscription;
 
   @override
   void initState() {
@@ -50,11 +52,13 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     _currentContributionNotifier.value = 0;
     _loadUserData();
     _setupGeolocationListener();
+    _listenCountingInZone();
   }
 
   @override
   void dispose() {
     _geoSubscription?.cancel();
+    _zoneSubscription?.cancel();
     // Dispose all ValueNotifiers
     _currentContributionNotifier.dispose();
     _particlesNotifier.dispose();
@@ -65,6 +69,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     _sessionDistanceNotifier.dispose();
     _sessionTimeNotifier.dispose();
     _isLoadingNotifier.dispose();
+    _isCountingInZoneNotifier.dispose();
     super.dispose();
   }
 
@@ -109,21 +114,29 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     }
   }
 
+  void _listenCountingInZone() {
+    if (widget.geolocation != null) {
+      _zoneSubscription = widget.geolocation!.stream.listen((event) {
+        final inZone = (event["isCountingInZone"] as num?)?.toInt() == 1;
+        if (_isCountingInZoneNotifier.value != inZone) {
+          _isCountingInZoneNotifier.value = inZone;
+        }
+      });
+    }
+  }
+
   void _setupGeolocationListener() {
-    // Cancel any existing subscription first
     _geoSubscription?.cancel();
 
-    if (widget.geolocation != null && widget.isSessionActive) {
+    if (widget.geolocation != null) {
       _geoSubscription = widget.geolocation!.stream.listen((event) {
-        // Add null checks for the distance and time
         final int newDistance = (event["distance"] as num?)?.toInt() ?? 0;
         final int newTime = (event["time"] as num?)?.toInt() ?? 0;
 
         _sessionDistanceNotifier.value = newDistance;
         _sessionTimeNotifier.value = newTime;
 
-        // Check for distance increase
-        if (newDistance > _currentContributionNotifier.value) {
+        if (widget.isSessionActive && newDistance > _currentContributionNotifier.value) {
           final int diff = newDistance - _currentContributionNotifier.value;
           _spawnParticle("+$diff m");
           _currentContributionNotifier.value = newDistance;
@@ -135,14 +148,11 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   @override
   void didUpdateWidget(covariant PersonalInfoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // If session status changed
-    if (oldWidget.isSessionActive != widget.isSessionActive) {
-      _loadUserData();
-
-      // Update geolocation listener
+    if (oldWidget.geolocation != widget.geolocation) {
       _geoSubscription?.cancel();
+      _zoneSubscription?.cancel();
       _setupGeolocationListener();
+      _listenCountingInZone();
     }
   }
 
@@ -180,7 +190,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       builder: (context, particles, _) {
         return Stack(
           children: [
-            _buildCard(),
+            _buildCard(widget.isSessionActive),
             ...particles,
           ],
         );
@@ -188,7 +198,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     );
   }
 
-  Widget _buildCard() {
+  Widget _buildCard(bool isSessionActive) {
     return Stack(
       children: [
         Container(
@@ -215,10 +225,10 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               _buildInfoCards(),
               const SizedBox(height: 16),
               _buildFunMessage(),
-              if (widget.isSessionActive) const SizedBox(height: 8),
-              if (widget.isSessionActive) const Divider(color: Color(Config.backgroundColor), thickness: 1),
-              if (widget.isSessionActive) const SizedBox(height: 8),
-              if (widget.isSessionActive) ContributionGraph(geolocation: widget.geolocation),
+              if (isSessionActive) const SizedBox(height: 8),
+              if (isSessionActive) const Divider(color: Color(Config.backgroundColor), thickness: 1),
+              if (isSessionActive) const SizedBox(height: 8),
+              if (isSessionActive) ContributionGraph(geolocation: widget.geolocation),
             ],
           ),
         ),
@@ -432,43 +442,48 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   Widget _statusBadge() {
-    String statusText;
-    Color badgeColor;
-    Color textColor = Colors.white;
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isCountingInZoneNotifier,
+      builder: (context, isCountingInZone, _) {
+        String statusText;
+        Color badgeColor;
+        Color textColor = Colors.white;
 
-    if (!widget.isSessionActive) {
-      statusText = 'En pause';
-      badgeColor = const Color(Config.backgroundColor);
-      textColor = Colors.black87;
-    } else if (!widget.isCountingInZone) {
-      statusText = 'Hors Zone';
-      badgeColor = Colors.red.shade400;
-    } else {
-      statusText = 'Actif';
-      badgeColor = Colors.green.shade400;
-    }
+        if (!widget.isSessionActive) {
+          statusText = 'En pause';
+          badgeColor = const Color(Config.backgroundColor);
+          textColor = Colors.black87;
+        } else if (!isCountingInZone) {
+          statusText = 'Hors Zone';
+          badgeColor = Colors.red.shade400;
+        } else {
+          statusText = 'Actif';
+          badgeColor = Colors.green.shade400;
+        }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: badgeColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.circle,
-            size: 10,
-            color: !widget.isSessionActive ? Colors.black87 : Colors.white,
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: badgeColor,
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 6),
-          Text(
-            statusText,
-            style: TextStyle(fontSize: 14, color: textColor),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.circle,
+                size: 10,
+                color: !widget.isSessionActive ? Colors.black87 : Colors.white,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                statusText,
+                style: TextStyle(fontSize: 14, color: textColor),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

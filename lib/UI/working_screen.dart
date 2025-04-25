@@ -256,14 +256,10 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
         children: [
           ValueListenableBuilder(
             valueListenable: _isMeasureOngoingNotifier,
-            builder: (_, isOngoing, __) => ValueListenableBuilder(
-              valueListenable: _isCountingInZoneNotifier,
-              builder: (_, inZone, __) => PersonalInfoCard(
-                key: const ValueKey('personalInfoCard'),
-                isSessionActive: isOngoing,
-                isCountingInZone: inZone,
-                geolocation: _geolocation,
-              ),
+            builder: (_, isOngoing, __) => PersonalInfoCard(
+              key: const ValueKey('personalInfoCard'),
+              isSessionActive: isOngoing,
+              geolocation: _geolocation,
             ),
           ),
           ValueListenableBuilder(
