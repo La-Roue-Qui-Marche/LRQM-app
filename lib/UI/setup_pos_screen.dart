@@ -20,7 +20,7 @@ import 'Components/button_action.dart';
 import 'Components/DynamicMapCard.dart';
 import 'Components/InfoCard.dart';
 import 'Components/TextModal.dart';
-import 'Components/TopAppBar.dart';
+import 'Components/top_app_bar.dart';
 import 'LoadingScreen.dart';
 import 'setup_team_screen.dart';
 import 'Components/app_toast.dart';

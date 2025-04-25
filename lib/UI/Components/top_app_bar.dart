@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../log_screen.dart';
 import '../../Geolocalisation/Geolocation.dart';
-import '../LoadingScreen.dart';
 
 class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
@@ -43,7 +42,6 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _TopAppBarState extends State<TopAppBar> {
   int _infoButtonClickCount = 0;
   bool _showShareButton = false;
-  bool _isLoading = false;
 
   void _incrementInfoButtonClickCount() {
     setState(() {
@@ -163,7 +161,6 @@ class _TopAppBarState extends State<TopAppBar> {
             ),
           ),
         ),
-        if (_isLoading) const LoadingScreen(text: "Déconnexion..."),
       ],
     );
   }

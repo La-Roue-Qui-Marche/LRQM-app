@@ -11,7 +11,7 @@ import '../Data/MeasureData.dart';
 import '../Data/ContributorsData.dart';
 import '../Data/DataUtils.dart';
 
-import 'Components/TopAppBar.dart';
+import 'Components/top_app_bar.dart';
 import 'Components/TextModal.dart';
 import 'Components/NavBar.dart';
 import 'Components/DynamicMapCard.dart';

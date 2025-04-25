@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../Utils/config.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'Components/TopAppBar.dart';
+import 'Components/top_app_bar.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});

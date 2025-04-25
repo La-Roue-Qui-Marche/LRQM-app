@@ -8,7 +8,7 @@ import 'Components/button_action.dart';
 import 'setup_scan_screen.dart';
 import 'LoadingScreen.dart';
 import 'Components/TapCard.dart';
-import 'Components/TopAppBar.dart';
+import 'Components/top_app_bar.dart';
 
 class SetupTeamScreen extends StatefulWidget {
   const SetupTeamScreen({super.key});
