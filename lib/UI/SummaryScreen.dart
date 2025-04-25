@@ -141,7 +141,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       color: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
-      margin: EdgeInsets.zero,
+      margin: const EdgeInsets.only(top: 6),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         child: Column(
