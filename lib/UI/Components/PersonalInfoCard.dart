@@ -147,14 +147,19 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   void _spawnParticle(String label) {
+    if (!widget.isSessionActive) return;
     final random = Random();
     final dx = random.nextDouble() * 60 - 30;
     final dy = random.nextDouble() * -60 - 30;
 
-    final particle = _AnimatedParticle(
-      offsetX: dx,
-      offsetY: dy,
-      label: label,
+    final key = UniqueKey();
+    final particle = KeyedSubtree(
+      key: key,
+      child: _AnimatedParticle(
+        offsetX: dx,
+        offsetY: dy,
+        label: label,
+      ),
     );
 
     final currentParticles = List<Widget>.from(_particlesNotifier.value);
@@ -163,7 +168,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
     Future.delayed(const Duration(seconds: 2), () {
       final updatedParticles = List<Widget>.from(_particlesNotifier.value);
-      updatedParticles.remove(particle);
+      updatedParticles.removeWhere((w) => w.key == key);
       _particlesNotifier.value = updatedParticles;
     });
   }
@@ -527,15 +532,15 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
       animation: _controller,
       builder: (_, child) {
         return Positioned(
-          top: 200 - widget.offsetY * _controller.value,
+          top: 190 - widget.offsetY * _controller.value,
           left: MediaQuery.of(context).size.width / 3.5 + widget.offsetX * _controller.value,
           child: Opacity(
             opacity: 1 - _controller.value,
             child: Text(
               widget.label,
               style: const TextStyle(
-                fontSize: 14,
-                color: Colors.greenAccent,
+                fontSize: 16,
+                color: Colors.green,
               ),
             ),
           ),
