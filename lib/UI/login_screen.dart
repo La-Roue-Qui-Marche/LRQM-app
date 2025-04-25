@@ -14,6 +14,7 @@ import 'confirm_screen.dart';
 import 'loading_screen.dart';
 import 'Components/button_action.dart';
 import 'Components/TextModal.dart';
+import 'Components/app_toast.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -48,12 +49,14 @@ class _LoginState extends State<Login> {
     final eventsResult = await NewEventController.getAllEvents();
     if (eventsResult.hasError) {
       log("Error fetching events: ${eventsResult.error}");
+      AppToast.showError("Erreur lors de la récupération des évènements.");
       _showErrorModal("Erreur lors de la récupération de l'évènement.");
       return;
     }
 
     _events = eventsResult.value ?? [];
     if (_events.isEmpty) {
+      AppToast.showError("Erreur lors de la récupération des évènements.");
       _showErrorModal("Aucun évènement trouvé.");
       return;
     }
@@ -100,10 +103,6 @@ class _LoginState extends State<Login> {
       showConfirmButton: true,
       onConfirm: () => _handleEventSelected(selectedEvent),
     );
-  }
-
-  void _showInSnackBar(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
   Future<void> _getUsername() async {
@@ -156,7 +155,7 @@ class _LoginState extends State<Login> {
         MaterialPageRoute(builder: (_) => ConfirmScreen(userData: user)),
       );
     } catch (e) {
-      _showInSnackBar("Numéro de dossard invalide");
+      AppToast.showError("Numéro de dossard invalide");
       Navigator.pop(context);
     }
   }
@@ -164,7 +163,7 @@ class _LoginState extends State<Login> {
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      _showInSnackBar("Impossible d'ouvrir le lien d'inscription.");
+      AppToast.showError("Impossible d'ouvrir le lien d'inscription.");
     }
   }
 

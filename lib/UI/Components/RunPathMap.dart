@@ -126,7 +126,13 @@ class _RunPathMapState extends State<RunPathMap> {
 
     if (_fullPath.length < 2) return;
 
-    _animationTimer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
+    // Calculate interval based on fixed 10 second total duration
+    // with a minimum interval of 100ms between points
+    final int totalPoints = _fullPath.length;
+    int intervalMs = (10000 / totalPoints).round(); // 10 seconds = 10000 ms
+    intervalMs = intervalMs.clamp(10, 200);
+
+    _animationTimer = Timer.periodic(Duration(milliseconds: intervalMs), (timer) {
       if (_currentIndex >= _fullPath.length) {
         timer.cancel();
         return;

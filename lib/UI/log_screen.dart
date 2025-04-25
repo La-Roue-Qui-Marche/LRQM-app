@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../Utils/LogHelper.dart';
+import './Components/app_toast.dart';
 
 class LogScreen extends StatefulWidget {
   const LogScreen({super.key});
@@ -45,9 +46,7 @@ class _LogScreenState extends State<LogScreen> {
   Future<void> _shareLogs() async {
     final logs = LogHelper.getLogs();
     if (logs.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No logs to share.")),
-      );
+      AppToast.showError("No logs to share.");
       return;
     }
 

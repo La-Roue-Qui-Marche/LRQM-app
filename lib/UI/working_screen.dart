@@ -230,9 +230,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           );
         } else if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Échec de la suppression des données utilisateur")),
-          );
+          AppToast.showError("Échec de la suppression des données utilisateur");
         }
       },
       showDiscardButton: true,
