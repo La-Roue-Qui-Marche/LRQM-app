@@ -221,7 +221,7 @@ class InfoScreen extends StatelessWidget {
                                   },
                                 ),
                                 Text(
-                                  'Copyright La Roue Qui Marche',
+                                  '© La Roue Qui Marche - 2025',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.black38,

@@ -110,7 +110,7 @@ class SupportCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(Config.backgroundColor),
+          color: Colors.grey[50],
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(

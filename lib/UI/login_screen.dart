@@ -10,8 +10,8 @@ import '../API/NewEventController.dart';
 import '../API/NewUserController.dart';
 import '../Utils/config.dart';
 import '../Data/EventData.dart';
-import 'ConfirmScreen.dart';
-import 'LoadingScreen.dart';
+import 'confirm_screen.dart';
+import 'loading_screen.dart';
 import 'Components/button_action.dart';
 import 'Components/TextModal.dart';
 
@@ -256,7 +256,7 @@ class _LoginState extends State<Login> {
                         text: 'Connexion',
                         onPressed: _getUsername,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       Center(
                         child: GestureDetector(
                           onTap: () => _launchUrl("https://larouequimarche.ch/levenement/inscription/"),
@@ -271,7 +271,7 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       FutureBuilder<String>(
                         future: Config.getAppVersion(),
                         builder: (context, snapshot) {

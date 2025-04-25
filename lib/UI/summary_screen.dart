@@ -1,6 +1,3 @@
-import 'dart:math';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:transparent_image/transparent_image.dart';
@@ -9,7 +6,7 @@ import '../Utils/config.dart';
 import '../Data/MeasureData.dart';
 import 'Components/RunPathMap.dart';
 import 'Components/top_app_bar.dart';
-import 'WorkingScreen.dart';
+import 'working_screen.dart';
 
 class SummaryScreen extends StatefulWidget {
   final int distanceAdded;
@@ -42,11 +39,11 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
     _metersController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(seconds: 3),
     );
     _percentController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(seconds: 3),
     );
 
     _metersAnimation = Tween<double>(
@@ -63,7 +60,12 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
     _percentController.forward();
 
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
-    _confettiController.play();
+
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        _confettiController.play();
+      }
+    });
   }
 
   @override
@@ -112,22 +114,47 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
         showLogoutButton: false,
         onClose: _handleClose,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildCelebrationCard(),
-                  SizedBox(
-                    height: mapHeight,
-                    width: double.infinity,
-                    child: const RunPathMap(),
+          Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildCelebrationCard(),
+                      SizedBox(
+                        height: mapHeight,
+                        width: double.infinity,
+                        child: const RunPathMap(),
+                      ),
+                      const SizedBox(height: 48),
+                    ],
                   ),
-                  const SizedBox(height: 48),
-                ],
+                ),
+              ),
+            ],
+          ),
+          // Positioned confetti at the top of the screen
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 50),
+              child: SizedBox(
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  colors: const [Colors.blue, Colors.pink, Colors.orange, Colors.green, Colors.purple],
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 20,
+                  maxBlastForce: 20,
+                  minBlastForce: 5,
+                  gravity: 0.2,
+                  particleDrag: 0.05,
+                ),
               ),
             ),
           ),
@@ -152,24 +179,17 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  FadeInImage(
-                    placeholder: MemoryImage(kTransparentImage),
-                    image: const AssetImage('assets/pictures/Cup-AI.png'),
-                    width: 140,
-                    height: 140,
-                    fit: BoxFit.contain,
-                  ),
-                  ConfettiWidget(
-                    confettiController: _confettiController,
-                    blastDirectionality: BlastDirectionality.explosive,
-                    shouldLoop: false,
-                    colors: const [Colors.blue, Colors.pink, Colors.orange, Colors.green, Colors.purple],
-                    emissionFrequency: 0.05,
-                    numberOfParticles: 10,
-                    maxBlastForce: 20,
-                    minBlastForce: 10,
-                    gravity: 0.4,
-                    particleDrag: 0.05,
+                  GestureDetector(
+                    onTap: () {
+                      _confettiController.play();
+                    },
+                    child: FadeInImage(
+                      placeholder: MemoryImage(kTransparentImage),
+                      image: const AssetImage('assets/pictures/Cup-AI.png'),
+                      width: 140,
+                      height: 140,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ],
               ),

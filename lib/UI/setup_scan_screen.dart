@@ -17,8 +17,8 @@ import 'Components/button_action.dart';
 import 'Components/InfoCard.dart';
 import 'Components/TextModal.dart';
 import 'Components/top_app_bar.dart';
-import 'LoadingScreen.dart';
-import 'WorkingScreen.dart';
+import 'loading_screen.dart';
+import 'working_screen.dart';
 
 class SetupScanScreen extends StatefulWidget {
   final int contributors;
@@ -163,8 +163,8 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
               child: GestureDetector(
                 onDoubleTap: _startSession,
                 child: Container(
+                  width: MediaQuery.of(context).size.width * 0.55,
                   padding: const EdgeInsets.only(bottom: 12.0),
-                  width: MediaQuery.of(context).size.width * 0.45,
                   child: FadeInImage(
                     placeholder: MemoryImage(kTransparentImage),
                     image: const AssetImage('assets/pictures/DrawScan-AI.png'),

@@ -6,7 +6,7 @@ import '../Utils/config.dart';
 import 'Components/InfoCard.dart';
 import 'Components/button_action.dart';
 import 'setup_scan_screen.dart';
-import 'LoadingScreen.dart';
+import 'loading_screen.dart';
 import 'Components/TapCard.dart';
 import 'Components/top_app_bar.dart';
 
@@ -96,7 +96,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
         children: [
           Center(
             child: Container(
-              width: MediaQuery.of(context).size.width * 0.45,
+              width: MediaQuery.of(context).size.width * 0.55,
               padding: const EdgeInsets.only(bottom: 12.0),
               child: FadeInImage(
                 placeholder: MemoryImage(kTransparentImage),

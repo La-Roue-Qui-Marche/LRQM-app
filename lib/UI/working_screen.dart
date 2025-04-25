@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_const_constructors, use_build_context_synchronously
 
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import '../Utils/config.dart';
@@ -21,10 +20,10 @@ import 'Components/SupportCard.dart';
 import 'Components/app_toast.dart';
 
 import 'setup_pos_screen.dart';
-import 'LoadingScreen.dart';
-import 'SummaryScreen.dart';
-import 'LoginScreen.dart';
-import 'InfoScreen.dart';
+import 'loading_screen.dart';
+import 'summary_screen.dart';
+import 'login_screen.dart';
+import 'info_screen.dart';
 
 class WorkingScreen extends StatefulWidget {
   const WorkingScreen({super.key});

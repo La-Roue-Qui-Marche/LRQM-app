@@ -18,7 +18,7 @@ import 'Components/DynamicMapCard.dart';
 import 'Components/InfoCard.dart';
 import 'Components/TextModal.dart';
 import 'Components/top_app_bar.dart';
-import 'LoadingScreen.dart';
+import 'loading_screen.dart';
 import 'setup_team_screen.dart';
 import 'Components/app_toast.dart';
 
@@ -264,7 +264,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         children: [
           Center(
             child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.45,
+              width: MediaQuery.of(context).size.width * 0.55,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: FadeInImage(
