@@ -72,23 +72,9 @@ class EventData {
     }
   }
 
-  static Future<String?> getEndDateBuffer() async {
-    final end = await getEndDate();
-    if (end == null) return null;
-
-    try {
-      final endDateTime = DateTime.parse(end);
-      final bufferedEndDate = endDateTime.subtract(const Duration(seconds: endBufferSeconds));
-      return bufferedEndDate.toIso8601String();
-    } catch (e) {
-      debugPrint('Error in getEndDateBuffer: $e');
-      return null;
-    }
-  }
-
   static Future<bool> isEventOver() async {
-    final bufferedEnd = await getEndDateBuffer();
-    return bufferedEnd != null && DateTime.now().isAfter(DateTime.parse(bufferedEnd));
+    final end = await getEndDate();
+    return end != null && DateTime.now().isAfter(DateTime.parse(end));
   }
 
   static Future<EventStatus> getEventStatus() async {
@@ -103,20 +89,20 @@ class EventData {
   }
 
   static Future<int> getRemainingTimeInSeconds() async {
-    final bufferedEnd = await getEndDateBuffer();
-    if (bufferedEnd == null) return 0;
+    final end = await getEndDate();
+    if (end == null) return 0;
 
     final now = DateTime.now();
-    final endDateTime = DateTime.parse(bufferedEnd);
+    final endDateTime = DateTime.parse(end);
     int seconds = endDateTime.difference(now).inSeconds;
     return seconds < 0 ? 0 : seconds; // Return 0 if negative
   }
 
   static Future<int> getRemainingTimeUntilEndInSeconds() async {
-    final bufferedEnd = await getEndDateBuffer();
-    if (bufferedEnd == null) return 0;
+    final end = await getEndDate();
+    if (end == null) return 0;
 
-    return DateTime.parse(bufferedEnd).difference(DateTime.now()).inSeconds;
+    return DateTime.parse(end).difference(DateTime.now()).inSeconds;
   }
 
   // ---- Time Formatting ----
