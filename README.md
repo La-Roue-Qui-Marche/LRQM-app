@@ -9,6 +9,8 @@ Visit the project website: [larouequimarche.ch](https://larouequimarche.ch/)
 
 This is a **cross-platform application**, compatible with both Android and iOS devices.
 
+flutter version 3.24.3
+
 ---
 
 ## Features
