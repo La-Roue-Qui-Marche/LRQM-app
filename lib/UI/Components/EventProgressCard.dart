@@ -273,7 +273,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
               Text(
                 'Progression de l\'événement',
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
@@ -289,13 +289,14 @@ class _EventProgressCardState extends State<EventProgressCard> {
                   return Text(
                     eventName ?? 'Nom de l\'événement',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                   );
                 },
               ),
+              const SizedBox(height: 2),
               ValueListenableBuilder<EventStatus>(
                 valueListenable: _eventStatusNotifier,
                 builder: (context, status, _) {
@@ -359,7 +360,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
                             child: Text(
                               '${(_sanitizeValue(currentValue) / _sanitizeValue(objectif) * 100).toStringAsFixed(1)}%',
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
@@ -489,7 +490,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
                             const SizedBox(width: 4),
                             const Expanded(
                               child: Text(
-                                'participants ou groupe actifs sur le parcours',
+                                'participant(s) ou groupe(s) actif(s) sur le parcours',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.black87,
@@ -598,13 +599,16 @@ class _EventProgressCardState extends State<EventProgressCard> {
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          mainValue,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
-            letterSpacing: 0.5,
+        Flexible(
+          child: Text(
+            mainValue,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: color,
+              letterSpacing: 0.5,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         if (unit.isNotEmpty)

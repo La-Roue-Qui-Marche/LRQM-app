@@ -97,7 +97,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
           Center(
             child: Container(
               width: MediaQuery.of(context).size.width * 0.45,
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(bottom: 12.0),
               child: FadeInImage(
                 placeholder: MemoryImage(kTransparentImage),
                 image: const AssetImage('assets/pictures/DrawTeam-AI.png'),

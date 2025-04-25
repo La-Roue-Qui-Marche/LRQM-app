@@ -51,6 +51,7 @@ dependencies:
   pinput: ^5.0.1
   transparent_image: ^2.0.1
   fluttertoast: ^8.2.4
+  confetti: ^0.8.0
 
 dev_dependencies:
   flutter_test:

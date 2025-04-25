@@ -31,7 +31,7 @@ class SupportCard extends StatelessWidget {
               const Text(
                 'Informations sur l\'événement',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
@@ -40,7 +40,7 @@ class SupportCard extends StatelessWidget {
               const Text(
                 'À propos de l\'événement',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),

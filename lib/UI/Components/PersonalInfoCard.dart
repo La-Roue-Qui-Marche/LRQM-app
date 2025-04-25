@@ -199,7 +199,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
               const Text(
                 'Ta contribution à l\'événement',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -240,7 +240,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                     children: [
                       const Text(
                         '№ de dossard: ',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
                       ),
                       ValueListenableBuilder<bool>(
                         valueListenable: _isLoadingNotifier,
@@ -253,7 +253,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                                   : Text(
                                       bibNumber,
                                       style: const TextStyle(
-                                          fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                                          fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
                                     );
                             },
                           );
@@ -261,7 +261,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   ValueListenableBuilder<bool>(
                     valueListenable: _isLoadingNotifier,
                     builder: (context, isLoading, _) {
@@ -372,6 +372,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.black87.withOpacity(0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,7 +386,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                     Text(
                       mainValue,
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: color,
                         letterSpacing: 0.5,

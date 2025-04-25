@@ -47,7 +47,7 @@ class InfoScreen extends StatelessWidget {
                       child: Text(
                         'La Roue Qui Marche',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -76,7 +76,7 @@ class InfoScreen extends StatelessWidget {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 8),
                           GestureDetector(
                             onTap: () async {
                               final Uri uri = Uri.parse('https://larouequimarche.ch');
@@ -95,13 +95,13 @@ class InfoScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       child: Text(
                         'Comment est venue l\'idée de créer une application dédiée ?',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -143,13 +143,13 @@ class InfoScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       child: Text(
                         'L\'équipe de développement',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),

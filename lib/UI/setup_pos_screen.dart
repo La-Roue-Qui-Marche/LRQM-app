@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
-import 'dart:developer';
 import 'dart:io' show Platform;
 import 'dart:async';
 
@@ -10,9 +9,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../API/NewMeasureController.dart';
 import '../Data/EventData.dart';
-import '../Data/MeasureData.dart';
 import '../Utils/Permission.dart';
 import '../Utils/config.dart';
 import '../Geolocalisation/Geolocation.dart';
@@ -188,7 +185,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       builder: (_) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.50,
+          height: MediaQuery.of(context).size.height * 0.5,
           width: double.infinity,
           child: Stack(
             children: [
@@ -267,9 +264,9 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         children: [
           Center(
             child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.4,
+              width: MediaQuery.of(context).size.width * 0.45,
               child: Padding(
-                padding: const EdgeInsets.only(top: 16.0),
+                padding: const EdgeInsets.only(bottom: 12.0),
                 child: FadeInImage(
                   placeholder: MemoryImage(kTransparentImage),
                   image: const AssetImage('assets/pictures/DrawPos-AI.png'),

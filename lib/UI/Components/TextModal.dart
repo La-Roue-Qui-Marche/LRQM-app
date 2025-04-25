@@ -153,12 +153,12 @@ class _TextModalContentState extends State<_TextModalContent> {
         Text(
           widget.title,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Color(Config.primaryColor),
+            color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         if (widget.countdownStartDate == null) ...[
           if (widget.dropdownItems == null)
             Text(

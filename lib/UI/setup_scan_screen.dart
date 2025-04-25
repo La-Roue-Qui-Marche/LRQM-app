@@ -163,7 +163,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
               child: GestureDetector(
                 onDoubleTap: _startSession,
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(bottom: 12.0),
                   width: MediaQuery.of(context).size.width * 0.45,
                   child: FadeInImage(
                     placeholder: MemoryImage(kTransparentImage),
