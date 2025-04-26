@@ -9,7 +9,7 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(Config.COLOR_BACKGROUND),
+      backgroundColor: const Color(Config.backgroundColor),
       body: Stack(
         children: [
           Positioned.fill(
@@ -30,7 +30,7 @@ class LoadingScreen extends StatelessWidget {
                         text!,
                         style: const TextStyle(
                           fontSize: 16,
-                          color: Color(Config.COLOR_APP_BAR),
+                          color: Color(Config.primaryColor),
                         ),
                       ),
                     ),

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../Utils/config.dart';
@@ -61,7 +63,7 @@ class NavBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 88), // Space for center button, matches floating button size
+                const SizedBox(width: 100), // Space for center button, matches floating button size
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
@@ -81,44 +83,44 @@ class NavBar extends StatelessWidget {
 
           // Floating button
           Positioned(
-            top: -14, // Adjusted for new button size to keep it centered
+            top: -10, // Adjusted for new button size to keep it centered
             left: 0,
             right: 0,
             child: Center(
-              child: GestureDetector(
-                onTap: canStartNewSession ? onStartStopPressed : null,
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: canStartNewSession
-                        ? LinearGradient(
-                            colors: isMeasureActive
-                                ? [Colors.redAccent, Colors.red]
-                                : [Color(Config.COLOR_BUTTON), Color(Config.COLOR_BUTTON)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : LinearGradient(
-                            colors: [Colors.grey.shade300, Colors.grey.shade400],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 6,
+              child: IgnorePointer(
+                ignoring: !canStartNewSession,
+                child: GestureDetector(
+                  onTap: canStartNewSession ? onStartStopPressed : null,
+                  child: Container(
+                    width: 74,
+                    height: 74,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: canStartNewSession
+                          ? LinearGradient(
+                              colors: isMeasureActive
+                                  ? [Colors.redAccent, Colors.red]
+                                  : [const Color(Config.accentColor), const Color(Config.accentColor)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [Colors.grey.shade100, Colors.grey.shade200],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 6,
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: isMeasureActive
-                        ? Icon(Icons.stop_rounded, color: Colors.white, size: 32)
-                        : SvgPicture.asset(
-                            'assets/icons/dot-circle.svg',
-                            color: Colors.white,
-                            width: 32,
-                            height: 32,
-                          ),
+                    child: Center(
+                      child: canStartNewSession
+                          ? (isMeasureActive
+                              ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
+                              : const Icon(Icons.radio_button_on, color: Colors.white, size: 38))
+                          : Icon(Icons.radio_button_on, color: Colors.grey.shade50, size: 38),
+                    ),
                   ),
                 ),
               ),
@@ -153,7 +155,7 @@ class NavBar extends StatelessWidget {
           children: [
             SvgPicture.asset(
               selected ? svgActive : svgInactive,
-              color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
+              color: selected ? const Color(Config.primaryColor) : Colors.black87,
               width: 26,
               height: 26,
             ),
@@ -163,7 +165,7 @@ class NavBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? Color(Config.COLOR_APP_BAR) : Colors.black87,
+                color: selected ? const Color(Config.primaryColor) : Colors.black87,
               ),
             ),
           ],

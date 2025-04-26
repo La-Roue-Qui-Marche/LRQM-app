@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Utils/config.dart';
-import 'ActionButton.dart';
-import 'DiscardButton.dart';
+import 'button_action.dart';
+import 'button_discard.dart';
 
 void showTextModal(
   BuildContext context,
@@ -84,8 +84,8 @@ class _TextModalContent extends StatefulWidget {
     this.countdownStartDate,
     this.externalUrl,
     this.externalUrlLabel,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _TextModalContentState createState() => _TextModalContentState();
@@ -153,12 +153,12 @@ class _TextModalContentState extends State<_TextModalContent> {
         Text(
           widget.title,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Color(Config.COLOR_APP_BAR),
+            color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         if (widget.countdownStartDate == null) ...[
           if (widget.dropdownItems == null)
             Text(
@@ -185,7 +185,7 @@ class _TextModalContentState extends State<_TextModalContent> {
                 isExpanded: true,
                 icon: const Icon(
                   Icons.keyboard_arrow_down,
-                  color: Color(Config.COLOR_APP_BAR),
+                  color: Color(Config.primaryColor),
                 ),
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
@@ -194,14 +194,14 @@ class _TextModalContentState extends State<_TextModalContent> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(Config.COLOR_APP_BAR),
+                      color: Color(Config.primaryColor),
                       width: 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(Config.COLOR_APP_BAR),
+                      color: Color(Config.primaryColor),
                       width: 2,
                     ),
                   ),
@@ -244,7 +244,7 @@ class _TextModalContentState extends State<_TextModalContent> {
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(Config.COLOR_APP_BAR).withOpacity(0.2),
+              color: const Color(Config.primaryColor).withOpacity(0.2),
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Text(
@@ -252,7 +252,7 @@ class _TextModalContentState extends State<_TextModalContent> {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(Config.COLOR_APP_BAR),
+                color: Color(Config.primaryColor),
               ),
               textAlign: TextAlign.center,
             ),
@@ -271,13 +271,13 @@ class _TextModalContentState extends State<_TextModalContent> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start, // Align left
                   children: [
-                    Icon(Icons.open_in_new, color: Color(Config.COLOR_APP_BAR)),
+                    const Icon(Icons.open_in_new, color: Color(Config.primaryColor)),
                     const SizedBox(width: 12),
                     Flexible(
                       child: Text(
                         widget.externalUrlLabel ?? "S'inscrire sur le site web",
                         style: const TextStyle(
-                          color: Color(Config.COLOR_APP_BAR),
+                          color: Color(Config.primaryColor),
                           fontWeight: FontWeight.w700,
                           decoration: TextDecoration.underline,
                           fontSize: 16,
@@ -300,7 +300,7 @@ class _TextModalContentState extends State<_TextModalContent> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                    child: DiscardButton(
+                    child: ButtonDiscard(
                       text: "Annuler",
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -315,7 +315,7 @@ class _TextModalContentState extends State<_TextModalContent> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                    child: ActionButton(
+                    child: ButtonAction(
                       text: "OK",
                       onPressed: () {
                         Navigator.of(context).pop();

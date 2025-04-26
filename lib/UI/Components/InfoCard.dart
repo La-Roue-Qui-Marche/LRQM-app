@@ -79,7 +79,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
           color: Colors.transparent, // Ensure white background
           borderRadius: BorderRadius.circular(16.0), // Rounded corners
         ),
-        padding: const EdgeInsets.all(10.0), // Consistent padding
+        padding: const EdgeInsets.only(bottom: 10.0), // Consistent padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -89,9 +89,9 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                   Container(
                     width: 48,
                     height: 48,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(Config.COLOR_BACKGROUND), // Subtle background for logo
+                      color: Color(Config.backgroundColor), // Subtle background for logo
                     ),
                     child: Center(
                       child: IconTheme(
@@ -112,7 +112,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       Text(
                         widget.title,
                         style: const TextStyle(
-                          fontSize: 20, // Slightly larger font
+                          fontSize: 22, // Slightly larger font
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -176,13 +176,13 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                         IconButton(
                           icon: actionItem.icon, // Updated to use Widget
                           onPressed: actionItem.onPressed,
-                          color: Colors.black54, // Updated color
+                          color: Colors.black87, // Updated color
                         ),
                         Text(
                           actionItem.label,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: Colors.black54, // Updated color
+                            color: Colors.black87, // Updated color
                           ),
                         ),
                       ],

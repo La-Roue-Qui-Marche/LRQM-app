@@ -1,30 +1,22 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Utils/config.dart';
+import '../../Geolocalisation/Geolocation.dart';
+import '../../Data/UserData.dart';
+import '../../API/NewUserController.dart';
 import 'ContributionGraph.dart';
 
 class PersonalInfoCard extends StatefulWidget {
   final bool isSessionActive;
-  final bool isCountingInZone;
-  final String logoPath;
-  final String bibNumber;
-  final String userName;
-  final String contribution;
-  final String totalTime;
-  final Stream<Map<String, int>> geoStream;
+  final Geolocation? geolocation;
 
   const PersonalInfoCard({
     super.key,
     required this.isSessionActive,
-    required this.isCountingInZone,
-    required this.logoPath,
-    required this.bibNumber,
-    required this.userName,
-    required this.contribution,
-    required this.totalTime,
-    required this.geoStream,
+    this.geolocation,
   });
 
   @override
@@ -32,123 +24,217 @@ class PersonalInfoCard extends StatefulWidget {
 }
 
 class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
-  late int _currentContribution;
-  final List<Widget> _particles = [];
+  // Replace state variables with ValueNotifiers
+  final ValueNotifier<int> _currentContributionNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<List<Widget>> _particlesNotifier = ValueNotifier<List<Widget>>([]);
+
+  // User data as ValueNotifiers
+  final ValueNotifier<String> _bibNumberNotifier = ValueNotifier<String>("");
+  final ValueNotifier<String> _userNameNotifier = ValueNotifier<String>("");
+  final ValueNotifier<int> _totalDistanceNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> _totalTimeNotifier = ValueNotifier<int>(0);
+
+  // Session data as ValueNotifiers
+  final ValueNotifier<int> _sessionDistanceNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> _sessionTimeNotifier = ValueNotifier<int>(0);
+
+  final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(true);
+
+  // Internal state for zone as ValueNotifiers
+  final ValueNotifier<bool> _isCountingInZoneNotifier = ValueNotifier<bool>(true);
+
+  StreamSubscription? _geoSubscription;
+  StreamSubscription? _zoneSubscription;
 
   @override
   void initState() {
     super.initState();
-    _currentContribution = _parseDistance(widget.contribution);
+    _currentContributionNotifier.value = 0;
+    _loadUserData();
+    _setupGeolocationListener();
+    _listenCountingInZone();
   }
 
   @override
   void dispose() {
+    _geoSubscription?.cancel();
+    _zoneSubscription?.cancel();
+    // Dispose all ValueNotifiers
+    _currentContributionNotifier.dispose();
+    _particlesNotifier.dispose();
+    _bibNumberNotifier.dispose();
+    _userNameNotifier.dispose();
+    _totalDistanceNotifier.dispose();
+    _totalTimeNotifier.dispose();
+    _sessionDistanceNotifier.dispose();
+    _sessionTimeNotifier.dispose();
+    _isLoadingNotifier.dispose();
+    _isCountingInZoneNotifier.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserData() async {
+    _isLoadingNotifier.value = true;
+
+    try {
+      // Get bib ID
+      final bibId = await UserData.getBibId();
+      if (bibId != null) {
+        _bibNumberNotifier.value = bibId;
+      }
+
+      // Get username
+      final username = await UserData.getUsername();
+      if (username != null) {
+        _userNameNotifier.value = username;
+      }
+
+      // Get user ID for distance and time
+      final userId = await UserData.getUserId();
+      if (userId != null) {
+        // Get total distance
+        final distanceResult = await NewUserController.getUserTotalMeters(userId);
+        if (!distanceResult.hasError) {
+          final totalDistance = distanceResult.value ?? 0;
+          _totalDistanceNotifier.value = totalDistance;
+          // Set current contribution to total distance initially
+          _currentContributionNotifier.value = totalDistance;
+        }
+
+        // Get total time
+        final timeResult = await NewUserController.getUserTotalTime(userId);
+        if (!timeResult.hasError) {
+          _totalTimeNotifier.value = timeResult.value ?? 0;
+        }
+      }
+    } catch (e) {
+      developer.log("Error loading user data: $e");
+    } finally {
+      _isLoadingNotifier.value = false;
+    }
+  }
+
+  void _listenCountingInZone() {
+    if (widget.geolocation != null) {
+      _zoneSubscription = widget.geolocation!.stream.listen((event) {
+        final inZone = (event["isCountingInZone"] as num?)?.toInt() == 1;
+        if (_isCountingInZoneNotifier.value != inZone) {
+          _isCountingInZoneNotifier.value = inZone;
+        }
+      });
+    }
+  }
+
+  void _setupGeolocationListener() {
+    _geoSubscription?.cancel();
+
+    if (widget.geolocation != null) {
+      _geoSubscription = widget.geolocation!.stream.listen((event) {
+        final int newDistance = (event["distance"] as num?)?.toInt() ?? 0;
+        final int newTime = (event["time"] as num?)?.toInt() ?? 0;
+
+        _sessionDistanceNotifier.value = newDistance;
+        _sessionTimeNotifier.value = newTime;
+
+        if (widget.isSessionActive && newDistance > _currentContributionNotifier.value) {
+          final int diff = newDistance - _currentContributionNotifier.value;
+          _spawnParticle("+$diff m");
+          _currentContributionNotifier.value = newDistance;
+        }
+      });
+    }
   }
 
   @override
   void didUpdateWidget(covariant PersonalInfoCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _checkForContributionIncrease();
-  }
-
-  void _checkForContributionIncrease() {
-    final newContribution = _parseDistance(widget.contribution);
-
-    if (newContribution > _currentContribution) {
-      final int diff = newContribution - _currentContribution;
-      _spawnParticle("+$diff m");
-
-      setState(() {
-        _currentContribution = newContribution;
-      });
+    if (oldWidget.geolocation != widget.geolocation) {
+      _geoSubscription?.cancel();
+      _zoneSubscription?.cancel();
+      _setupGeolocationListener();
+      _listenCountingInZone();
     }
   }
 
   void _spawnParticle(String label) {
+    if (!widget.isSessionActive) return;
     final random = Random();
     final dx = random.nextDouble() * 60 - 30;
     final dy = random.nextDouble() * -60 - 30;
 
-    final particle = _AnimatedParticle(
-      offsetX: dx,
-      offsetY: dy,
-      label: label,
+    final key = UniqueKey();
+    final particle = KeyedSubtree(
+      key: key,
+      child: _AnimatedParticle(
+        offsetX: dx,
+        offsetY: dy,
+        label: label,
+      ),
     );
 
-    setState(() {
-      _particles.add(particle);
-    });
+    final currentParticles = List<Widget>.from(_particlesNotifier.value);
+    currentParticles.add(particle);
+    _particlesNotifier.value = currentParticles;
 
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _particles.remove(particle);
-        });
-      }
+      final updatedParticles = List<Widget>.from(_particlesNotifier.value);
+      updatedParticles.removeWhere((w) => w.key == key);
+      _particlesNotifier.value = updatedParticles;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 12.0, bottom: 8.0, top: 16.0),
-          child: Row(
-            children: [
-              Text(
-                'Ta contribution à l\'événement',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Stack(
+    return ValueListenableBuilder<List<Widget>>(
+      valueListenable: _particlesNotifier,
+      builder: (context, particles, _) {
+        return Stack(
           children: [
-            _buildCard(),
-            ..._particles,
+            _buildCard(widget.isSessionActive),
+            ...particles,
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildCard() {
+  Widget _buildCard(bool isSessionActive) {
     return Stack(
       children: [
         Container(
-          margin: const EdgeInsets.only(bottom: 0.0, right: 12.0, left: 12.0),
+          margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 6.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(0.0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Ta contribution à l\'événement',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
               _buildHeader(),
-              const SizedBox(height: 8),
-              Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _buildInfoCards(),
               const SizedBox(height: 16),
               _buildFunMessage(),
-              if (widget.isSessionActive) const SizedBox(height: 8),
-              if (widget.isSessionActive) Divider(color: Color(Config.COLOR_BACKGROUND), thickness: 1),
-              if (widget.isSessionActive) const SizedBox(height: 8),
-              if (widget.isSessionActive) ContributionGraph(geoStream: widget.geoStream),
+              if (isSessionActive) const SizedBox(height: 8),
+              if (isSessionActive) const Divider(color: Color(Config.backgroundColor), thickness: 1),
+              if (isSessionActive) const SizedBox(height: 8),
+              if (isSessionActive) ContributionGraph(geolocation: widget.geolocation),
             ],
           ),
         ),
         Positioned(
-          top: 16,
-          right: 28,
+          top: 72,
+          right: 16,
           child: _statusBadge(),
         ),
       ],
@@ -167,35 +253,50 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                 children: [
                   Row(
                     children: [
-                      Text(
+                      const Text(
                         '№ de dossard: ',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
                       ),
-                      Text(
-                        widget.bibNumber,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _isLoadingNotifier,
+                        builder: (context, isLoading, _) {
+                          return ValueListenableBuilder<String>(
+                            valueListenable: _bibNumberNotifier,
+                            builder: (context, bibNumber, _) {
+                              return isLoading || bibNumber.isEmpty
+                                  ? _buildShimmer(width: 40)
+                                  : Text(
+                                      bibNumber,
+                                      style: const TextStyle(
+                                          fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+                                    );
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Container(
-                        child: Image.asset(
-                          widget.logoPath,
-                          width: 22,
-                          height: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (widget.userName.isNotEmpty)
-                        Text(
-                          widget.userName,
-                          style: const TextStyle(fontSize: 18, color: Colors.black87),
-                        ),
-                    ],
+                  const SizedBox(height: 2),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _isLoadingNotifier,
+                    builder: (context, isLoading, _) {
+                      return ValueListenableBuilder<String>(
+                        valueListenable: _userNameNotifier,
+                        builder: (context, userName, _) {
+                          if (isLoading) {
+                            return _buildShimmer(width: 100);
+                          } else if (userName.isNotEmpty) {
+                            return Text(
+                              userName,
+                              style: const TextStyle(fontSize: 18, color: Colors.black87),
+                            );
+                          } else {
+                            return const SizedBox.shrink();
+                          }
+                        },
+                      );
+                    },
                   ),
-                  if (widget.userName.isEmpty) _buildShimmer(width: 100),
                 ],
               ),
             ),
@@ -209,19 +310,38 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     return Row(
       children: [
         Expanded(
-          child: _infoCard(
-            label: 'Distance',
-            value: widget.contribution.isNotEmpty
-                ? "${_formatDistance(_currentContribution)} m"
-                : null, // Pass null to trigger shimmer
-            color: const Color(Config.COLOR_APP_BAR),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isLoadingNotifier,
+            builder: (context, isLoading, _) {
+              return ValueListenableBuilder<int>(
+                valueListenable: widget.isSessionActive ? _sessionDistanceNotifier : _totalDistanceNotifier,
+                builder: (context, displayedDistance, _) {
+                  return _infoCard(
+                    label: 'Distance',
+                    value: isLoading ? null : "${_formatDistance(displayedDistance)} m",
+                    color: const Color(Config.primaryColor),
+                  );
+                },
+              );
+            },
           ),
         ),
+        const SizedBox(width: 16),
         Expanded(
-          child: _infoCard(
-            label: 'Temps total',
-            value: widget.totalTime.isNotEmpty ? widget.totalTime : null,
-            color: const Color(Config.COLOR_APP_BAR),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isLoadingNotifier,
+            builder: (context, isLoading, _) {
+              return ValueListenableBuilder<int>(
+                valueListenable: widget.isSessionActive ? _sessionTimeNotifier : _totalTimeNotifier,
+                builder: (context, displayedTime, _) {
+                  return _infoCard(
+                    label: 'Temps total',
+                    value: isLoading ? null : _formatModernTime(displayedTime),
+                    color: const Color(Config.primaryColor),
+                  );
+                },
+              );
+            },
           ),
         ),
       ],
@@ -229,17 +349,26 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   Widget _buildFunMessage() {
-    if (widget.contribution.isNotEmpty) {
-      return Text(
-        _getDistanceMessage(_currentContribution),
-        style: const TextStyle(fontSize: 16, color: Colors.black87),
-      );
-    }
-    return _buildShimmer(width: double.infinity, height: 16);
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isLoadingNotifier,
+      builder: (context, isLoading, _) {
+        if (isLoading) {
+          return _buildShimmer(width: double.infinity, height: 16);
+        }
+        return ValueListenableBuilder<int>(
+          valueListenable: widget.isSessionActive ? _sessionDistanceNotifier : _totalDistanceNotifier,
+          builder: (context, displayedDistance, _) {
+            return Text(
+              _getDistanceMessage(displayedDistance),
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _infoCard({required String label, String? value, required Color color}) {
-    // Extract value and unit if possible
     String mainValue = '';
     String unit = '';
     if (value != null && value.isNotEmpty) {
@@ -253,11 +382,12 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(Config.COLOR_BACKGROUND),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.black87.withOpacity(0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +401,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
                     Text(
                       mainValue,
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: color,
                         letterSpacing: 0.5,
@@ -312,52 +442,62 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   }
 
   Widget _statusBadge() {
-    String statusText;
-    Color badgeColor;
-    Color textColor = Colors.white;
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isCountingInZoneNotifier,
+      builder: (context, isCountingInZone, _) {
+        String statusText;
+        Color badgeColor;
+        Color textColor = Colors.white;
 
-    if (!widget.isSessionActive) {
-      statusText = 'En pause';
-      badgeColor = Color(Config.COLOR_BACKGROUND);
-      textColor = Colors.black87;
-    } else if (!widget.isCountingInZone) {
-      statusText = 'Hors Zone';
-      badgeColor = Colors.red.shade400;
-    } else {
-      statusText = 'Actif';
-      badgeColor = Colors.green.shade400;
-    }
+        if (!widget.isSessionActive) {
+          statusText = 'En pause';
+          badgeColor = const Color(Config.backgroundColor);
+          textColor = Colors.black87;
+        } else if (!isCountingInZone) {
+          statusText = 'Hors Zone';
+          badgeColor = Colors.red.shade400;
+        } else {
+          statusText = 'Actif';
+          badgeColor = Colors.green.shade400;
+        }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: badgeColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.circle,
-            size: 10,
-            color: !widget.isSessionActive ? Colors.black87 : Colors.white, // Change to black if "En pause"
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: badgeColor,
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 6),
-          Text(
-            statusText,
-            style: TextStyle(fontSize: 14, color: textColor),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.circle,
+                size: 10,
+                color: !widget.isSessionActive ? Colors.black87 : Colors.white,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                statusText,
+                style: TextStyle(fontSize: 14, color: textColor),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   String _formatDistance(int distance) {
-    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\\d))'), (m) => "${m[1]}'");
+    if (distance <= 0) return "0";
+    return distance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => "${m[1]}'");
   }
 
-  int _parseDistance(String input) {
-    return int.tryParse(input.replaceAll("'", "").replaceAll(" m", "")) ?? 0;
+  String _formatModernTime(int seconds) {
+    if (seconds < 0) seconds = 0;
+    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
+    final m = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return "$h:$m:$s";
   }
 
   String _getDistanceMessage(int distance) {
@@ -407,15 +547,15 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
       animation: _controller,
       builder: (_, child) {
         return Positioned(
-          top: 150 - widget.offsetY * _controller.value,
+          top: 190 - widget.offsetY * _controller.value,
           left: MediaQuery.of(context).size.width / 3.5 + widget.offsetX * _controller.value,
           child: Opacity(
             opacity: 1 - _controller.value,
             child: Text(
               widget.label,
               style: const TextStyle(
-                fontSize: 14,
-                color: Colors.greenAccent,
+                fontSize: 16,
+                color: Colors.green,
               ),
             ),
           ),

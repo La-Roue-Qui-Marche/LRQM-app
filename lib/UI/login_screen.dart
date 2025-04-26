@@ -4,16 +4,17 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../API/NewEventController.dart';
 import '../API/NewUserController.dart';
-import '../Utils/Result.dart';
 import '../Utils/config.dart';
 import '../Data/EventData.dart';
-import 'ConfirmScreen.dart';
-import 'LoadingScreen.dart';
-import 'Components/ActionButton.dart';
+import 'confirm_screen.dart';
+import 'loading_screen.dart';
+import 'Components/button_action.dart';
 import 'Components/TextModal.dart';
+import 'Components/app_toast.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -24,9 +25,9 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final TextEditingController _controller = TextEditingController();
+
   bool _isEventActive = false;
   String? _eventName;
-
   List<dynamic> _events = [];
   dynamic _selectedEvent;
 
@@ -38,77 +39,46 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> _loadSavedEvent() async {
-    String? eventName = await EventData.getEventName();
-    setState(() {
-      _eventName = eventName;
-    });
+    final eventName = await EventData.getEventName();
+    setState(() => _eventName = eventName);
   }
 
-  void _checkEventStatus() async {
-    setState(() {
-      _isEventActive = false;
-    });
+  Future<void> _checkEventStatus() async {
+    setState(() => _isEventActive = false);
 
-    Result<List<dynamic>> eventsResult = await NewEventController.getAllEvents();
+    final eventsResult = await NewEventController.getAllEvents();
     if (eventsResult.hasError) {
       log("Error fetching events: ${eventsResult.error}");
+      AppToast.showError("Erreur lors de la récupération des évènements.");
       _showErrorModal("Erreur lors de la récupération de l'évènement.");
       return;
     }
 
-    var events = eventsResult.value ?? [];
-    if (events.isEmpty) {
+    _events = eventsResult.value ?? [];
+    if (_events.isEmpty) {
+      AppToast.showError("Erreur lors de la récupération des évènements.");
       _showErrorModal("Aucun évènement trouvé.");
       return;
     }
 
-    setState(() {
-      _events = events;
-    });
+    setState(() => _events = _events);
 
     if (_events.length == 1) {
       _handleEventSelected(_events.first);
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showEventSelectionModal();
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showEventSelectionModal());
     }
   }
 
-  void _handleEventSelected(dynamic event) async {
+  Future<void> _handleEventSelected(dynamic event) async {
     _selectedEvent = event;
     await EventData.saveEvent(event);
     _loadSavedEvent();
-
-    DateTime startDate = DateTime.parse(event['start_date']);
-    DateTime endDate = DateTime.parse(event['end_date']);
-    DateTime now = DateTime.now();
-
-    setState(() {
-      _isEventActive = true;
-    });
-
-    if (now.isBefore(startDate)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(
-          context,
-          "C'est bientôt l'heure !",
-          "L'évènement \"${_selectedEvent['name']}\" n'a pas encore démarré. "
-              "Pas de stress, on compte les secondes ensemble jusqu'au top départ !",
-          countdownStartDate: startDate, // Use countdown functionality
-        );
-      });
-    } else if (now.isAfter(endDate)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(context, "C'est fini !", "Malheureusement, l'évènement est terminé.");
-      });
-    }
+    setState(() => _isEventActive = true);
   }
 
   void _showErrorModal(String message) {
-    setState(() {
-      _isEventActive = true;
-    });
+    setState(() => _isEventActive = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showTextModal(
         context,
@@ -125,40 +95,17 @@ class _LoginState extends State<Login> {
 
     showTextModal(
       context,
-      "Selectionne ton évènement",
+      "Sélectionne ton évènement",
       "Merci de sélectionner ton évènement",
       dropdownItems: _events.map((e) => e['name']).toList(),
       selectedDropdownValue: selectedEvent['name'],
-      onDropdownChanged: (value) {
-        selectedEvent = _events.firstWhere((e) => e['name'] == value);
-      },
+      onDropdownChanged: (value) => selectedEvent = _events.firstWhere((e) => e['name'] == value),
       showConfirmButton: true,
-      onConfirm: () {
-        if (selectedEvent != null) {
-          _handleEventSelected(selectedEvent);
-        }
-      },
+      onConfirm: () => _handleEventSelected(selectedEvent),
     );
   }
 
-  void _showUserNotFoundModal() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showTextModal(
-        context,
-        "Numéro de dossard introuvable",
-        "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
-        showConfirmButton: true,
-      );
-    });
-  }
-
-  void showInSnackBar(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
-  }
-
-  void _getUsername() async {
-    log("Trying to login");
-
+  Future<void> _getUsername() async {
     FocusScope.of(context).unfocus();
 
     if (_controller.text.isEmpty) {
@@ -166,24 +113,23 @@ class _LoginState extends State<Login> {
         showTextModal(
           context,
           "Numéro de dossard manquant",
-          "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM.",
+          "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM",
           showConfirmButton: true,
+          externalUrl: "https://larouequimarche.ch/levenement/inscription/",
+          externalUrlLabel: "S'inscrire en ligne",
         );
       });
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LoadingScreen()),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoadingScreen()));
 
     try {
-      int dossardNumber = int.parse(_controller.text);
-      Result<Map<String, dynamic>> loginResult = await NewUserController.login(_controller.text, _selectedEvent['id']);
+      int.parse(_controller.text);
 
+      final loginResult = await NewUserController.login(_controller.text, _selectedEvent['id']);
       final user = loginResult.value;
-      // Check if user object is valid
+
       if (loginResult.error != null ||
           user == null ||
           user['id'] == null ||
@@ -206,19 +152,24 @@ class _LoginState extends State<Login> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ConfirmScreen(userData: user)),
+        MaterialPageRoute(builder: (_) => ConfirmScreen(userData: user)),
       );
     } catch (e) {
-      showInSnackBar("Numéro de dossard invalide");
+      AppToast.showError("Numéro de dossard invalide");
       Navigator.pop(context);
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      AppToast.showError("Impossible d'ouvrir le lien d'inscription.");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isEventActive) {
-      return const LoadingScreen();
-    }
+    if (!_isEventActive) return const LoadingScreen();
 
     return Scaffold(
       body: Stack(
@@ -234,9 +185,7 @@ class _LoginState extends State<Login> {
                 ),
                 BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                  child: Container(
-                    color: Colors.black.withOpacity(0.05),
-                  ),
+                  child: Container(color: Colors.black.withOpacity(0.05)),
                 ),
               ],
             ),
@@ -247,9 +196,7 @@ class _LoginState extends State<Login> {
               child: Card(
                 elevation: 0,
                 color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
@@ -268,10 +215,7 @@ class _LoginState extends State<Login> {
                         const Text(
                           'Entre ton numéro de dossard pour continuer.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black87,
-                          ),
+                          style: TextStyle(fontSize: 16, color: Colors.black87),
                         ),
                       const SizedBox(height: 16),
                       TextField(
@@ -279,23 +223,20 @@ class _LoginState extends State<Login> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [LengthLimitingTextInputFormatter(4)],
                         textAlign: TextAlign.center,
-                        showCursor: false, // Hide the caret
+                        showCursor: false,
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w600,
-                          color: Color(Config.COLOR_APP_BAR),
+                          color: Color(Config.primaryColor),
                           letterSpacing: 5.0,
                         ),
                         decoration: const InputDecoration(
-                          hintStyle: TextStyle(
-                            fontSize: 18,
-                            color: Color(Config.COLOR_APP_BAR),
-                          ),
+                          hintStyle: TextStyle(fontSize: 18, color: Color(Config.primaryColor)),
                           enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 1),
+                            borderSide: BorderSide(color: Color(Config.primaryColor), width: 1),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(Config.COLOR_APP_BAR), width: 2),
+                            borderSide: BorderSide(color: Color(Config.primaryColor), width: 2),
                           ),
                           contentPadding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
                         ),
@@ -305,19 +246,31 @@ class _LoginState extends State<Login> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Numéro entre 1 et 9999.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(Config.COLOR_APP_BAR),
-                          ),
+                          style: TextStyle(fontSize: 14, color: Color(Config.primaryColor)),
                         ),
                       ),
                       const SizedBox(height: 24),
-                      ActionButton(
+                      ButtonAction(
                         icon: Icons.login,
                         text: 'Connexion',
                         onPressed: _getUsername,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => _launchUrl("https://larouequimarche.ch/levenement/inscription/"),
+                          child: const Text(
+                            "Tu n'es pas encore inscrit ?",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                              decoration: TextDecoration.underline,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       FutureBuilder<String>(
                         future: Config.getAppVersion(),
                         builder: (context, snapshot) {
@@ -325,10 +278,7 @@ class _LoginState extends State<Login> {
                           return Text(
                             'v$version',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
+                            style: const TextStyle(fontSize: 12, color: Colors.black54),
                           );
                         },
                       ),
