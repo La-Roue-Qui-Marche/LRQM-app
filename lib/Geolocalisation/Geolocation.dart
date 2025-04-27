@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart' as geo;
-import 'package:background_location_2/background_location.dart' as bg;
+import 'package:background_location/background_location.dart' as bg;
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
 import 'package:lrqm/API/NewMeasureController.dart';
 import 'package:lrqm/Utils/LogHelper.dart';
@@ -48,7 +48,6 @@ class Geolocation with WidgetsBindingObserver {
     _initZone();
   }
 
-  // Change the type to match the stream's Map<String, int>
   Map<String, int>? lastEvent;
 
   late geo.LocationSettings _settings;
@@ -71,7 +70,6 @@ class Geolocation with WidgetsBindingObserver {
 
   Stream<Map<String, int>> get stream => _streamController.stream;
 
-  // Add simple getters for current distance and elapsed time
   int get currentDistance => _distance;
   int get elapsedTimeInSeconds => _elapsedTimeInSeconds;
 
@@ -135,7 +133,6 @@ class Geolocation with WidgetsBindingObserver {
     _distance = 0;
     _outsideCounter = 0;
 
-    // Initialize lastEvent with proper type
     lastEvent = {
       "time": 0,
       "distance": 0,
@@ -158,7 +155,7 @@ class Geolocation with WidgetsBindingObserver {
           "time": _elapsedTimeInSeconds,
           "distance": _distance,
           "isCountingInZone": _isCountingInZone ? 1 : 0,
-          "speed": _oldPos != null ? 0 : 0, // Add default speed value
+          "speed": _oldPos != null ? 0 : 0,
         });
       }
     });
@@ -240,10 +237,9 @@ class Geolocation with WidgetsBindingObserver {
       timestamp: timestamp,
       lat: lat,
       lng: lng,
-      duration: _elapsedTimeInSeconds, // Add duration
+      duration: _elapsedTimeInSeconds,
     );
 
-    // Store latest event data with proper integer values
     lastEvent = {
       "time": _elapsedTimeInSeconds,
       "distance": _distance,
@@ -251,7 +247,6 @@ class Geolocation with WidgetsBindingObserver {
       "speed": speed.toInt(),
     };
 
-    // Add speed to the stream data
     if (!_streamController.isClosed) {
       _streamController.sink.add(lastEvent!);
     }
@@ -377,14 +372,17 @@ class Geolocation with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!_positionStreamStarted) return;
-    if (state == AppLifecycleState.paused) {
-      _switchToBackgroundLocation();
-    } else if (state == AppLifecycleState.resumed) {
-      _switchToForegroundLocation();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      if (state == AppLifecycleState.paused) {
+        _switchToBackgroundLocation();
+      } else if (state == AppLifecycleState.resumed) {
+        _switchToForegroundLocation();
+      }
     }
   }
 
   Future<void> _switchToBackgroundLocation() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
     LogHelper.logInfo("[BG] Switching to background...");
     await _positionStream?.cancel();
 
@@ -400,6 +398,7 @@ class Geolocation with WidgetsBindingObserver {
   }
 
   Future<void> _switchToForegroundLocation() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
     LogHelper.logInfo("[FG] Switching to foreground...");
     try {
       await bg.BackgroundLocation.stopLocationService();
