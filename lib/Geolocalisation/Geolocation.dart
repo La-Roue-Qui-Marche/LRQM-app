@@ -11,7 +11,6 @@ import '../Data/EventData.dart';
 import '../Data/MeasureData.dart';
 
 class GeolocationConfig {
-  final Duration locationUpdateInterval;
   final int locationDistanceFilter;
   final geo.LocationAccuracy locationAccuracy;
   final Duration apiInterval;
@@ -25,7 +24,6 @@ class GeolocationConfig {
   final String notificationIconType;
 
   GeolocationConfig({
-    this.locationUpdateInterval = const Duration(seconds: 5),
     this.locationDistanceFilter = 5,
     this.locationAccuracy = geo.LocationAccuracy.bestForNavigation,
     this.apiInterval = const Duration(seconds: 10),
@@ -95,7 +93,6 @@ class Geolocation with WidgetsBindingObserver {
       return geo.AndroidSettings(
         accuracy: config.locationAccuracy,
         distanceFilter: config.locationDistanceFilter,
-        intervalDuration: config.locationUpdateInterval,
         forceLocationManager: true,
         foregroundNotificationConfig: geo.ForegroundNotificationConfig(
           notificationText: config.notificationText,
