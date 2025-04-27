@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
@@ -280,6 +281,27 @@ class Geolocation with WidgetsBindingObserver {
     final zone = _zonePoints;
     if (zone == null) return false;
     return mp.PolygonUtil.containsLocation(pos, zone, false);
+  }
+
+  Future<bool> isInZone() async {
+    final pos = await geo.Geolocator.getCurrentPosition();
+    return await isLocationInZone(pos.latitude, pos.longitude);
+  }
+
+  Future<double> distanceToZone() async {
+    final pos = await geo.Geolocator.getCurrentPosition();
+    final zone = _zonePoints;
+    if (zone == null) return -1;
+    if (await isLocationInZone(pos.latitude, pos.longitude)) return -1;
+    final currentPoint = mp.LatLng(pos.latitude, pos.longitude);
+    double minDistance = double.infinity;
+    for (int i = 0; i < zone.length; i++) {
+      final p1 = zone[i];
+      final p2 = zone[(i + 1) % zone.length];
+      final dist = mp.PolygonUtil.distanceToLine(currentPoint, p1, p2).toDouble();
+      if (dist < minDistance) minDistance = dist;
+    }
+    return double.parse((minDistance / 1000).toStringAsFixed(1));
   }
 
   void cleanup() {
