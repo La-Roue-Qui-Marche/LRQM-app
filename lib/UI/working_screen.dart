@@ -79,7 +79,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void _initializeGeolocation() {
     _geolocation = Geolocation(
       config: GeolocationConfig(
-        locationUpdateInterval: Config.locationUpdateInterval,
         locationDistanceFilter: Config.locationDistanceFilter,
         accuracyThreshold: Config.accuracyThreshold,
         distanceThreshold: Config.distanceThreshold,
