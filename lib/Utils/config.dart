@@ -16,11 +16,10 @@ class Config {
   static const double defaultLon1 = 6.71095185969227;
 
   // ----------------- Geolocation Config -----------------
-  static const Duration locationUpdateInterval = Duration(seconds: 5);
   static const int locationDistanceFilter = 5;
   static const double accuracyThreshold = 20;
-  static const int distanceThreshold = 40;
-  static const double speedThreshold = 10;
+  static const int distanceThreshold = 60;
+  static const double speedThreshold = 12;
   static const Duration apiInterval = Duration(seconds: 10);
   static const int outsideCounterMax = 5;
 

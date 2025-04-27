@@ -46,6 +46,8 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   StreamSubscription? _geoSubscription;
   StreamSubscription? _zoneSubscription;
 
+  int _lastSessionDistance = 0; // Track last received session distance
+
   @override
   void initState() {
     super.initState();
@@ -135,12 +137,12 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
         _sessionDistanceNotifier.value = newDistance;
         _sessionTimeNotifier.value = newTime;
-
-        if (widget.isSessionActive && newDistance > _currentContributionNotifier.value) {
-          final int diff = newDistance - _currentContributionNotifier.value;
+        if (widget.isSessionActive && newDistance > _lastSessionDistance) {
+          final int diff = newDistance - _lastSessionDistance;
           _spawnParticle("+$diff m");
-          _currentContributionNotifier.value = newDistance;
         }
+        _lastSessionDistance = newDistance;
+        _currentContributionNotifier.value = newDistance;
       });
     }
   }
@@ -154,6 +156,10 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       _setupGeolocationListener();
       _listenCountingInZone();
     }
+    // Reset _lastSessionDistance when session becomes inactive
+    if (oldWidget.isSessionActive && !widget.isSessionActive) {
+      _lastSessionDistance = 0;
+    }
   }
 
   void _spawnParticle(String label) {
@@ -163,6 +169,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     final dy = random.nextDouble() * -60 - 30;
 
     final key = UniqueKey();
+
     final particle = KeyedSubtree(
       key: key,
       child: _AnimatedParticle(
@@ -547,7 +554,7 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
       animation: _controller,
       builder: (_, child) {
         return Positioned(
-          top: 190 - widget.offsetY * _controller.value,
+          top: 192 - widget.offsetY * _controller.value,
           left: MediaQuery.of(context).size.width / 3.5 + widget.offsetX * _controller.value,
           child: Opacity(
             opacity: 1 - _controller.value,
@@ -556,6 +563,7 @@ class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerP
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.green,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
