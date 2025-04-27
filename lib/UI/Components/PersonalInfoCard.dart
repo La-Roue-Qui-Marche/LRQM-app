@@ -9,6 +9,7 @@ import '../../Data/UserData.dart';
 import '../../API/NewUserController.dart';
 import 'ContributionGraph.dart';
 
+/// Card displaying the user's contribution and session info.
 class PersonalInfoCard extends StatefulWidget {
   final bool isSessionActive;
   final Geolocation? geolocation;
@@ -20,10 +21,11 @@ class PersonalInfoCard extends StatefulWidget {
   });
 
   @override
-  State<PersonalInfoCard> createState() => _PersonalInfoCardState();
+  PersonalInfoCardState createState() => PersonalInfoCardState();
 }
 
-class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
+/// Public state class for PersonalInfoCard to allow external access (e.g., refresh).
+class PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
   // Replace state variables with ValueNotifiers
   final ValueNotifier<int> _currentContributionNotifier = ValueNotifier<int>(0);
   final ValueNotifier<List<Widget>> _particlesNotifier = ValueNotifier<List<Widget>>([]);
@@ -181,6 +183,13 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       updatedParticles.removeWhere((w) => w.key == key);
       _particlesNotifier.value = updatedParticles;
     });
+  }
+
+  /// Refreshes the user data if no session is active.
+  Future<void> refresh() async {
+    if (!widget.isSessionActive) {
+      await _loadUserData();
+    }
   }
 
   @override
