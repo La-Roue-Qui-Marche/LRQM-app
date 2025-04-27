@@ -46,10 +46,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   late Geolocation _geolocation;
 
-  // Add GlobalKeys to access card states
-  final GlobalKey<PersonalInfoCardState> _personalInfoCardKey = GlobalKey<PersonalInfoCardState>();
-  final GlobalKey<EventProgressCardState> _eventProgressCardKey = GlobalKey<EventProgressCardState>();
-
   @override
   void initState() {
     super.initState();
@@ -83,6 +79,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void _initializeGeolocation() {
     _geolocation = Geolocation(
       config: GeolocationConfig(
+        locationUpdateInterval: Config.locationUpdateInterval,
         locationDistanceFilter: Config.locationDistanceFilter,
         accuracyThreshold: Config.accuracyThreshold,
         distanceThreshold: Config.distanceThreshold,
@@ -257,72 +254,57 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   }
 
   Widget _buildHomePage() {
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Only refresh if no session is active
-        if (!_isMeasureOngoingNotifier.value) {
-          _personalInfoCardKey.currentState?.refresh();
-        }
-      },
-      child: SingleChildScrollView(
-        key: PageStorageKey('scrollPage0'),
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(), // Ensure pull-to-refresh works even if not scrollable
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ValueListenableBuilder(
-              valueListenable: _isMeasureOngoingNotifier,
-              builder: (_, isOngoing, __) => PersonalInfoCard(
-                key: _personalInfoCardKey,
-                isSessionActive: isOngoing,
-                geolocation: _geolocation,
-              ),
+    return SingleChildScrollView(
+      key: PageStorageKey('scrollPage0'),
+      controller: _scrollController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ValueListenableBuilder(
+            valueListenable: _isMeasureOngoingNotifier,
+            builder: (_, isOngoing, __) => PersonalInfoCard(
+              key: const ValueKey('personalInfoCard'),
+              isSessionActive: isOngoing,
+              geolocation: _geolocation,
             ),
-            ValueListenableBuilder(
-              valueListenable: _isMeasureOngoingNotifier,
-              builder: (_, isOngoing, __) => DynamicMapCard(
-                geolocation: _geolocation,
-                followUser: isOngoing,
-              ),
+          ),
+          ValueListenableBuilder(
+            valueListenable: _isMeasureOngoingNotifier,
+            builder: (_, isOngoing, __) => DynamicMapCard(
+              geolocation: _geolocation,
+              followUser: isOngoing,
             ),
-            ValueListenableBuilder(
-              valueListenable: _isMeasureOngoingNotifier,
-              builder: (_, isOngoing, __) => isOngoing
-                  ? SizedBox.shrink()
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      child: Center(
-                        child: Text(
-                          'Appuie sur le bouton orange pour démarrer une mesure !',
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
-                        ),
+          ),
+          ValueListenableBuilder(
+            valueListenable: _isMeasureOngoingNotifier,
+            builder: (_, isOngoing, __) => isOngoing
+                ? SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Center(
+                      child: Text(
+                        'Appuie sur le bouton orange pour démarrer une mesure !',
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
                       ),
                     ),
-            ),
-            SizedBox(height: 40),
-          ],
-        ),
+                  ),
+          ),
+          SizedBox(height: 40),
+        ],
       ),
     );
   }
 
   Widget _buildEventPage() {
-    return RefreshIndicator(
-      onRefresh: () async {
-        _eventProgressCardKey.currentState?.refresh();
-      },
-      child: SingleChildScrollView(
-        key: PageStorageKey('scrollPage1'),
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            EventProgressCard(key: _eventProgressCardKey),
-            const SupportCard(),
-          ],
-        ),
+    return SingleChildScrollView(
+      key: PageStorageKey('scrollPage1'),
+      controller: _scrollController,
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          EventProgressCard(key: ValueKey('eventProgressCard')),
+          SupportCard(),
+        ],
       ),
     );
   }

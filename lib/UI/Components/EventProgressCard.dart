@@ -14,11 +14,10 @@ class EventProgressCard extends StatefulWidget {
   });
 
   @override
-  EventProgressCardState createState() => EventProgressCardState();
+  State<EventProgressCard> createState() => _EventProgressCardState();
 }
 
-// Make the state class public for external access
-class EventProgressCardState extends State<EventProgressCard> {
+class _EventProgressCardState extends State<EventProgressCard> {
   // Using ValueNotifier instead of regular state variables
   final ValueNotifier<String?> _objectifNotifier = ValueNotifier<String?>(null);
   final ValueNotifier<String?> _currentValueNotifier = ValueNotifier<String?>(null);
@@ -254,13 +253,6 @@ class EventProgressCardState extends State<EventProgressCard> {
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}\'',
         );
-  }
-
-  /// Public method to refresh all event values and status.
-  Future<void> refresh() async {
-    await _updateEventStatus();
-    _refreshEventValues();
-    _updateEventTimeDisplay();
   }
 
   @override
