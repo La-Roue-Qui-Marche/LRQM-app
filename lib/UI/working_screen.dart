@@ -36,6 +36,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   final _eventStatusNotifier = ValueNotifier<EventStatus>(EventStatus.inProgress);
   final _isMeasureOngoingNotifier = ValueNotifier<bool>(false);
+  final _isCountingInZoneNotifier = ValueNotifier<bool>(true);
 
   int _currentPage = 0;
   bool _shouldShowEventModal = false;
@@ -71,6 +72,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     _geolocation.stopListening();
     _eventStatusNotifier.dispose();
     _isMeasureOngoingNotifier.dispose();
+    _isCountingInZoneNotifier.dispose();
     super.dispose();
   }
 
@@ -207,7 +209,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       'Es-tu sûr de vouloir te déconnecter ?\n\nCela supprimera toutes les données locales et arrêtera toute mesure en cours.',
       showConfirmButton: true,
       onConfirm: () async {
-        _isDisposed = true;
+        _isDisposed = true; // Prevent further timer/event checks
         setState(() => _showMainCards = false);
         await Future.delayed(const Duration(milliseconds: 100));
 
@@ -272,6 +274,20 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
               followUser: isOngoing,
             ),
           ),
+          ValueListenableBuilder(
+            valueListenable: _isMeasureOngoingNotifier,
+            builder: (_, isOngoing, __) => isOngoing
+                ? SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    child: Center(
+                      child: Text(
+                        'Appuie sur le bouton orange pour démarrer une mesure !',
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                      ),
+                    ),
+                  ),
+          ),
           SizedBox(height: 40),
         ],
       ),
@@ -311,11 +327,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void _showEventCompletionModal() => showTextModal(context, 'L\'Évènement est Terminé !',
       "Merci pour ta participation !\n N'hésites pas à prendre une capture d'écran de ta contribution",
       showConfirmButton: true);
-
   void _showEventNotStartedModal() => showTextModal(
       context, 'L\'Évènement n\'a pas Commencé', "Tu pourras démarrer une mesure dès le début de l'évènement.",
       showConfirmButton: true);
-
   void _showEventStartedModal() => showTextModal(context, 'L\'Évènement a Commencé !',
       "Tu peux maintenant démarrer une session pour enregistrer ta contribution à l'évènement.",
       showConfirmButton: true);
