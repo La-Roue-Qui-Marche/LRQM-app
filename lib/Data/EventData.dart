@@ -6,7 +6,6 @@ enum EventStatus { notStarted, inProgress, over }
 
 class EventData {
   static final DataManagement _dataManagement = DataManagement();
-  static const int endBufferSeconds = 60;
 
   // ---- Save event ----
 
@@ -65,7 +64,9 @@ class EventData {
     if (start == null) return false;
 
     try {
-      return DateTime.now().isAfter(DateTime.parse(start));
+      // Parse the date from the server and ensure it's in local timezone for comparison
+      final startDateTime = DateTime.parse(start).toLocal();
+      return DateTime.now().isAfter(startDateTime);
     } catch (e) {
       debugPrint('Error parsing start date: $e');
       return false;
@@ -74,7 +75,16 @@ class EventData {
 
   static Future<bool> isEventOver() async {
     final end = await getEndDate();
-    return end != null && DateTime.now().isAfter(DateTime.parse(end));
+    if (end == null) return false;
+
+    try {
+      // Parse the date from the server and ensure it's in local timezone for comparison
+      final endDateTime = DateTime.parse(end).toLocal();
+      return DateTime.now().isAfter(endDateTime);
+    } catch (e) {
+      debugPrint('Error parsing end date: $e');
+      return false;
+    }
   }
 
   static Future<EventStatus> getEventStatus() async {
@@ -85,7 +95,7 @@ class EventData {
 
   static Future<int> getTimeUntilStartInSeconds() async {
     final start = await getStartDate();
-    return start == null ? 0 : DateTime.parse(start).difference(DateTime.now()).inSeconds;
+    return start == null ? 0 : DateTime.parse(start).toLocal().difference(DateTime.now()).inSeconds;
   }
 
   static Future<int> getRemainingTimeInSeconds() async {
@@ -93,7 +103,7 @@ class EventData {
     if (end == null) return 0;
 
     final now = DateTime.now();
-    final endDateTime = DateTime.parse(end);
+    final endDateTime = DateTime.parse(end).toLocal();
     int seconds = endDateTime.difference(now).inSeconds;
     return seconds < 0 ? 0 : seconds; // Return 0 if negative
   }
@@ -102,7 +112,7 @@ class EventData {
     final end = await getEndDate();
     if (end == null) return 0;
 
-    return DateTime.parse(end).difference(DateTime.now()).inSeconds;
+    return DateTime.parse(end).toLocal().difference(DateTime.now()).inSeconds;
   }
 
   // ---- Time Formatting ----
@@ -129,7 +139,7 @@ class EventData {
     if (seconds < 0) return "L'évènement est terminé !";
 
     final start = await getStartDate();
-    if (start == null || DateTime.now().isBefore(DateTime.parse(start))) {
+    if (start == null || DateTime.now().isBefore(DateTime.parse(start).toLocal())) {
       return "L'évènement n'a pas encore commencé !";
     }
 
@@ -141,8 +151,8 @@ class EventData {
     final end = await getEndDate();
     if (start == null || end == null) return 0.0;
 
-    final startDate = DateTime.parse(start);
-    final endDate = DateTime.parse(end);
+    final startDate = DateTime.parse(start).toLocal();
+    final endDate = DateTime.parse(end).toLocal();
     final now = DateTime.now();
 
     if (now.isBefore(startDate)) return 0.0;
