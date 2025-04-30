@@ -226,19 +226,23 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       );
     }
 
-    // New implementation with fixed positions and draggable behavior
+    // New implementation with fixed heights instead of proportional sizing
     return Container(
       child: AnimatedBuilder(
         animation: _animation,
         builder: (context, child) {
-          // Calculate the fraction of screen height to use
-          // Reduced height factors for both collapsed and expanded states
-          final heightFactor = 0.26 + (_animation.value * 0.4);
+          // Use fixed heights instead of height factors
+          final collapsedHeight = 210.0; // Height when collapsed
+          final expandedHeight = 520.0; // Height when expanded
+
+          // Interpolate between the two heights based on animation value
+          final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
 
           return Align(
             alignment: Alignment.bottomCenter,
-            child: FractionallySizedBox(
-              heightFactor: heightFactor,
+            child: Container(
+              height: height,
+              width: double.infinity,
               child: _buildDraggableBottomSheet(),
             ),
           );
@@ -294,7 +298,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                       children: [
                         // Header with basic info (always visible)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                          padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -359,7 +363,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
                         // Info cards (always visible)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                           child: _buildInfoCards(),
                         ),
 
@@ -369,14 +373,14 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                           secondChild: Column(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                                 child: _buildFunMessage(),
                               ),
                               if (widget.isSessionActive)
                                 const Divider(color: Color(Config.backgroundColor), thickness: 1),
                               if (widget.isSessionActive)
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(20, 8, 16, 20),
+                                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                                   child: ContributionGraph(geolocation: widget.geolocation),
                                 ),
                             ],

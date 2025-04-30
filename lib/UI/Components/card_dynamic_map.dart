@@ -205,7 +205,11 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           )
         else if (widget.fullScreen)
           Container(
-            height: MediaQuery.of(context).size.height * 0.61, // 70% of screen height
+            // Calculate available height by subtracting system padding and collapsed card height
+            height: MediaQuery.of(context).size.height -
+                MediaQuery.of(context).padding.top -
+                MediaQuery.of(context).padding.bottom -
+                350, // collapsed card height
             width: double.infinity,
             child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, polygonColor,
                 polygonBorderColor, userColor, meetingPointColor),
@@ -478,6 +482,6 @@ enum _MapBaseType { satellite, voyager }
 class _MapStyles {
   static const Color zoneBorderColor = Color(Config.primaryColor);
   static const Color zoneFillColor = Color(Config.primaryColor);
-  static const double zoneFillOpacity = 0.2;
+  static const double zoneFillOpacity = 0.1;
   static const double legendBgOpacity = 0.95;
 }
