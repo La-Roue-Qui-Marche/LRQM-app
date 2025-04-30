@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -8,10 +9,36 @@ class PermissionHelper {
   // LOCATION PERMISSION
   // ----------------------------
 
+  /// Check if proper location permission is granted based on platform
+  static Future<bool> isProperLocationPermissionGranted() async {
+    if (Platform.isIOS) {
+      return isLocationAlwaysGranted();
+    } else {
+      // For Android, when in use permission is sufficient due to foreground service
+      return isLocationWhenInUseGranted();
+    }
+  }
+
+  /// Check if location when in use permission is granted
+  static Future<bool> isLocationWhenInUseGranted() async {
+    final status = await Permission.locationWhenInUse.status;
+    return status.isGranted;
+  }
+
   /// Check if location always permission is granted
   static Future<bool> isLocationAlwaysGranted() async {
     final status = await Permission.locationAlways.status;
     return status.isGranted;
+  }
+
+  /// Request proper location permission based on platform
+  static Future<bool> requestProperLocationPermission() async {
+    if (Platform.isIOS) {
+      return requestLocationAlwaysPermission();
+    } else {
+      // For Android, when in use permission is sufficient due to foreground service
+      return requestLocationWhenInUsePermission();
+    }
   }
 
   /// Request location permission when app is active (while in use)

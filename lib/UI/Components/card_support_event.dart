@@ -65,7 +65,7 @@ class CardSupportEvent extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const Divider(color: Color(Config.backgroundColor)),
               const SizedBox(height: 16),
               const Text(

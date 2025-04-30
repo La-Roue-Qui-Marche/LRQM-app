@@ -120,7 +120,7 @@ class GeolocationController with WidgetsBindingObserver {
 
     await MeasureData.clearMeasurePoints();
 
-    if (_positionStreamStarted || !(await PermissionHelper.isLocationAlwaysGranted())) {
+    if (_positionStreamStarted || !(await PermissionHelper.isProperLocationPermissionGranted())) {
       LogHelper.logError("Permission not granted or already started.");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
@@ -384,7 +384,7 @@ class GeolocationController with WidgetsBindingObserver {
     LogHelper.logInfo("[BG] Switching to background...");
     await _positionStream?.cancel();
 
-    if (!await PermissionHelper.isLocationAlwaysGranted()) {
+    if (!await PermissionHelper.isProperLocationPermissionGranted()) {
       LogHelper.logError("[BG] Permission lost!");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
@@ -405,7 +405,7 @@ class GeolocationController with WidgetsBindingObserver {
     }
 
     _resetPosition = true;
-    if (!await PermissionHelper.isLocationAlwaysGranted()) {
+    if (!await PermissionHelper.isProperLocationPermissionGranted()) {
       LogHelper.logError("[FG] Permission lost!");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;

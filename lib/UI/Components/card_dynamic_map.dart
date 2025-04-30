@@ -170,7 +170,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
       case _MapBaseType.voyager:
         urlTemplate = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
         subdomains = ['a', 'b', 'c', 'd'];
-        icon = Icons.satellite_alt;
+        icon = Icons.map;
         tooltip = "Vue satellite";
         polygonColor = _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity);
         polygonBorderColor = _MapStyles.zoneBorderColor;
@@ -180,9 +180,9 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
       case _MapBaseType.satellite:
         urlTemplate = "https://wmts10.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg";
         subdomains = [];
-        icon = Icons.map;
+        icon = Icons.satellite_alt;
         tooltip = "Vue Swisstopo";
-        polygonColor = Colors.grey.shade400.withOpacity(0.25);
+        polygonColor = Colors.grey.shade400.withOpacity(_MapStyles.zoneFillOpacity);
         polygonBorderColor = Colors.grey.shade400;
         userColor = Colors.pinkAccent;
         meetingPointColor = Colors.tealAccent;
@@ -204,9 +204,8 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
             ),
           )
         else if (widget.fullScreen)
-          // When in fullScreen mode, take full screen minus 30% (for the collapsed personal info card)
           Container(
-            height: MediaQuery.of(context).size.height * 0.605, // 70% of screen height
+            height: MediaQuery.of(context).size.height * 0.61, // 70% of screen height
             width: double.infinity,
             child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, polygonColor,
                 polygonBorderColor, userColor, meetingPointColor),
@@ -341,7 +340,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                     _showLegend = !_showLegend;
                   });
                 },
-                child: const Icon(Icons.info_outline, color: Colors.black87),
+                child: const Icon(Icons.question_mark, color: Colors.black87),
               ),
               const SizedBox(height: 12),
               FloatingActionButton(
@@ -479,6 +478,6 @@ enum _MapBaseType { satellite, voyager }
 class _MapStyles {
   static const Color zoneBorderColor = Color(Config.primaryColor);
   static const Color zoneFillColor = Color(Config.primaryColor);
-  static const double zoneFillOpacity = 0.1;
+  static const double zoneFillOpacity = 0.2;
   static const double legendBgOpacity = 0.95;
 }

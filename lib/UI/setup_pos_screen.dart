@@ -50,17 +50,22 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   Future<void> _checkPermissions() async {
-    final granted = await PermissionHelper.isLocationAlwaysGranted();
+    final granted = await PermissionHelper.isProperLocationPermissionGranted();
     if (!granted) _showLocationPermissionModal();
   }
 
   void _showLocationPermissionModal() {
+    String title = Platform.isIOS ? "Position en arrière-plan" : "Autorisation de position";
+    String message = Platform.isIOS
+        ? "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?"
+        : "Peux-tu autoriser l'accès à ta position afin que nous puissions calculer ta distance parcourue ?";
+
     showModalBottomText(
       context,
-      "Position en arrière-plan",
-      "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?",
+      title,
+      message,
       showConfirmButton: true,
-      onConfirm: () => PermissionHelper.requestLocationAlwaysPermission(),
+      onConfirm: () => PermissionHelper.requestProperLocationPermission(),
     );
   }
 
@@ -92,12 +97,17 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     });
 
     try {
-      final granted = await PermissionHelper.isLocationAlwaysGranted();
+      final granted = await PermissionHelper.isProperLocationPermissionGranted();
       if (!granted) {
+        String title = Platform.isIOS ? "Position en arrière-plan" : "Autorisation de position";
+        String message = Platform.isIOS
+            ? "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?"
+            : "Peux-tu autoriser l'accès à ta position afin que nous puissions calculer ta distance parcourue ?";
+
         showModalBottomText(
           context,
-          "Position en arrière-plan",
-          "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?",
+          title,
+          message,
           showConfirmButton: true,
           onConfirm: () => PermissionHelper.openLocationSettings(),
         );
