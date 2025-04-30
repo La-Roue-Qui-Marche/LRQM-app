@@ -4,11 +4,12 @@ import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:background_location/background_location.dart' as bg;
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
-import 'package:lrqm/API/NewMeasureController.dart';
-import 'package:lrqm/Utils/LogHelper.dart';
-import '../Utils/Permission.dart';
-import '../Data/EventData.dart';
-import '../Data/MeasureData.dart';
+
+import 'package:lrqm/api/measure_controller.dart';
+import 'package:lrqm/utils/log_helper.dart';
+import 'package:lrqm/utils/permission_helper.dart';
+import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/data/measure_data.dart';
 
 class GeolocationConfig {
   final int locationDistanceFilter;
@@ -38,9 +39,9 @@ class GeolocationConfig {
   });
 }
 
-class Geolocation with WidgetsBindingObserver {
+class GeolocationController with WidgetsBindingObserver {
   final GeolocationConfig config;
-  Geolocation({required this.config}) {
+  GeolocationController({required this.config}) {
     _settings = _getSettings();
     WidgetsBinding.instance.addObserver(this);
     _initZone();
@@ -270,7 +271,7 @@ class Geolocation with WidgetsBindingObserver {
     if (_isSending) return;
     _isSending = true;
     try {
-      final response = await NewMeasureController.editMeters(_distance);
+      final response = await MeasureController.editMeters(_distance);
       if (response.error != null) {
         LogHelper.logError("[API] Failed to send current distance: ${response.error}");
       } else {
@@ -286,7 +287,7 @@ class Geolocation with WidgetsBindingObserver {
   Future<void> _sendFinalDistance() async {
     LogHelper.logInfo("[GEO] Sending final distance $_distance m...");
     try {
-      final response = await NewMeasureController.editMeters(_distance);
+      final response = await MeasureController.editMeters(_distance);
       if (response.error != null) {
         LogHelper.logError("[API] Failed to send final distance: ${response.error}");
       } else {
@@ -309,7 +310,7 @@ class Geolocation with WidgetsBindingObserver {
     }
 
     try {
-      final result = await NewMeasureController.stopMeasure();
+      final result = await MeasureController.stopMeasure();
       if (result.value != true) {
         LogHelper.logError("[GEO] Failed to stop measure: ${result.error}");
         return false;

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../Utils/config.dart';
 
-class TapCard extends StatelessWidget {
+import 'package:lrqm/utils/config.dart';
+
+class ButtonTap extends StatelessWidget {
   final Widget logo;
   final String text;
   final VoidCallback onTap;
   final bool isSelected;
 
-  const TapCard({
+  const ButtonTap({
     super.key,
     required this.logo,
     required this.text,

@@ -3,27 +3,25 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import '../Utils/config.dart';
-import '../Geolocalisation/Geolocation.dart';
-import '../Data/EventData.dart';
-import '../Data/MeasureData.dart';
-import '../Data/ContributorsData.dart';
-import '../Data/DataUtils.dart';
-
-import 'Components/top_app_bar.dart';
-import 'Components/TextModal.dart';
-import 'Components/NavBar.dart';
-import 'Components/DynamicMapCard.dart';
-import 'Components/PersonalInfoCard.dart';
-import 'Components/EventProgressCard.dart';
-import 'Components/SupportCard.dart';
-import 'Components/app_toast.dart';
-
-import 'setup_pos_screen.dart';
-import 'loading_screen.dart';
-import 'summary_screen.dart';
-import 'login_screen.dart';
-import 'info_screen.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/geo/geolocation.dart';
+import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/data/measure_data.dart';
+import 'package:lrqm/data/contributors_data.dart';
+import 'package:lrqm/data/utils_data.dart';
+import 'package:lrqm/ui/components/app_top_bar.dart';
+import 'package:lrqm/ui/components/modal_bottom_text.dart';
+import 'package:lrqm/ui/components/app_nav_bar.dart';
+import 'package:lrqm/ui/components/card_dynamic_map.dart';
+import 'package:lrqm/ui/components/card_progress_event.dart';
+import 'package:lrqm/ui/components/card_support_event.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
+import 'package:lrqm/ui/components/card_personal_info.dart';
+import 'package:lrqm/ui/setup_pos_screen.dart';
+import 'package:lrqm/ui/loading_screen.dart';
+import 'package:lrqm/ui/summary_screen.dart';
+import 'package:lrqm/ui/login_screen.dart';
+import 'package:lrqm/ui/info_screen.dart';
 
 class WorkingScreen extends StatefulWidget {
   const WorkingScreen({super.key});
@@ -44,7 +42,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   Timer? _eventCheckTimer;
   bool _isDisposed = false;
 
-  late Geolocation _geolocation;
+  late GeolocationController _geolocation;
 
   @override
   void initState() {
@@ -77,7 +75,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   }
 
   void _initializeGeolocation() {
-    _geolocation = Geolocation(
+    _geolocation = GeolocationController(
       config: GeolocationConfig(
         locationDistanceFilter: Config.locationDistanceFilter,
         accuracyThreshold: Config.accuracyThreshold,
@@ -190,7 +188,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   }
 
   void _confirmStopMeasure() {
-    showTextModal(
+    showModalBottomText(
       context,
       'Confirmation',
       'Arrêter la mesure en cours ?\n\nCela mettra fin à l\'enregistrement de ta distance et de ton temps.',
@@ -203,7 +201,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void _handleInfoButton() => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen()));
 
   void _handleLogoutButton() async {
-    showTextModal(
+    showModalBottomText(
       context,
       'Confirmation',
       'Es-tu sûr de vouloir te déconnecter ?\n\nCela supprimera toutes les données locales et arrêtera toute mesure en cours.',
@@ -226,7 +224,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           await _geolocation.stopListening();
         }
 
-        final cleared = await DataUtils.deleteAllData();
+        final cleared = await UtilsData.deleteAllData();
         if (cleared && mounted) {
           Navigator.pushAndRemoveUntil(
             context,
@@ -253,44 +251,31 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   }
 
   Widget _buildHomePage() {
-    return SingleChildScrollView(
-      key: PageStorageKey('scrollPage0'),
-      controller: _scrollController,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ValueListenableBuilder(
-            valueListenable: _isMeasureOngoingNotifier,
-            builder: (_, isOngoing, __) => PersonalInfoCard(
-              key: const ValueKey('personalInfoCard'),
-              isSessionActive: isOngoing,
-              geolocation: _geolocation,
-            ),
-          ),
-          ValueListenableBuilder(
-            valueListenable: _isMeasureOngoingNotifier,
-            builder: (_, isOngoing, __) => DynamicMapCard(
+    return Stack(
+      children: [
+        // Full screen map that fills the entire space
+        ValueListenableBuilder(
+          valueListenable: _isMeasureOngoingNotifier,
+          builder: (_, isOngoing, __) => Positioned.fill(
+            child: CardDynamicMap(
               geolocation: _geolocation,
               followUser: isOngoing,
+              fullScreen: true,
             ),
           ),
-          ValueListenableBuilder(
-            valueListenable: _isMeasureOngoingNotifier,
-            builder: (_, isOngoing, __) => isOngoing
-                ? SizedBox.shrink()
-                : Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    child: Center(
-                      child: Text(
-                        'Appuie sur le bouton orange pour démarrer une mesure !',
-                        style: TextStyle(fontSize: 14, color: Colors.black87),
-                      ),
-                    ),
-                  ),
+        ),
+
+        // PersonalInfoCard as a draggable bottom sheet
+        ValueListenableBuilder(
+          valueListenable: _isMeasureOngoingNotifier,
+          builder: (_, isOngoing, __) => CardPersonalInfo(
+            key: const ValueKey('personalInfoCard'),
+            isSessionActive: isOngoing,
+            geolocation: _geolocation,
+            isFloating: true,
           ),
-          SizedBox(height: 40),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -301,8 +286,8 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          EventProgressCard(key: ValueKey('eventProgressCard')),
-          SupportCard(),
+          CardProgressEvent(key: ValueKey('eventProgressCard')),
+          CardSupportEvent(),
         ],
       ),
     );
@@ -313,7 +298,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       valueListenable: _eventStatusNotifier,
       builder: (_, status, __) => ValueListenableBuilder<bool>(
         valueListenable: _isMeasureOngoingNotifier,
-        builder: (_, isOngoing, __) => NavBar(
+        builder: (_, isOngoing, __) => AppNavBar(
           currentPage: _currentPage,
           onPageSelected: (int page) => setState(() => _currentPage = page),
           isMeasureActive: isOngoing,
@@ -324,13 +309,13 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     );
   }
 
-  void _showEventCompletionModal() => showTextModal(context, 'L\'Évènement est Terminé !',
+  void _showEventCompletionModal() => showModalBottomText(context, 'L\'Évènement est Terminé !',
       "Merci pour ta participation !\n N'hésites pas à prendre une capture d'écran de ta contribution",
       showConfirmButton: true);
-  void _showEventNotStartedModal() => showTextModal(
+  void _showEventNotStartedModal() => showModalBottomText(
       context, 'L\'Évènement n\'a pas Commencé', "Tu pourras démarrer une mesure dès le début de l'évènement.",
       showConfirmButton: true);
-  void _showEventStartedModal() => showTextModal(context, 'L\'Évènement a Commencé !',
+  void _showEventStartedModal() => showModalBottomText(context, 'L\'Évènement a Commencé !',
       "Tu peux maintenant démarrer une session pour enregistrer ta contribution à l'évènement.",
       showConfirmButton: true);
 
@@ -341,7 +326,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       onPopInvoked: (_) async {},
       child: Scaffold(
         backgroundColor: Color(Config.backgroundColor),
-        appBar: TopAppBar(
+        appBar: AppTopBar(
           title: 'Accueil',
           showInfoButton: true,
           showLogoutButton: true,

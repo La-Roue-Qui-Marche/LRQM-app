@@ -2,16 +2,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../Utils/config.dart';
 
-class NavBar extends StatelessWidget {
+import 'package:lrqm/utils/config.dart';
+
+class AppNavBar extends StatelessWidget {
   final int currentPage;
   final Function(int) onPageSelected;
   final bool isMeasureActive;
   final bool canStartNewSession;
   final VoidCallback onStartStopPressed;
 
-  const NavBar({
+  const AppNavBar({
     super.key,
     required this.currentPage,
     required this.onPageSelected,

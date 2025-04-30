@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import '../Utils/config.dart';
-import '../Data/MeasureData.dart';
-import 'Components/RunPathMap.dart';
-import 'Components/top_app_bar.dart';
-import 'working_screen.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/data/measure_data.dart';
+import 'package:lrqm/ui/components/card_path_map.dart';
+import 'package:lrqm/ui/components/app_top_bar.dart';
+import 'package:lrqm/ui/working_screen.dart';
 
 class SummaryScreen extends StatefulWidget {
   final int distanceAdded;
@@ -102,11 +102,13 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final double mapHeight = MediaQuery.of(context).size.height * 0.5;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double contentHeight = screenHeight - AppBar().preferredSize.height - MediaQuery.of(context).padding.top;
+    final double sectionHeight = contentHeight * 0.5;
 
     return Scaffold(
       backgroundColor: const Color(Config.backgroundColor),
-      appBar: TopAppBar(
+      appBar: AppTopBar(
         title: "Résumé",
         showBackButton: false,
         showCloseButton: true,
@@ -124,13 +126,15 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildCelebrationCard(),
                       SizedBox(
-                        height: mapHeight,
-                        width: double.infinity,
-                        child: const RunPathMap(),
+                        height: sectionHeight,
+                        child: _buildCelebrationCard(),
                       ),
-                      const SizedBox(height: 48),
+                      SizedBox(
+                        height: sectionHeight,
+                        width: double.infinity,
+                        child: const CardPathMap(),
+                      ),
                     ],
                   ),
                 ),
@@ -168,62 +172,65 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       color: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
-      margin: const EdgeInsets.only(top: 6),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        child: Column(
-          children: [
-            SizedBox(
-              width: 160,
-              height: 160,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      _confettiController.play();
-                    },
-                    child: FadeInImage(
-                      placeholder: MemoryImage(kTransparentImage),
-                      image: const AssetImage('assets/pictures/Cup-AI.png'),
-                      width: 140,
-                      height: 140,
-                      fit: BoxFit.contain,
+      margin: const EdgeInsets.only(top: 0),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 160,
+                height: 160,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        _confettiController.play();
+                      },
+                      child: FadeInImage(
+                        placeholder: MemoryImage(kTransparentImage),
+                        image: const AssetImage('assets/pictures/Cup-AI.png'),
+                        width: 140,
+                        height: 140,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Bravo !',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
+              const SizedBox(height: 8),
+              const Text(
+                'Bravo !',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Voici le résumé de ta contribution',
-              style: TextStyle(fontSize: 16, color: Colors.black87),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            AnimatedBuilder(
-              animation: Listenable.merge([_metersAnimation, _percentAnimation]),
-              builder: (context, _) {
-                return _buildContributionCard(
-                  meters: _metersAnimation.value.round(),
-                  percent: _percentAnimation.value,
-                  distance: widget.distanceAdded,
-                  contributors: widget.contributors,
-                  time: widget.timeAdded,
-                );
-              },
-            ),
-          ],
+              const SizedBox(height: 8),
+              const Text(
+                'Voici le résumé de ta contribution',
+                style: TextStyle(fontSize: 16, color: Colors.black87),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              AnimatedBuilder(
+                animation: Listenable.merge([_metersAnimation, _percentAnimation]),
+                builder: (context, _) {
+                  return _buildContributionCard(
+                    meters: _metersAnimation.value.round(),
+                    percent: _percentAnimation.value,
+                    distance: widget.distanceAdded,
+                    contributors: widget.contributors,
+                    time: widget.timeAdded,
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

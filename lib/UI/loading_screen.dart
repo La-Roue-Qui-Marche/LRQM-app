@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../Utils/config.dart';
+
+import 'package:lrqm/utils/config.dart';
 
 class LoadingScreen extends StatelessWidget {
   final String? text;

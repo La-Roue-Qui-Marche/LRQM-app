@@ -1,27 +1,26 @@
-import 'DataManagement.dart';
+import 'package:lrqm/data/management_data.dart';
 
 /// Class to manage the number of participants.
 class ContributorsData {
-  /// Singleton instance of the DataManagement class.
-  static final DataManagement _dataManagement = DataManagement();
+  static final ManagementData _managementData = ManagementData();
 
   /// Save the number of contributors [contributors] in the shared preferences.
   static Future<bool> saveContributors(int contributors) async {
-    return _dataManagement.saveInt('contributors', contributors);
+    return _managementData.saveInt('contributors', contributors);
   }
 
   /// Get the number of contributors from the shared preferences.
   static Future<int?> getContributors() async {
-    return _dataManagement.getInt('contributors');
+    return _managementData.getInt('contributors');
   }
 
   /// Remove the number of contributors from the shared preferences.
   static Future<bool> removeContributors() async {
-    return _dataManagement.removeData('contributors');
+    return _managementData.removeData('contributors');
   }
 
   /// Check if the number of contributors exists in the shared preferences.
   static Future<bool> doesContributorsExist() async {
-    return _dataManagement.doesDataExist('contributors');
+    return _managementData.doesDataExist('contributors');
   }
 }

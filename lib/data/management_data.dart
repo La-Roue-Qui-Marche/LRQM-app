@@ -1,24 +1,23 @@
 import 'dart:developer';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Class to manage the data in the shared preferences.
 /// Allow to save, get, remove and check if the data exists in the shared preferences.
 /// Those methods are implemented for int and string data.
-class DataManagement {
+class ManagementData {
   /// Singleton instance of the class.
-  static final DataManagement _singleton = DataManagement._internal();
+  static final ManagementData _singleton = ManagementData._internal();
 
   /// Future to get the shared preferences.
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   /// Factory constructor to return the singleton instance of the class.
-  factory DataManagement() {
+  factory ManagementData() {
     return _singleton;
   }
 
   /// Internal constructor to create the singleton instance of the class.
-  DataManagement._internal();
+  ManagementData._internal();
 
   /// Save an integer [value] with the name [name] in the shared preferences.
   /// Return a [Future] object resolving to a boolean value indicating if the data was saved.

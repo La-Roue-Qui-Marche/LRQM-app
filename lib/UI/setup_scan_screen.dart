@@ -1,24 +1,23 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import '../API/NewMeasureController.dart';
-import '../Data/ContributorsData.dart';
-import '../Data/UserData.dart';
-import '../Utils/Permission.dart';
-import '../Utils/config.dart';
-import 'Components/app_toast.dart';
-import 'Components/button_action.dart';
-import 'Components/InfoCard.dart';
-import 'Components/TextModal.dart';
-import 'Components/top_app_bar.dart';
-import 'loading_screen.dart';
-import 'working_screen.dart';
+import 'package:lrqm/api/measure_controller.dart';
+import 'package:lrqm/data/contributors_data.dart';
+import 'package:lrqm/data/user_data.dart';
+import 'package:lrqm/utils/permission_helper.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
+import 'package:lrqm/ui/components/button_action.dart';
+import 'package:lrqm/ui/components/card_info.dart';
+import 'package:lrqm/ui/components/modal_bottom_text.dart';
+import 'package:lrqm/ui/components/app_top_bar.dart';
+import 'package:lrqm/ui/loading_screen.dart';
+import 'package:lrqm/ui/working_screen.dart';
 
 class SetupScanScreen extends StatefulWidget {
   final int contributors;
@@ -47,7 +46,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
     try {
       final granted = await PermissionHelper.requestCameraPermission();
       if (!granted) {
-        showTextModal(
+        showModalBottomText(
           context,
           "Accès à la caméra refusé",
           "Va dans les paramètres pour autoriser l'application à utiliser la caméra.",
@@ -58,7 +57,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
       }
       setState(() => _isCameraOpen = true);
     } catch (e) {
-      showTextModal(
+      showModalBottomText(
         context,
         "Erreur caméra",
         "Une erreur s'est produite. Vérifie les paramètres du téléphone.",
@@ -103,7 +102,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
       return;
     }
 
-    final result = await NewMeasureController.startMeasure(
+    final result = await MeasureController.startMeasure(
       userId,
       contributorsNumber: widget.contributors,
     );
@@ -135,7 +134,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
       backgroundColor: const Color(Config.backgroundColor),
       appBar: _isCameraOpen
           ? null
-          : const TopAppBar(
+          : const AppTopBar(
               title: "Scanner",
               showBackButton: true,
               showInfoButton: false,
@@ -152,7 +151,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
 
   Widget _buildBody(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.only(top: 0),
       child: Container(
         decoration: const BoxDecoration(color: Colors.white),
         padding: const EdgeInsets.all(16.0),
@@ -173,7 +172,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
                 ),
               ),
             ),
-            const InfoCard(
+            const CardInfo(
               title: "Le petit oiseau va sortir !",
               data: "Prend en photo le QR code pour démarrer ta session",
             ),

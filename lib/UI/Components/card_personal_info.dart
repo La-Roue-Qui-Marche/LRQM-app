@@ -1,32 +1,35 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../Utils/config.dart';
-import '../../Geolocalisation/Geolocation.dart';
-import '../../Data/UserData.dart';
-import '../../API/NewUserController.dart';
-import 'ContributionGraph.dart';
 
-class PersonalInfoCard extends StatefulWidget {
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/geo/geolocation.dart';
+import 'package:lrqm/data/user_data.dart';
+import 'package:lrqm/api/user_controller.dart';
+import 'package:lrqm/ui/Components/contribution_graph.dart';
+
+class CardPersonalInfo extends StatefulWidget {
   final bool isSessionActive;
-  final Geolocation? geolocation;
+  final GeolocationController? geolocation;
+  final bool isFloating;
 
-  const PersonalInfoCard({
+  const CardPersonalInfo({
     super.key,
     required this.isSessionActive,
     this.geolocation,
+    this.isFloating = false,
   });
 
   @override
-  State<PersonalInfoCard> createState() => _PersonalInfoCardState();
+  State<CardPersonalInfo> createState() => _CardPersonalInfoState();
 }
 
-class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerProviderStateMixin {
+class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerProviderStateMixin {
   // Replace state variables with ValueNotifiers
   final ValueNotifier<int> _currentContributionNotifier = ValueNotifier<int>(0);
-  final ValueNotifier<List<Widget>> _particlesNotifier = ValueNotifier<List<Widget>>([]);
 
   // User data as ValueNotifiers
   final ValueNotifier<String> _bibNumberNotifier = ValueNotifier<String>("");
@@ -43,10 +46,18 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
   // Internal state for zone as ValueNotifiers
   final ValueNotifier<bool> _isCountingInZoneNotifier = ValueNotifier<bool>(true);
 
+  // Sheet expansion controller
+  final ValueNotifier<bool> _isExpandedNotifier = ValueNotifier<bool>(false);
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  // For drag gestures
+  double _dragStartY = 0;
+  double _dragDistance = 0;
+  final double _dragThreshold = 50; // Distance needed to consider it a valid drag
+
   StreamSubscription? _geoSubscription;
   StreamSubscription? _zoneSubscription;
-
-  int _lastSessionDistance = 0; // Track last received session distance
 
   @override
   void initState() {
@@ -55,6 +66,18 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     _loadUserData();
     _setupGeolocationListener();
     _listenCountingInZone();
+
+    // Initialize animation controller for expanding/collapsing
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+      reverseCurve: Curves.easeIn,
+    );
   }
 
   @override
@@ -63,7 +86,6 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     _zoneSubscription?.cancel();
     // Dispose all ValueNotifiers
     _currentContributionNotifier.dispose();
-    _particlesNotifier.dispose();
     _bibNumberNotifier.dispose();
     _userNameNotifier.dispose();
     _totalDistanceNotifier.dispose();
@@ -72,6 +94,8 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     _sessionTimeNotifier.dispose();
     _isLoadingNotifier.dispose();
     _isCountingInZoneNotifier.dispose();
+    _isExpandedNotifier.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -95,7 +119,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       final userId = await UserData.getUserId();
       if (userId != null) {
         // Get total distance
-        final distanceResult = await NewUserController.getUserTotalMeters(userId);
+        final distanceResult = await UserController.getUserTotalMeters(userId);
         if (!distanceResult.hasError) {
           final totalDistance = distanceResult.value ?? 0;
           _totalDistanceNotifier.value = totalDistance;
@@ -104,7 +128,7 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
         }
 
         // Get total time
-        final timeResult = await NewUserController.getUserTotalTime(userId);
+        final timeResult = await UserController.getUserTotalTime(userId);
         if (!timeResult.hasError) {
           _totalTimeNotifier.value = timeResult.value ?? 0;
         }
@@ -137,18 +161,13 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
 
         _sessionDistanceNotifier.value = newDistance;
         _sessionTimeNotifier.value = newTime;
-        if (widget.isSessionActive && newDistance > _lastSessionDistance) {
-          final int diff = newDistance - _lastSessionDistance;
-          _spawnParticle("+$diff m");
-        }
-        _lastSessionDistance = newDistance;
         _currentContributionNotifier.value = newDistance;
       });
     }
   }
 
   @override
-  void didUpdateWidget(covariant PersonalInfoCard oldWidget) {
+  void didUpdateWidget(covariant CardPersonalInfo oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.geolocation != widget.geolocation) {
       _geoSubscription?.cancel();
@@ -156,52 +175,224 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       _setupGeolocationListener();
       _listenCountingInZone();
     }
-    // Reset _lastSessionDistance when session becomes inactive
-    if (oldWidget.isSessionActive && !widget.isSessionActive) {
-      _lastSessionDistance = 0;
+  }
+
+  void _toggleExpanded() {
+    final newValue = !_isExpandedNotifier.value;
+    _isExpandedNotifier.value = newValue;
+
+    if (newValue) {
+      _animationController.forward();
+    } else {
+      _animationController.reverse();
     }
   }
 
-  void _spawnParticle(String label) {
-    if (!widget.isSessionActive) return;
-    final random = Random();
-    final dx = random.nextDouble() * 60 - 30;
-    final dy = random.nextDouble() * -60 - 30;
+  // Handle drag gestures to expand/collapse
+  void _onDragStart(DragStartDetails details) {
+    _dragStartY = details.globalPosition.dy;
+  }
 
-    final key = UniqueKey();
+  void _onDragUpdate(DragUpdateDetails details) {
+    _dragDistance = _dragStartY - details.globalPosition.dy;
+  }
 
-    final particle = KeyedSubtree(
-      key: key,
-      child: _AnimatedParticle(
-        offsetX: dx,
-        offsetY: dy,
-        label: label,
-      ),
-    );
-
-    final currentParticles = List<Widget>.from(_particlesNotifier.value);
-    currentParticles.add(particle);
-    _particlesNotifier.value = currentParticles;
-
-    Future.delayed(const Duration(seconds: 2), () {
-      final updatedParticles = List<Widget>.from(_particlesNotifier.value);
-      updatedParticles.removeWhere((w) => w.key == key);
-      _particlesNotifier.value = updatedParticles;
-    });
+  void _onDragEnd(DragEndDetails details) {
+    if (_dragDistance.abs() > _dragThreshold) {
+      if (_dragDistance > 0) {
+        // Dragged upward - expand
+        if (!_isExpandedNotifier.value) {
+          _toggleExpanded();
+        }
+      } else {
+        // Dragged downward - collapse
+        if (_isExpandedNotifier.value) {
+          _toggleExpanded();
+        }
+      }
+    }
+    // Reset values
+    _dragStartY = 0;
+    _dragDistance = 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<Widget>>(
-      valueListenable: _particlesNotifier,
-      builder: (context, particles, _) {
-        return Stack(
-          children: [
-            _buildCard(widget.isSessionActive),
-            ...particles,
+    if (!widget.isFloating) {
+      // Original implementation for non-floating mode
+      return Container(
+        color: const Color(Config.backgroundColor),
+        child: _buildCard(widget.isSessionActive),
+      );
+    }
+
+    // New implementation with fixed positions and draggable behavior
+    return Container(
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          // Calculate the fraction of screen height to use
+          // Reduced height factors for both collapsed and expanded states
+          final heightFactor = 0.26 + (_animation.value * 0.4);
+
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: FractionallySizedBox(
+              heightFactor: heightFactor,
+              child: _buildDraggableBottomSheet(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDraggableBottomSheet() {
+    return GestureDetector(
+      onVerticalDragStart: _onDragStart,
+      onVerticalDragUpdate: _onDragUpdate,
+      onVerticalDragEnd: _onDragEnd,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
           ],
-        );
-      },
+        ),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _isExpandedNotifier,
+          builder: (context, isExpanded, _) {
+            return Column(
+              children: [
+                // Drag handle
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Scrollable content area
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header with basic info (always visible)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        '№ de dossard: ',
+                                        style:
+                                            TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+                                      ),
+                                      ValueListenableBuilder<bool>(
+                                        valueListenable: _isLoadingNotifier,
+                                        builder: (context, isLoading, _) {
+                                          return ValueListenableBuilder<String>(
+                                            valueListenable: _bibNumberNotifier,
+                                            builder: (context, bibNumber, _) {
+                                              return isLoading || bibNumber.isEmpty
+                                                  ? _buildShimmer(width: 40)
+                                                  : Text(
+                                                      bibNumber,
+                                                      style: const TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: Colors.black87),
+                                                    );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  ValueListenableBuilder<bool>(
+                                    valueListenable: _isLoadingNotifier,
+                                    builder: (context, isLoading, _) {
+                                      return ValueListenableBuilder<String>(
+                                        valueListenable: _userNameNotifier,
+                                        builder: (context, userName, _) {
+                                          if (isLoading) {
+                                            return _buildShimmer(width: 100);
+                                          } else if (userName.isNotEmpty) {
+                                            return Text(
+                                              userName,
+                                              style: const TextStyle(fontSize: 18, color: Colors.black87),
+                                            );
+                                          } else {
+                                            return const SizedBox.shrink();
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                              // Status badge
+                              _statusBadge(),
+                            ],
+                          ),
+                        ),
+
+                        // Info cards (always visible)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                          child: _buildInfoCards(),
+                        ),
+
+                        // Only show if expanded
+                        AnimatedCrossFade(
+                          firstChild: const SizedBox(height: 1), // Small placeholder when collapsed
+                          secondChild: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                                child: _buildFunMessage(),
+                              ),
+                              if (widget.isSessionActive)
+                                const Divider(color: Color(Config.backgroundColor), thickness: 1),
+                              if (widget.isSessionActive)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(20, 8, 16, 20),
+                                  child: ContributionGraph(geolocation: widget.geolocation),
+                                ),
+                            ],
+                          ),
+                          crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                          duration: const Duration(milliseconds: 200),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -209,39 +400,41 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     return Stack(
       children: [
         Container(
-          margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 6.0),
-          padding: const EdgeInsets.all(16.0),
+          margin: widget.isFloating
+              ? EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0)
+              : EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 8.0),
+          padding: EdgeInsets.all(20.0),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(0.0),
+            borderRadius: BorderRadius.circular(widget.isFloating ? 20.0 : 0.0),
+            boxShadow: widget.isFloating
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ]
+                : [],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Ta contribution à l\'événement',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
               _buildHeader(),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               _buildInfoCards(),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               _buildFunMessage(),
-              if (isSessionActive) const SizedBox(height: 8),
-              if (isSessionActive) const Divider(color: Color(Config.backgroundColor), thickness: 1),
-              if (isSessionActive) const SizedBox(height: 8),
+              if (isSessionActive) SizedBox(height: 8),
+              if (isSessionActive) Divider(color: Color(Config.backgroundColor), thickness: 1),
+              if (isSessionActive) SizedBox(height: 8),
               if (isSessionActive) ContributionGraph(geolocation: widget.geolocation),
             ],
           ),
         ),
         Positioned(
-          top: 72,
-          right: 16,
+          top: 32.0,
+          right: 32.0,
           child: _statusBadge(),
         ),
       ],
@@ -392,15 +585,14 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Color(Config.backgroundColor),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.black87.withOpacity(0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: const TextStyle(fontSize: 16, color: Colors.black87)),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           value != null && value.isNotEmpty
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -519,56 +711,5 @@ class _PersonalInfoCardState extends State<PersonalInfoCard> with SingleTickerPr
     } else {
       return "C'est ${(distance / 42195).toStringAsFixed(1)} marathon. Forme et détermination au top!";
     }
-  }
-}
-
-class _AnimatedParticle extends StatefulWidget {
-  final double offsetX;
-  final double offsetY;
-  final String label;
-
-  const _AnimatedParticle({required this.offsetX, required this.offsetY, required this.label});
-
-  @override
-  State<_AnimatedParticle> createState() => _AnimatedParticleState();
-}
-
-class _AnimatedParticleState extends State<_AnimatedParticle> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (_, child) {
-        return Positioned(
-          top: 192 - widget.offsetY * _controller.value,
-          left: MediaQuery.of(context).size.width / 3.5 + widget.offsetX * _controller.value,
-          child: Opacity(
-            opacity: 1 - _controller.value,
-            child: Text(
-              widget.label,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 }

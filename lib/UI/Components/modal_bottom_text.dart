@@ -1,11 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../Utils/config.dart';
-import 'button_action.dart';
-import 'button_discard.dart';
 
-void showTextModal(
+import 'package:lrqm/ui/Components/button_action.dart';
+import 'package:lrqm/ui/Components/button_discard.dart';
+import 'package:lrqm/utils/config.dart';
+
+void showModalBottomText(
   BuildContext context,
   String title,
   String message, {
@@ -16,7 +16,6 @@ void showTextModal(
   List<dynamic>? dropdownItems,
   Function(dynamic)? onDropdownChanged,
   dynamic selectedDropdownValue,
-  DateTime? countdownStartDate,
   String? externalUrl,
   String? externalUrlLabel,
 }) {
@@ -36,7 +35,7 @@ void showTextModal(
           bottom: true,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-            child: _TextModalContent(
+            child: _ModalBottomTextContent(
               title: title,
               message: message,
               showConfirmButton: showConfirmButton,
@@ -46,7 +45,6 @@ void showTextModal(
               dropdownItems: dropdownItems,
               onDropdownChanged: onDropdownChanged,
               selectedDropdownValue: selectedDropdownValue,
-              countdownStartDate: countdownStartDate,
               externalUrl: externalUrl,
               externalUrlLabel: externalUrlLabel,
             ),
@@ -57,7 +55,7 @@ void showTextModal(
   });
 }
 
-class _TextModalContent extends StatefulWidget {
+class _ModalBottomTextContent extends StatefulWidget {
   final String title;
   final String message;
   final bool showConfirmButton;
@@ -67,11 +65,10 @@ class _TextModalContent extends StatefulWidget {
   final List<dynamic>? dropdownItems;
   final Function(dynamic)? onDropdownChanged;
   final dynamic selectedDropdownValue;
-  final DateTime? countdownStartDate;
   final String? externalUrl;
   final String? externalUrlLabel;
 
-  const _TextModalContent({
+  const _ModalBottomTextContent({
     required this.title,
     required this.message,
     this.showConfirmButton = false,
@@ -81,68 +78,20 @@ class _TextModalContent extends StatefulWidget {
     this.dropdownItems,
     this.onDropdownChanged,
     this.selectedDropdownValue,
-    this.countdownStartDate,
     this.externalUrl,
     this.externalUrlLabel,
-    super.key,
   });
 
   @override
-  _TextModalContentState createState() => _TextModalContentState();
+  _ModalBottomTextContentState createState() => _ModalBottomTextContentState();
 }
 
-class _TextModalContentState extends State<_TextModalContent> {
-  Timer? _timer; // Initialize _timer to null
-  String _countdown = "";
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.countdownStartDate != null) {
-      _startCountdown();
-    }
-  }
-
-  void _startCountdown() {
-    _updateCountdown();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      _updateCountdown();
-      if (DateTime.now().isAfter(widget.countdownStartDate!)) {
-        timer.cancel();
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      }
-    });
-  }
-
-  void _updateCountdown() {
-    Duration difference = widget.countdownStartDate!.difference(DateTime.now());
-    setState(() {
-      _countdown = "${difference.inDays} J : "
-          "${difference.inHours.remainder(24).toString().padLeft(2, '0')} H : "
-          "${difference.inMinutes.remainder(60).toString().padLeft(2, '0')} M : "
-          "${difference.inSeconds.remainder(60).toString().padLeft(2, '0')} S";
-    });
-  }
-
+class _ModalBottomTextContentState extends State<_ModalBottomTextContent> {
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       throw Exception('Impossible d\'ouvrir $url');
     }
-  }
-
-  @override
-  void dispose() {
-    if (_timer != null) {
-      _timer!.cancel(); // Check if _timer is not null before canceling
-    }
-    super.dispose();
   }
 
   @override
@@ -159,78 +108,7 @@ class _TextModalContentState extends State<_TextModalContent> {
           ),
         ),
         const SizedBox(height: 24),
-        if (widget.countdownStartDate == null) ...[
-          if (widget.dropdownItems == null)
-            Text(
-              widget.message,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.left,
-            ),
-          if (widget.dropdownItems != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 0),
-              child: DropdownButtonFormField<dynamic>(
-                value: widget.selectedDropdownValue,
-                hint: Text(
-                  widget.message,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.left,
-                ),
-                isExpanded: true,
-                icon: const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Color(Config.primaryColor),
-                ),
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                  filled: true,
-                  fillColor: Colors.white,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(Config.primaryColor),
-                      width: 1.5,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(Config.primaryColor),
-                      width: 2,
-                    ),
-                  ),
-                ),
-                dropdownColor: Colors.white,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-                items: widget.dropdownItems!.map((item) {
-                  return DropdownMenuItem(
-                    value: item,
-                    child: Text(
-                      item.toString(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  if (widget.onDropdownChanged != null) {
-                    widget.onDropdownChanged!(newValue);
-                  }
-                },
-              ),
-            ),
-        ] else ...[
+        if (widget.dropdownItems == null)
           Text(
             widget.message,
             style: const TextStyle(
@@ -239,25 +117,67 @@ class _TextModalContentState extends State<_TextModalContent> {
             ),
             textAlign: TextAlign.left,
           ),
-          const SizedBox(height: 16),
+        if (widget.dropdownItems != null)
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(Config.primaryColor).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Text(
-              _countdown,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.symmetric(horizontal: 0),
+            child: DropdownButtonFormField<dynamic>(
+              value: widget.selectedDropdownValue,
+              hint: Text(
+                widget.message,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.left,
+              ),
+              isExpanded: true,
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
                 color: Color(Config.primaryColor),
               ),
-              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                filled: true,
+                fillColor: Colors.white,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(Config.primaryColor),
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(Config.primaryColor),
+                    width: 2,
+                  ),
+                ),
+              ),
+              dropdownColor: Colors.white,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+              items: widget.dropdownItems!.map((item) {
+                return DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    item.toString(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                if (widget.onDropdownChanged != null) {
+                  widget.onDropdownChanged!(newValue);
+                }
+              },
             ),
           ),
-        ],
         if (widget.externalUrl != null) ...[
           const SizedBox(height: 24),
           SizedBox(
@@ -269,7 +189,7 @@ class _TextModalContentState extends State<_TextModalContent> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start, // Align left
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     const Icon(Icons.open_in_new, color: Color(Config.primaryColor)),
                     const SizedBox(width: 12),

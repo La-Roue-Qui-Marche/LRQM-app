@@ -1,12 +1,11 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../Utils/LogHelper.dart';
-import './Components/app_toast.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
+import 'package:lrqm/Utils/log_helper.dart';
 
 class LogScreen extends StatefulWidget {
   const LogScreen({super.key});

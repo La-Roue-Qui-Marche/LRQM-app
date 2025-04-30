@@ -1,21 +1,21 @@
-import 'DataManagement.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
 import 'package:flutter/foundation.dart';
+import 'package:lrqm/data/management_data.dart';
 
 enum EventStatus { notStarted, inProgress, over }
 
 class EventData {
-  static final DataManagement _dataManagement = DataManagement();
+  static final ManagementData _managementData = ManagementData();
 
   // ---- Save event ----
 
   static Future<bool> saveEvent(Map<String, dynamic> event) async {
     final saves = [
-      _dataManagement.saveInt('event_id', event['id']),
-      _dataManagement.saveString('event_name', event['name']),
-      _dataManagement.saveString('event_start_date', event['start_date']),
-      _dataManagement.saveString('event_end_date', event['end_date']),
-      _dataManagement.saveInt('event_meters_goal', event['meters_goal']),
+      _managementData.saveInt('event_id', event['id']),
+      _managementData.saveString('event_name', event['name']),
+      _managementData.saveString('event_start_date', event['start_date']),
+      _managementData.saveString('event_end_date', event['end_date']),
+      _managementData.saveInt('event_meters_goal', event['meters_goal']),
       _saveOptionalDouble('event_meeting_point_lat', event['meeting_point_lat']),
       _saveOptionalDouble('event_meeting_point_lng', event['meeting_point_lng']),
       _saveOptionalDouble('event_site_left_up_lat', event['site_left_up_lat']),
@@ -29,28 +29,28 @@ class EventData {
   }
 
   static Future<bool> _saveOptionalDouble(String key, dynamic value) async {
-    return value != null ? await _dataManagement.saveDouble(key, value) : true;
+    return value != null ? await _managementData.saveDouble(key, value) : true;
   }
 
   // ---- Getters ----
 
-  static Future<int?> getEventId() => _dataManagement.getInt('event_id');
-  static Future<String?> getEventName() => _dataManagement.getString('event_name');
-  static Future<String?> getStartDate() => _dataManagement.getString('event_start_date');
-  static Future<String?> getEndDate() => _dataManagement.getString('event_end_date');
-  static Future<int?> getMetersGoal() => _dataManagement.getInt('event_meters_goal');
+  static Future<int?> getEventId() => _managementData.getInt('event_id');
+  static Future<String?> getEventName() => _managementData.getString('event_name');
+  static Future<String?> getStartDate() => _managementData.getString('event_start_date');
+  static Future<String?> getEndDate() => _managementData.getString('event_end_date');
+  static Future<int?> getMetersGoal() => _managementData.getInt('event_meters_goal');
 
   static Future<List<mp.LatLng>?> getMeetingPointLatLngList() async {
-    final lat = await _dataManagement.getDouble('event_meeting_point_lat');
-    final lng = await _dataManagement.getDouble('event_meeting_point_lng');
+    final lat = await _managementData.getDouble('event_meeting_point_lat');
+    final lng = await _managementData.getDouble('event_meeting_point_lng');
     return (lat != null && lng != null) ? [mp.LatLng(lat, lng), mp.LatLng(lat, lng)] : null;
   }
 
   static Future<List<mp.LatLng>?> getSiteCoordLatLngList() async {
-    final lat1 = await _dataManagement.getDouble('event_site_left_up_lat');
-    final lng1 = await _dataManagement.getDouble('event_site_left_up_lng');
-    final lat2 = await _dataManagement.getDouble('event_site_right_down_lat');
-    final lng2 = await _dataManagement.getDouble('event_site_right_down_lng');
+    final lat1 = await _managementData.getDouble('event_site_left_up_lat');
+    final lng1 = await _managementData.getDouble('event_site_left_up_lng');
+    final lat2 = await _managementData.getDouble('event_site_right_down_lat');
+    final lng2 = await _managementData.getDouble('event_site_right_down_lng');
 
     return (lat1 != null && lng1 != null && lat2 != null && lng2 != null)
         ? [mp.LatLng(lat1, lng1), mp.LatLng(lat2, lng1), mp.LatLng(lat2, lng2), mp.LatLng(lat1, lng2)]
@@ -179,7 +179,7 @@ class EventData {
       'event_site_right_down_lat',
       'event_site_right_down_lng',
     ];
-    final results = await Future.wait(keys.map(_dataManagement.removeData));
+    final results = await Future.wait(keys.map(_managementData.removeData));
     return results.every((res) => res);
   }
 }

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import '../Utils/Result.dart';
-import '../Utils/config.dart';
+import 'package:lrqm/utils/Result.dart';
+import 'package:lrqm/utils/config.dart';
 
-class NewUserController {
+class UserController {
   static final http.Client _client = http.Client(); // Reusable HTTP client
 
   /// Create a new user.

@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import '../Utils/Result.dart';
-import '../Utils/config.dart';
-import '../Data/MeasureData.dart';
 
-class NewMeasureController {
+import 'package:lrqm/utils/Result.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/data/measure_data.dart';
+
+class MeasureController {
   static final http.Client _client = http.Client();
   static const Duration _timeoutDuration = Duration(seconds: 10);
 

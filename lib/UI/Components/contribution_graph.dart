@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
-import '../../Utils/config.dart';
-import '../../Geolocalisation/Geolocation.dart';
+
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/geo/geolocation.dart';
 
 class ContributionGraph extends StatefulWidget {
-  final Geolocation? geolocation;
+  final GeolocationController? geolocation;
 
   const ContributionGraph({
     super.key,

@@ -1,11 +1,11 @@
-import 'ContributorsData.dart';
-import 'TimeData.dart';
-import 'UserData.dart';
-import 'EventData.dart';
-import 'MeasureData.dart';
+import 'package:lrqm/data/contributors_data.dart';
+import 'package:lrqm/data/time_data.dart';
+import 'package:lrqm/data/user_data.dart';
+import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/data/measure_data.dart';
 
 /// Class containing utility methods to interact with the data.
-class DataUtils {
+class UtilsData {
   /// Delete all data stored in the shared preferences.
   /// Return a [Future] object resolving to a boolean value indicating if the data was deleted.
   static Future<bool> deleteAllData() async {

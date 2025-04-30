@@ -2,10 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../log_screen.dart';
-import '../../Geolocalisation/Geolocation.dart';
 
-class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
+import 'package:lrqm/ui/log_screen.dart';
+import 'package:lrqm/geo/geolocation.dart';
+
+class AppTopBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final bool showInfoButton;
   final bool showBackButton;
@@ -15,9 +16,9 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
   final VoidCallback? onClose;
   final VoidCallback? onInfo;
   final VoidCallback? onLogout;
-  final Geolocation? geolocation;
+  final GeolocationController? geolocation;
 
-  const TopAppBar({
+  const AppTopBar({
     super.key,
     required this.title,
     this.showInfoButton = true,
@@ -33,13 +34,13 @@ class TopAppBar extends StatefulWidget implements PreferredSizeWidget {
 
   @override
   // ignore: library_private_types_in_public_api
-  _TopAppBarState createState() => _TopAppBarState();
+  _AppTopBarState createState() => _AppTopBarState();
 
   @override
   Size get preferredSize => const Size.fromHeight(50.0);
 }
 
-class _TopAppBarState extends State<TopAppBar> {
+class _AppTopBarState extends State<AppTopBar> {
   int _infoButtonClickCount = 0;
   bool _showShareButton = false;
 

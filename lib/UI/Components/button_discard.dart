@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../Utils/config.dart';
+
+import 'package:lrqm/utils/config.dart';
 
 class ButtonDiscard extends StatelessWidget {
   final String text;
@@ -20,7 +21,7 @@ class ButtonDiscard extends StatelessWidget {
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(),
+          shape: const RoundedRectangleBorder(),
           padding: const EdgeInsets.symmetric(vertical: 14.0),
         ),
         child: Row(

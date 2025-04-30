@@ -4,20 +4,21 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../Utils/config.dart';
-import '../../Data/EventData.dart';
-import '../../API/NewEventController.dart';
 
-class EventProgressCard extends StatefulWidget {
-  const EventProgressCard({
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/api/event_controller.dart';
+
+class CardProgressEvent extends StatefulWidget {
+  const CardProgressEvent({
     super.key,
   });
 
   @override
-  State<EventProgressCard> createState() => _EventProgressCardState();
+  State<CardProgressEvent> createState() => _CardProgressEventState();
 }
 
-class _EventProgressCardState extends State<EventProgressCard> {
+class _CardProgressEventState extends State<CardProgressEvent> {
   // Using ValueNotifier instead of regular state variables
   final ValueNotifier<String?> _objectifNotifier = ValueNotifier<String?>(null);
   final ValueNotifier<String?> _currentValueNotifier = ValueNotifier<String?>(null);
@@ -227,13 +228,13 @@ class _EventProgressCardState extends State<EventProgressCard> {
 
     try {
       // Get the total distance
-      final metersResult = await NewEventController.getTotalMeters(int.parse(_eventId!));
+      final metersResult = await EventController.getTotalMeters(int.parse(_eventId!));
       if (!metersResult.hasError) {
         _currentValueNotifier.value = '${_formatDistance(metersResult.value!)} m';
       }
 
       // Get the number of participants
-      final participantsResult = await NewEventController.getActiveUsers(int.parse(_eventId!));
+      final participantsResult = await EventController.getActiveUsers(int.parse(_eventId!));
       if (!participantsResult.hasError) {
         _participantsNotifier.value = '${participantsResult.value}';
       }
@@ -261,7 +262,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 6.0),
+          margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 0.0),
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -270,18 +271,6 @@ class _EventProgressCardState extends State<EventProgressCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Progression de l\'événement',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Event status with colored text
-
               // Event name using ValueListenableBuilder
               ValueListenableBuilder<String?>(
                 valueListenable: _eventNameNotifier,
@@ -289,7 +278,7 @@ class _EventProgressCardState extends State<EventProgressCard> {
                   return Text(
                     eventName ?? 'Nom de l\'événement',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -510,6 +499,12 @@ class _EventProgressCardState extends State<EventProgressCard> {
             ],
           ),
         ),
+        // Add a 1 height divider with background color
+        Container(
+          height: 1,
+          width: double.infinity,
+          color: Color(Config.backgroundColor),
+        ),
       ],
     );
   }
@@ -533,10 +528,8 @@ class _EventProgressCardState extends State<EventProgressCard> {
             margin: const EdgeInsets.symmetric(horizontal: 8),
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: Color(Config.backgroundColor),
               borderRadius: BorderRadius.circular(8),
-              // Add a subtle border with the status color
-              border: Border.all(color: color.withOpacity(0.3), width: 1.5),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

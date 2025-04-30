@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../Utils/LogHelper.dart';
+
+import 'package:lrqm/utils/log_helper.dart';
 
 class PermissionHelper {
   // ----------------------------

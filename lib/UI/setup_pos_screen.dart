@@ -9,21 +9,21 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../Data/EventData.dart';
-import '../Utils/Permission.dart';
-import '../Utils/config.dart';
-import '../Geolocalisation/Geolocation.dart';
-import 'Components/button_action.dart';
-import 'Components/DynamicMapCard.dart';
-import 'Components/InfoCard.dart';
-import 'Components/TextModal.dart';
-import 'Components/top_app_bar.dart';
-import 'loading_screen.dart';
-import 'setup_team_screen.dart';
-import 'Components/app_toast.dart';
+import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/utils/permission_helper.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/geo/geolocation.dart';
+import 'package:lrqm/ui/components/button_action.dart';
+import 'package:lrqm/ui/components/card_dynamic_map.dart';
+import 'package:lrqm/ui/components/card_info.dart';
+import 'package:lrqm/ui/components/modal_bottom_text.dart';
+import 'package:lrqm/ui/components/app_top_bar.dart';
+import 'package:lrqm/ui/loading_screen.dart';
+import 'package:lrqm/ui/setup_team_screen.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
 
 class SetupPosScreen extends StatefulWidget {
-  final Geolocation geolocation;
+  final GeolocationController geolocation;
 
   const SetupPosScreen({super.key, required this.geolocation});
 
@@ -55,7 +55,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   void _showLocationPermissionModal() {
-    showTextModal(
+    showModalBottomText(
       context,
       "Position en arrière-plan",
       "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?",
@@ -94,7 +94,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     try {
       final granted = await PermissionHelper.isLocationAlwaysGranted();
       if (!granted) {
-        showTextModal(
+        showModalBottomText(
           context,
           "Position en arrière-plan",
           "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?",
@@ -121,7 +121,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           timeoutTimer.cancel();
           return;
         }
-        showTextModal(
+        showModalBottomText(
           context,
           "Hors de la zone",
           "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'événement.\nUtilise la carte pour trouver la localisation de l'événement et te rendre au point de départ.",
@@ -194,7 +194,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * 0.50,
-                    child: DynamicMapCard(geolocation: widget.geolocation),
+                    child: CardDynamicMap(geolocation: widget.geolocation),
                   ),
                 ),
               ),
@@ -211,7 +211,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       backgroundColor: const Color(Config.backgroundColor),
       appBar: _isLoading
           ? null
-          : const TopAppBar(
+          : const AppTopBar(
               title: "Position",
               showInfoButton: false,
               showBackButton: true,
@@ -220,7 +220,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 6.0, bottom: 12.0),
+            padding: const EdgeInsets.only(top: 0.0, bottom: 12.0),
             child: Column(
               children: [
                 _buildInfoCard(),
@@ -275,7 +275,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
               ),
             ),
           ),
-          InfoCard(
+          CardInfo(
             title: "Prépares-toi !",
             data: "Rends-toi au point de départ de l'évènement.",
             actionItems: [

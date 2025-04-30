@@ -1,22 +1,21 @@
 // ignore_for_file: prefer_const_declarations
 
-import 'DataManagement.dart';
-import 'dart:convert'; // Add for JSON encoding/decoding
-import '../Utils/LogHelper.dart'; // Import LogHelper
+import 'dart:convert';
+import 'package:lrqm/data/management_data.dart';
+import 'package:lrqm/utils/log_helper.dart';
 
 /// Class to manage measure-related data.
 class MeasureData {
-  /// Singleton instance of the DataManagement class.
-  static final DataManagement _dataManagement = DataManagement();
+  static final ManagementData _managementData = ManagementData();
 
   /// Save the measure ID in the shared preferences.
   static Future<bool> saveMeasureId(String measureId) async {
-    return _dataManagement.saveString('measure_id', measureId);
+    return _managementData.saveString('measure_id', measureId);
   }
 
   /// Retrieve the measure ID from the shared preferences.
   static Future<String?> getMeasureId() async {
-    return _dataManagement.getString('measure_id');
+    return _managementData.getString('measure_id');
   }
 
   /// Save a point (distance, speed, accuracy, timestamp, lat, lng, duration) for the current measure.
@@ -48,13 +47,13 @@ class MeasureData {
         "[MEASURE] Added point: distance=${distance.toStringAsFixed(2)}m, speed=${speed.toStringAsFixed(2)}m/s, accuracy=${acc.toStringAsFixed(2)}m, lat=${lat.toStringAsFixed(6)}, lng=${lng.toStringAsFixed(6)}, duration=${duration}s, timestamp=${timestamp.toString()}");
 
     points.add(pointData);
-    await _dataManagement.saveString(key, jsonEncode(points));
+    await _managementData.saveString(key, jsonEncode(points));
   }
 
   /// Retrieve all points for the current measure.
   static Future<List<Map<String, dynamic>>> getMeasurePoints() async {
     const String key = 'measure_points';
-    String? jsonStr = await _dataManagement.getString(key);
+    String? jsonStr = await _managementData.getString(key);
     try {
       final List<dynamic> decoded = jsonDecode(jsonStr);
       return decoded.cast<Map<String, dynamic>>();
@@ -64,12 +63,12 @@ class MeasureData {
   }
 
   static Future<bool> clearMeasurePoints() async {
-    return _dataManagement.removeData('measure_points');
+    return _managementData.removeData('measure_points');
   }
 
   /// Clear the measure ID and points from the shared preferences.
   static Future<bool> clearMeasureId() async {
-    final bool idCleared = await _dataManagement.removeData('measure_id');
+    final bool idCleared = await _managementData.removeData('measure_id');
     return idCleared;
   }
 

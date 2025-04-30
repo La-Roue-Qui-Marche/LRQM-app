@@ -3,18 +3,19 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../Data/MeasureData.dart';
-import '../../Utils/config.dart';
 
-class RunPathMap extends StatefulWidget {
-  const RunPathMap({super.key});
+import 'package:lrqm/data/measure_data.dart';
+import 'package:lrqm/utils/config.dart';
+
+class CardPathMap extends StatefulWidget {
+  const CardPathMap({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _RunPathMapState createState() => _RunPathMapState();
+  _CardPathMapState createState() => _CardPathMapState();
 }
 
-class _RunPathMapState extends State<RunPathMap> {
+class _CardPathMapState extends State<CardPathMap> {
   final MapController _mapController = MapController();
   List<LatLng> _fullPath = [];
   List<LatLng> _animatedPath = [];
