@@ -196,10 +196,12 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
             child: Container(
               color: Colors.white,
               width: double.infinity,
-              alignment: Alignment.center,
-              child: const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text("Chargement de la carte..."),
+              child: Center(
+                // Using only one Center widget with proper alignment
+                child: Image.asset(
+                  'assets/pictures/LogoSimpleAnimated.gif',
+                  width: 32.0,
+                ),
               ),
             ),
           )
@@ -209,7 +211,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
             height: MediaQuery.of(context).size.height -
                 MediaQuery.of(context).padding.top -
                 MediaQuery.of(context).padding.bottom -
-                350, // collapsed card height
+                360, // collapsed card height
             width: double.infinity,
             child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, polygonColor,
                 polygonBorderColor, userColor, meetingPointColor),
@@ -289,9 +291,9 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                 if (_currentLatLng != null)
                   Marker(
                     point: _currentLatLng!,
-                    width: 36,
-                    height: 36,
-                    child: Icon(Icons.my_location, size: 36, color: userColor),
+                    width: 40,
+                    height: 40,
+                    child: PulsingLocationMarker(color: userColor),
                   ),
               ],
             ),
@@ -424,7 +426,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                         height: 18,
                         decoration: BoxDecoration(
                           color: polygonColor,
-                          border: Border.all(color: polygonBorderColor, width: 2),
+                          border: Border.all(color: polygonBorderColor, width: 1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -443,7 +445,34 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Icon(Icons.my_location, color: userColor, size: 24),
+                      Container(
+                        width: 24,
+                        height: 24,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: userColor,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 2,
+                                    spreadRadius: 0.5,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(width: 10),
                       const Text("Votre position", style: TextStyle(fontSize: 14)),
                     ],
@@ -455,18 +484,18 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
 
         // --- Map credits bottom right ---
         Positioned(
-          bottom: 24,
+          bottom: 32,
           right: 12,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.circular(0),
+              color: Colors.white.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 color: Colors.black87,
               ),
             ),
@@ -477,11 +506,89 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   }
 }
 
+class PulsingLocationMarker extends StatefulWidget {
+  final Color color;
+
+  const PulsingLocationMarker({
+    Key? key,
+    required this.color,
+  }) : super(key: key);
+
+  @override
+  State<PulsingLocationMarker> createState() => _PulsingLocationMarkerState();
+}
+
+class _PulsingLocationMarkerState extends State<PulsingLocationMarker> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Pulsing circle
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (_, __) {
+              return Container(
+                width: 48 * _animation.value,
+                height: 48 * _animation.value,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: widget.color.withOpacity(0.3 * (1 - _animation.value)),
+                ),
+              );
+            },
+          ),
+          // Inner circle with border
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.color,
+              border: Border.all(
+                color: Colors.white,
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 enum _MapBaseType { satellite, voyager }
 
 class _MapStyles {
   static const Color zoneBorderColor = Color(Config.primaryColor);
   static const Color zoneFillColor = Color(Config.primaryColor);
-  static const double zoneFillOpacity = 0.1;
+  static const double zoneFillOpacity = 0.05;
   static const double legendBgOpacity = 0.95;
 }

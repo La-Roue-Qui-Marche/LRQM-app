@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:lrqm/ui/log_screen.dart';
 import 'package:lrqm/geo/geolocation.dart';
+import 'package:lrqm/utils/config.dart';
 
 class AppTopBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
@@ -62,13 +63,12 @@ class _AppTopBarState extends State<AppTopBar> {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 4),
+              border: Border(
+                bottom: BorderSide(
+                  color: const Color(Config.backgroundColor),
+                  width: 1.0,
                 ),
-              ],
+              ),
             ),
             child: SafeArea(
               top: true,

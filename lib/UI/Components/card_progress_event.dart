@@ -394,7 +394,7 @@ class _CardProgressEventState extends State<CardProgressEvent> {
                   );
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               // Time and Participants section
               Column(
@@ -567,7 +567,7 @@ class _CardProgressEventState extends State<CardProgressEvent> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[400],
+                color: Color(Config.primaryColor),
               ),
             ),
           ),

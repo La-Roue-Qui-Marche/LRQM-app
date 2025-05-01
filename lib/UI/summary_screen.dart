@@ -102,10 +102,6 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final double screenHeight = MediaQuery.of(context).size.height;
-    final double contentHeight = screenHeight - AppBar().preferredSize.height - MediaQuery.of(context).padding.top;
-    final double sectionHeight = contentHeight * 0.5;
-
     return Scaffold(
       backgroundColor: const Color(Config.backgroundColor),
       appBar: AppTopBar(
@@ -126,15 +122,8 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(
-                        height: sectionHeight,
-                        child: _buildCelebrationCard(),
-                      ),
-                      SizedBox(
-                        height: sectionHeight,
-                        width: double.infinity,
-                        child: const CardPathMap(),
-                      ),
+                      _buildCelebrationCard(),
+                      const CardPathMap(),
                     ],
                   ),
                 ),

@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -24,32 +22,28 @@ class AppNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.amber.withOpacity(0.2), // For debugging: visualize the area
+      color: Colors.amber.withOpacity(0.2),
       child: Stack(
-        clipBehavior: Clip.none, // allows the button to overflow
+        clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
         children: [
           // Background bar
           Container(
-            height: 80, // Slightly increased for better vertical balance
+            height: 80,
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0)
                 .copyWith(bottom: 6.0), // Increased bottom padding
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               border: Border(
-                top: BorderSide(color: Color(0x11000000), width: 1),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, -2),
+                top: BorderSide(
+                  color: const Color(Config.backgroundColor),
+                  width: 1.0,
                 ),
-              ],
+              ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Even horizontal spacing
-              crossAxisAlignment: CrossAxisAlignment.center, // Vertically center items
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Align(
@@ -64,7 +58,7 @@ class AppNavBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 100), // Space for center button, matches floating button size
+                const SizedBox(width: 100),
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
@@ -84,7 +78,7 @@ class AppNavBar extends StatelessWidget {
 
           // Floating button
           Positioned(
-            top: -10, // Adjusted for new button size to keep it centered
+            top: -10,
             left: 0,
             right: 0,
             child: Center(
@@ -114,13 +108,31 @@ class AppNavBar extends StatelessWidget {
                         color: Colors.white,
                         width: 6,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(Config.backgroundColor),
+                          offset: const Offset(0, -1),
+                          spreadRadius: 0,
+                          blurRadius: 0,
+                        ),
+                      ],
                     ),
                     child: Center(
                       child: canStartNewSession
                           ? (isMeasureActive
                               ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
-                              : const Icon(Icons.radio_button_on, color: Colors.white, size: 38))
-                          : Icon(Icons.radio_button_on, color: Colors.grey.shade50, size: 38),
+                              : SvgPicture.asset(
+                                  'assets/icons/dot-circle.svg',
+                                  color: Colors.white,
+                                  width: 38,
+                                  height: 38,
+                                ))
+                          : SvgPicture.asset(
+                              'assets/icons/dot-circle.svg',
+                              color: Colors.grey.shade50,
+                              width: 38,
+                              height: 38,
+                            ),
                     ),
                   ),
                 ),
