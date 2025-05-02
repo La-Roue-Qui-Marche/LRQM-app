@@ -275,7 +275,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
