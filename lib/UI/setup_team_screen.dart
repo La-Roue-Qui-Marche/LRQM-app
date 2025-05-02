@@ -131,10 +131,6 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
           onTap: () => _selectParticipants(number),
           isSelected: _selectedContributors == number,
         ),
-        Container(
-          height: 1,
-          color: const Color(Config.backgroundColor),
-        ),
       ],
     );
   }

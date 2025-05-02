@@ -193,7 +193,7 @@ class _CardPathMapState extends State<CardPathMap> {
         ClipRRect(
           borderRadius: BorderRadius.circular(0),
           child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6,
+            height: MediaQuery.of(context).size.height * 0.4,
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(

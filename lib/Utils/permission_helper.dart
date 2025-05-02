@@ -51,7 +51,7 @@ class PermissionHelper {
     if (status.isGranted) {
       return true;
     }
-    LogHelper.logError("[PERMISSION] Location whileInUse permission not granted: $status");
+    LogHelper.staticLogError("[PERMISSION] Location whileInUse permission not granted: $status");
     return false;
   }
 
@@ -63,22 +63,22 @@ class PermissionHelper {
     }
     // First, ensure "when in use" is granted
     if (!await PermissionHelper.requestLocationWhenInUsePermission()) {
-      LogHelper.logError("[PERMISSION] Cannot request always permission without whileInUse permission.");
+      LogHelper.staticLogError("[PERMISSION] Cannot request always permission without whileInUse permission.");
       return false;
     }
     status = await Permission.locationAlways.request();
     if (status.isGranted) {
       return true;
     }
-    LogHelper.logError("[PERMISSION] Location always permission not granted: $status");
+    LogHelper.staticLogError("[PERMISSION] Location always permission not granted: $status");
     return false;
   }
 
   static Future<void> openLocationSettings() async {
-    LogHelper.logInfo("[PERMISSION] Opening location settings...");
+    LogHelper.staticLogInfo("[PERMISSION] Opening location settings...");
     final success = await Geolocator.openLocationSettings();
     if (!success) {
-      LogHelper.logError("[PERMISSION] Failed to open location settings.");
+      LogHelper.staticLogError("[PERMISSION] Failed to open location settings.");
     }
   }
 
@@ -86,27 +86,27 @@ class PermissionHelper {
   // CAMERA PERMISSION
   // ----------------------------
   static Future<bool> requestCameraPermission() async {
-    LogHelper.logInfo("[PERMISSION] Requesting camera permission...");
+    LogHelper.staticLogInfo("[PERMISSION] Requesting camera permission...");
     final status = await Permission.camera.request();
     if (status.isGranted) {
-      LogHelper.logInfo("[PERMISSION] Camera permission granted.");
+      LogHelper.staticLogInfo("[PERMISSION] Camera permission granted.");
       return true;
     } else if (status.isDenied) {
-      LogHelper.logWarn("[PERMISSION] Camera permission denied.");
+      LogHelper.staticLogWarn("[PERMISSION] Camera permission denied.");
       return false;
     } else if (status.isPermanentlyDenied) {
-      LogHelper.logError("[PERMISSION] Camera permission permanently denied. Please enable it in settings.");
+      LogHelper.staticLogError("[PERMISSION] Camera permission permanently denied. Please enable it in settings.");
       return false;
     }
-    LogHelper.logError("[PERMISSION] Unknown camera permission status: $status");
+    LogHelper.staticLogError("[PERMISSION] Unknown camera permission status: $status");
     return false;
   }
 
   static Future<void> openCameraSettings() async {
-    LogHelper.logInfo("[PERMISSION] Opening settings...");
+    LogHelper.staticLogInfo("[PERMISSION] Opening settings...");
     final success = await openAppSettings();
     if (!success) {
-      LogHelper.logError("[PERMISSION] Failed to open settings.");
+      LogHelper.staticLogError("[PERMISSION] Failed to open settings.");
     }
   }
 }

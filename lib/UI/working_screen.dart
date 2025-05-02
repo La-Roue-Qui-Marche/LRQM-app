@@ -272,7 +272,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
             key: const ValueKey('personalInfoCard'),
             isSessionActive: isOngoing,
             geolocation: _geolocation,
-            isFloating: true,
           ),
         ),
       ],

@@ -14,13 +14,11 @@ import 'package:lrqm/ui/Components/contribution_graph.dart';
 class CardPersonalInfo extends StatefulWidget {
   final bool isSessionActive;
   final GeolocationController? geolocation;
-  final bool isFloating;
 
   const CardPersonalInfo({
     super.key,
     required this.isSessionActive,
     this.geolocation,
-    this.isFloating = false,
   });
 
   @override
@@ -239,36 +237,33 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isFloating) {
-      // Original implementation for non-floating mode
-      return Container(
-        color: const Color(Config.backgroundColor),
-        child: _buildCard(widget.isSessionActive),
-      );
-    }
+    // Always use the bottom sheet implementation
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final collapsedHeight = 130.0;
+        final expandedHeight = widget.isSessionActive ? 380.0 : 300.0;
+        final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
 
-    // New implementation with fixed heights and rebound effect
-    return Container(
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          // Use fixed heights instead of height factors
-          final collapsedHeight = 200.0; // Height when collapsed
-          final expandedHeight = 510.0; // Height when expanded
-
-          // Interpolate between the two heights based on animation value
-          final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
-
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: height,
-              width: double.infinity,
-              child: _buildDraggableBottomSheet(),
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            height: height,
+            width: double.infinity,
+            // Wrap the bottom sheet in a Stack to allow fixed positioning inside it
+            child: Stack(
+              children: [
+                _buildDraggableBottomSheet(),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: _statusBadge(),
+                ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -306,49 +301,84 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                 ),
               ),
             ),
-
-            // Scrollable content area with overlaid status badge
-            Expanded(
-              child: Stack(
+            // Add title above info cards
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 0),
+              child: Row(
                 children: [
-                  // Scrollable content
-                  SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(), // Disable scrolling within the card
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Info cards with distance at the top - no padding
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                          child: _buildInfoCards(),
-                        ),
-
-                        // Always build additional content, it will be hidden when collapsed
-                        Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                              child: _buildFunMessage(),
+                  Expanded(
+                    child: Container(
+                      alignment: Alignment.centerLeft,
+                      child: ValueListenableBuilder<String>(
+                        valueListenable: _userNameNotifier,
+                        builder: (context, userName, _) {
+                          return Text(
+                            "${userName.isNotEmpty ? " $userName" : ""}",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
-                            if (widget.isSessionActive) Divider(color: Color(Config.backgroundColor), thickness: 1),
-                            if (widget.isSessionActive)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                                child: ContributionGraph(geolocation: widget.geolocation),
-                              ),
-                          ],
-                        ),
-                      ],
+                          );
+                        },
+                      ),
                     ),
                   ),
-
-                  // Fixed position status badge overlaid on top
-                  Positioned(
-                    top: 8,
-                    right: 20,
-                    child: _statusBadge(),
-                  ),
                 ],
+              ),
+            ),
+            // Scrollable content area
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Info cards with distance at the top - no padding
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+                      child: _buildInfoCards(),
+                    ),
+                    // Always build additional content, it will be hidden when collapsed
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: _buildFunMessage(),
+                          ),
+                        ),
+                        if (widget.isSessionActive) Divider(color: Color(Config.backgroundColor), thickness: 1),
+                        if (widget.isSessionActive)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: ContributionGraph(geolocation: widget.geolocation),
+                          ),
+                        // Add message and animated arrow if session is not active
+                        if (!widget.isSessionActive)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 24, bottom: 16),
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Appuie sur le bouton orange pour démarrer une session",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Color(Config.accentColor),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 12),
+                                _AnimatedDownArrow(),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -357,122 +387,12 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     );
   }
 
-  Widget _buildCard(bool isSessionActive) {
-    return Stack(
-      children: [
-        Container(
-          margin: widget.isFloating
-              ? EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0)
-              : EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 8.0),
-          padding: EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(widget.isFloating ? 20.0 : 0.0),
-            boxShadow: widget.isFloating
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              SizedBox(height: 12),
-              _buildInfoCards(),
-              SizedBox(height: 16),
-              _buildFunMessage(),
-              if (isSessionActive) SizedBox(height: 8),
-              Divider(color: Color(Config.backgroundColor), thickness: 1),
-              if (isSessionActive) SizedBox(height: 8),
-              if (isSessionActive) ContributionGraph(geolocation: widget.geolocation),
-            ],
-          ),
-        ),
-        Positioned(
-          top: 32.0,
-          right: 32.0,
-          child: _statusBadge(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
+  Widget _buildInfoCards() {
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        '№ de dossard: ',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
-                      ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: _isLoadingNotifier,
-                        builder: (context, isLoading, _) {
-                          return ValueListenableBuilder<String>(
-                            valueListenable: _bibNumberNotifier,
-                            builder: (context, bibNumber, _) {
-                              return isLoading || bibNumber.isEmpty
-                                  ? _buildShimmer(width: 40)
-                                  : Text(
-                                      bibNumber,
-                                      style: const TextStyle(
-                                          fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
-                                    );
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: _isLoadingNotifier,
-                    builder: (context, isLoading, _) {
-                      return ValueListenableBuilder<String>(
-                        valueListenable: _userNameNotifier,
-                        builder: (context, userName, _) {
-                          if (isLoading) {
-                            return _buildShimmer(width: 100);
-                          } else if (userName.isNotEmpty) {
-                            return Text(
-                              userName,
-                              style: const TextStyle(fontSize: 18, color: Colors.black87),
-                            );
-                          } else {
-                            return const SizedBox.shrink();
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoCards() {
-    return Column(
-      children: [
-        // First row - Distance info spanning both columns
-        Container(
-          margin: const EdgeInsets.only(bottom: 0),
+        Expanded(
+          flex: 4,
           child: ValueListenableBuilder<bool>(
             valueListenable: _isLoadingNotifier,
             builder: (context, isLoading, _) {
@@ -483,81 +403,76 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                     label: 'Distance',
                     value: isLoading ? null : "${_formatDistance(displayedDistance)} m",
                     color: const Color(Config.primaryColor),
-                    fullWidth: true,
+                    fontSize: 20,
                   );
                 },
               );
             },
           ),
         ),
-
-        // Horizontal divider between rows
-        Divider(
-          color: Color(Config.backgroundColor),
-          height: 16,
-          thickness: 1,
+        // Vertical divider
+        Container(
+          height: 60,
+          child: VerticalDivider(
+            color: Color(Config.backgroundColor),
+            width: 2,
+            thickness: 1,
+          ),
         ),
-
-        // Second row - User info and Time
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left side - User info with new style
-            Expanded(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: _isLoadingNotifier,
-                builder: (context, isLoading, _) {
-                  return ValueListenableBuilder<String>(
-                    valueListenable: _bibNumberNotifier,
-                    builder: (context, bibNumber, _) {
-                      return _infoCard(
-                        label: '№ de dossard',
-                        value: isLoading || bibNumber.isEmpty ? null : bibNumber,
-                        color: const Color(Config.primaryColor),
-                        fullWidth: false,
-                      );
-                    },
+        // Time info (40%)
+        Expanded(
+          flex: 4,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isLoadingNotifier,
+            builder: (context, isLoading, _) {
+              return ValueListenableBuilder<int>(
+                valueListenable: widget.isSessionActive ? _sessionTimeNotifier : _totalTimeNotifier,
+                builder: (context, displayedTime, _) {
+                  return _infoCard(
+                    label: 'Temps',
+                    value: isLoading ? null : _formatModernTime(displayedTime),
+                    color: const Color(Config.primaryColor),
+                    fontSize: 20,
                   );
                 },
-              ),
-            ),
-
-            // Vertical divider between cards
-            Container(
-              height: 60,
-              child: VerticalDivider(
-                color: Color(Config.backgroundColor),
-                width: 8,
-                thickness: 1,
-              ),
-            ),
-
-            // Right side - Time info with new style
-            Expanded(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: _isLoadingNotifier,
-                builder: (context, isLoading, _) {
-                  return ValueListenableBuilder<int>(
-                    valueListenable: widget.isSessionActive ? _sessionTimeNotifier : _totalTimeNotifier,
-                    builder: (context, displayedTime, _) {
-                      return _infoCard(
-                        label: 'Temps total',
-                        value: isLoading ? null : _formatModernTime(displayedTime),
-                        color: const Color(Config.primaryColor),
-                        fullWidth: false,
-                      );
-                    },
+              );
+            },
+          ),
+        ),
+        // Vertical divider
+        Container(
+          height: 60,
+          child: VerticalDivider(
+            color: Color(Config.backgroundColor),
+            width: 2,
+            thickness: 1,
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isLoadingNotifier,
+            builder: (context, isLoading, _) {
+              return ValueListenableBuilder<String>(
+                valueListenable: _bibNumberNotifier,
+                builder: (context, bibNumber, _) {
+                  return _infoCard(
+                    label: 'Dossard',
+                    value: isLoading || bibNumber.isEmpty ? null : bibNumber,
+                    color: const Color(Config.primaryColor),
+                    fontSize: 20,
                   );
                 },
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
       ],
     );
   }
 
-  Widget _infoCard({required String label, String? value, required Color color, bool fullWidth = false}) {
+  // Remove fullWidth, add fontSize param
+  Widget _infoCard({required String label, String? value, required Color color, double fontSize = 20}) {
     String mainValue = '';
     String unit = '';
     if (value != null && value.isNotEmpty) {
@@ -586,7 +501,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: Colors.black54,
             ),
           ),
 
@@ -597,13 +512,12 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
           value != null && value.isNotEmpty
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  // Make sure all values are left-aligned
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
                       mainValue,
                       style: TextStyle(
-                        fontSize: fullWidth ? 26 : 22,
+                        fontSize: fontSize,
                         fontWeight: FontWeight.w600,
                         color: color,
                         letterSpacing: 0.5,
@@ -624,8 +538,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                   ],
                 )
               : Align(
-                  alignment: Alignment.centerLeft, // Consistent alignment for shimmer too
-                  child: _buildShimmer(width: fullWidth ? 120 : 60, height: fullWidth ? 36 : 26),
+                  alignment: Alignment.centerLeft,
+                  child: _buildShimmer(width: 80, height: 26),
                 ),
         ],
       ),
@@ -668,10 +582,10 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
         }
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             color: badgeColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -738,5 +652,50 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     } else {
       return "C'est ${(distance / 42195).toStringAsFixed(1)} marathon. Forme et détermination au top!";
     }
+  }
+}
+
+// --- Animated down arrow widget ---
+class _AnimatedDownArrow extends StatefulWidget {
+  @override
+  State<_AnimatedDownArrow> createState() => _AnimatedDownArrowState();
+}
+
+class _AnimatedDownArrowState extends State<_AnimatedDownArrow> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (_, child) => Transform.translate(
+        offset: Offset(0, _animation.value),
+        child: child,
+      ),
+      child: Icon(
+        Icons.keyboard_double_arrow_down_rounded,
+        size: 36,
+        color: Color(Config.accentColor),
+      ),
+    );
   }
 }

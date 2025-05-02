@@ -43,7 +43,7 @@ class MeasureData {
     };
 
     // Log the point details
-    LogHelper.logInfo(
+    LogHelper.staticLogInfo(
         "[MEASURE] Added point: distance=${distance.toStringAsFixed(2)}m, speed=${speed.toStringAsFixed(2)}m/s, accuracy=${acc.toStringAsFixed(2)}m, lat=${lat.toStringAsFixed(6)}, lng=${lng.toStringAsFixed(6)}, duration=${duration}s, timestamp=${timestamp.toString()}");
 
     points.add(pointData);

@@ -1,57 +1,95 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 
+/// LogHelper as a singleton class for managing application logs
 class LogHelper {
-  static final List<String> _logs = [];
-  static final StreamController<List<String>> _logStreamController = StreamController<List<String>>.broadcast();
-  static bool _isClosed = false;
-  static bool isLoggingEnabled = true;
+  // Singleton instance
+  static final LogHelper _instance = LogHelper._internal();
+
+  // Factory constructor to return the same instance
+  factory LogHelper() => _instance;
+
+  // Private constructor for singleton pattern
+  LogHelper._internal();
+
+  // Instance variables
+  final List<String> _logs = [];
+  final StreamController<List<String>> _logStreamController = StreamController<List<String>>.broadcast();
+  bool _isClosed = false;
+  bool isLoggingEnabled = true;
 
   /// Stream pour afficher les logs
-  static Stream<List<String>> get logStream => _logStreamController.stream;
+  Stream<List<String>> get logStream => _logStreamController.stream;
 
   /// Ajoute un log au journal avec niveau et timestamp
-  static void writeLog(String msg, {String level = "INFO"}) {
-    if (!isLoggingEnabled || _isClosed) return;
+  void writeLog(String msg, {String level = "INFO"}) {
+    if (!isLoggingEnabled) return;
 
-    final timestamp = DateTime.now().toIso8601String();
-    final logEntry = "[$level] $timestamp: $msg";
-    _logs.add(logEntry);
+    try {
+      final timestamp = DateTime.now().toIso8601String();
+      final logEntry = "[$level] $timestamp: $msg";
+      _logs.add(logEntry);
 
-    // Log to console
-    dev.log(logEntry, name: 'LogHelper');
+      // Log to console
+      dev.log(logEntry, name: 'LogHelper');
 
-    // Émet une copie non modifiable
-    _logStreamController.add(List.unmodifiable(_logs));
+      // Only emit if the stream controller is still open
+      if (!_isClosed && _logStreamController.hasListener) {
+        // Émet une copie non modifiable
+        _logStreamController.add(List.unmodifiable(_logs));
+      }
+    } catch (e) {
+      // Fallback logging in case of error
+      dev.log("Error in LogHelper: $e", name: 'LogHelper');
+    }
   }
 
   /// Méthodes pratiques pour différents niveaux de log
-  static void logInfo(String msg) => writeLog(msg, level: "INFO");
-  static void logWarn(String msg) => writeLog(msg, level: "WARN");
-  static void logError(String msg) => writeLog(msg, level: "ERROR");
+  void logInfo(String msg) => writeLog(msg, level: "INFO");
+  void logWarn(String msg) => writeLog(msg, level: "WARN");
+  void logError(String msg) => writeLog(msg, level: "ERROR");
 
   /// Force un push des logs actuels dans le stream (utile au premier affichage)
-  static void forceRefresh() {
+  void forceRefresh() {
     if (_isClosed) return;
-    _logStreamController.add(List.unmodifiable(_logs));
+    // Add logging to diagnose issues with force refresh
+    dev.log("Force refreshing logs (${_logs.length} entries)", name: 'LogHelper');
+    try {
+      _logStreamController.add(List.unmodifiable(_logs));
+    } catch (e) {
+      dev.log("Error in forceRefresh: $e", name: 'LogHelper');
+    }
   }
 
   /// Supprime tous les logs
-  static void clearLogs() {
+  void clearLogs() {
     if (_isClosed) return;
     _logs.clear();
     _logStreamController.add([]);
   }
 
   /// Renvoie tous les logs actuels (pour export, copier, etc.)
-  static List<String> getLogs() {
+  List<String> getLogs() {
     return List.unmodifiable(_logs);
   }
 
   /// Ferme proprement le StreamController
-  static void dispose() {
+  void dispose() {
     if (_isClosed) return;
     _logStreamController.close();
     _isClosed = true;
   }
+
+  // Static convenience methods with 'static' prefix to avoid name conflicts
+  static final LogHelper _logger = LogHelper();
+  static Stream<List<String>> get staticLogStream => _logger.logStream;
+
+  static void staticLog(String msg, {String level = "INFO"}) => _logger.writeLog(msg, level: level);
+  static void staticLogInfo(String msg) => _logger.logInfo(msg);
+  static void staticLogWarn(String msg) => _logger.logWarn(msg);
+  static void staticLogError(String msg) => _logger.logError(msg);
+  static void staticForceRefresh() => _logger.forceRefresh();
+  static void staticClearLogs() => _logger.clearLogs();
+  static List<String> staticGetLogs() => _logger.getLogs();
+  static void staticDispose() => _logger.dispose();
 }

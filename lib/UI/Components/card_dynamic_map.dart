@@ -211,7 +211,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
             height: MediaQuery.of(context).size.height -
                 MediaQuery.of(context).padding.top -
                 MediaQuery.of(context).padding.bottom -
-                360, // collapsed card height
+                290, // collapsed card height
             width: double.infinity,
             child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, polygonColor,
                 polygonBorderColor, userColor, meetingPointColor),
@@ -247,8 +247,9 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           options: MapOptions(
             initialCenter: LatLng(userLat, userLon),
             initialZoom: 5.0,
+            // Block map rotation by removing InteractiveFlag.rotate
             interactionOptions: InteractionOptions(
-              flags: _followUserMode ? InteractiveFlag.none : InteractiveFlag.all,
+              flags: _followUserMode ? (InteractiveFlag.none) : (InteractiveFlag.all & ~InteractiveFlag.rotate),
             ),
             onMapReady: () {
               _isMapReady = true;
@@ -489,13 +490,13 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(0),
             ),
             child: Text(
               _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 color: Colors.black87,
               ),
             ),

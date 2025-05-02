@@ -170,13 +170,13 @@ class ContributionGraphState extends State<ContributionGraph> {
             "Contribution moyenne (m/s)",
             style: TextStyle(
               fontSize: 16,
-              color: Colors.black87,
+              color: Colors.black54,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           SizedBox(
-            height: 140,
+            height: 150,
             child: Stack(
               alignment: Alignment.center,
               children: [
