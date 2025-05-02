@@ -241,7 +241,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final collapsedHeight = 130.0;
+        final collapsedHeight = 120.0;
         final expandedHeight = widget.isSessionActive ? 380.0 : 300.0;
         final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
 
@@ -255,7 +255,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
               children: [
                 _buildDraggableBottomSheet(),
                 Positioned(
-                  top: 12,
+                  top: 16,
                   right: 12,
                   child: _statusBadge(),
                 ),
@@ -275,10 +275,10 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -286,10 +286,10 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
         ),
         child: Column(
           children: [
-            // Drag handle
+            // Drag handle with reduced padding
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Center(
                 child: Container(
                   width: 40,
@@ -301,9 +301,9 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                 ),
               ),
             ),
-            // Add title above info cards
+            // Add title with reduced top padding
             Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 0),
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 0), // Reduced top padding from 4 to 0
               child: Row(
                 children: [
                   Expanded(
@@ -312,13 +312,18 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                       child: ValueListenableBuilder<String>(
                         valueListenable: _userNameNotifier,
                         builder: (context, userName, _) {
-                          return Text(
-                            "${userName.isNotEmpty ? " $userName" : ""}",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
+                          return ValueListenableBuilder<String>(
+                            valueListenable: _bibNumberNotifier,
+                            builder: (context, bibNumber, _) {
+                              return Text(
+                                "${userName.isNotEmpty ? userName : ""} ${bibNumber.isNotEmpty ? '• N°$bibNumber' : ""}",
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -336,23 +341,22 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                   children: [
                     // Info cards with distance at the top - no padding
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
                       child: _buildInfoCards(),
                     ),
                     // Always build additional content, it will be hidden when collapsed
                     Column(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: _buildFunMessage(),
                           ),
                         ),
-                        if (widget.isSessionActive) Divider(color: Color(Config.backgroundColor), thickness: 1),
                         if (widget.isSessionActive)
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                             child: ContributionGraph(geolocation: widget.geolocation),
                           ),
                         // Add message and animated arrow if session is not active
@@ -391,8 +395,9 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Distance info (50%)
         Expanded(
-          flex: 4,
+          flex: 1,
           child: ValueListenableBuilder<bool>(
             valueListenable: _isLoadingNotifier,
             builder: (context, isLoading, _) {
@@ -403,7 +408,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                     label: 'Distance',
                     value: isLoading ? null : "${_formatDistance(displayedDistance)} m",
                     color: const Color(Config.primaryColor),
-                    fontSize: 20,
+                    fontSize: 22,
                   );
                 },
               );
@@ -419,9 +424,9 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
             thickness: 1,
           ),
         ),
-        // Time info (40%)
+        // Time info (50%)
         Expanded(
-          flex: 4,
+          flex: 1,
           child: ValueListenableBuilder<bool>(
             valueListenable: _isLoadingNotifier,
             builder: (context, isLoading, _) {
@@ -429,38 +434,10 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                 valueListenable: widget.isSessionActive ? _sessionTimeNotifier : _totalTimeNotifier,
                 builder: (context, displayedTime, _) {
                   return _infoCard(
-                    label: 'Temps',
+                    label: 'Durée',
                     value: isLoading ? null : _formatModernTime(displayedTime),
                     color: const Color(Config.primaryColor),
-                    fontSize: 20,
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        // Vertical divider
-        Container(
-          height: 60,
-          child: VerticalDivider(
-            color: Color(Config.backgroundColor),
-            width: 2,
-            thickness: 1,
-          ),
-        ),
-        Expanded(
-          flex: 4,
-          child: ValueListenableBuilder<bool>(
-            valueListenable: _isLoadingNotifier,
-            builder: (context, isLoading, _) {
-              return ValueListenableBuilder<String>(
-                valueListenable: _bibNumberNotifier,
-                builder: (context, bibNumber, _) {
-                  return _infoCard(
-                    label: 'Dossard',
-                    value: isLoading || bibNumber.isEmpty ? null : bibNumber,
-                    color: const Color(Config.primaryColor),
-                    fontSize: 20,
+                    fontSize: 22,
                   );
                 },
               );
@@ -505,7 +482,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
             ),
           ),
 
-          // Reduced spacing between header and value (from 4 to 0)
           const SizedBox(height: 0),
 
           // Value display

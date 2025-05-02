@@ -86,15 +86,15 @@ class CardSupportEvent extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Color(Config.backgroundColor),
           shape: BoxShape.circle,
         ),
         child: SvgPicture.asset(
           assetPath,
-          width: 24,
-          height: 24,
+          width: 28,
+          height: 28,
         ),
       ),
     );

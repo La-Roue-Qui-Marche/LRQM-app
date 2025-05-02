@@ -121,18 +121,8 @@ class AppNavBar extends StatelessWidget {
                       child: canStartNewSession
                           ? (isMeasureActive
                               ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
-                              : SvgPicture.asset(
-                                  'assets/icons/dot-circle.svg',
-                                  color: Colors.white,
-                                  width: 38,
-                                  height: 38,
-                                ))
-                          : SvgPicture.asset(
-                              'assets/icons/dot-circle.svg',
-                              color: Colors.grey.shade50,
-                              width: 38,
-                              height: 38,
-                            ),
+                              : _buildAnimatedGlowingDot(Colors.white))
+                          : _buildAnimatedGlowingDot(Colors.grey.shade50),
                     ),
                   ),
                 ),
@@ -184,6 +174,84 @@ class AppNavBar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAnimatedGlowingDot(Color color) {
+    return RepaintBoundary(
+      child: PulsingDot(color: color),
+    );
+  }
+}
+
+class PulsingDot extends StatefulWidget {
+  final Color color;
+
+  const PulsingDot({super.key, required this.color});
+
+  @override
+  State<PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<PulsingDot> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // Simple repeating pulse animation
+    _animation = Tween<double>(begin: 0.5, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Simple pulsing circle
+        AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Container(
+              width: 24 + (_animation.value * 8),
+              height: 24 + (_animation.value * 8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.color.withOpacity(0.2 + (_animation.value * 0.2)),
+              ),
+            );
+          },
+        ),
+
+        // Center dot
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.color,
+          ),
+        ),
+      ],
     );
   }
 }

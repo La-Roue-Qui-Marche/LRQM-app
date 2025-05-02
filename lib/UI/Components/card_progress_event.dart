@@ -31,7 +31,7 @@ class _CardProgressEventState extends State<CardProgressEvent> {
   final ValueNotifier<String?> _countdownValueNotifier = ValueNotifier<String?>(null);
 
   // Colors for different event statuses
-  final Color _notStartedColor = Colors.green;
+  final Color _notStartedColor = Colors.black54;
   final Color _inProgressColor = Colors.black87;
   final Color _overColor = Colors.red.shade700;
 
@@ -45,7 +45,7 @@ class _CardProgressEventState extends State<CardProgressEvent> {
       case EventStatus.notStarted:
         return "L'évènement n'a pas encore commencé !";
       case EventStatus.inProgress:
-        return "L'évènement est en cours";
+        return "L'évènement est en cours !";
       case EventStatus.over:
         return "L'évènement est terminé !";
     }
@@ -128,7 +128,7 @@ class _CardProgressEventState extends State<CardProgressEvent> {
     // Update countdown label based on status
     switch (status) {
       case EventStatus.notStarted:
-        _countdownLabelNotifier.value = "L'évènement commence dans";
+        _countdownLabelNotifier.value = "L'évènement commence dans:";
         break;
       case EventStatus.inProgress:
         _countdownLabelNotifier.value = "Temps restant";
