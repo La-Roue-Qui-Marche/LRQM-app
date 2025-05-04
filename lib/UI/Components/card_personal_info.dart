@@ -241,8 +241,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final collapsedHeight = 130.0;
-        final expandedHeight = widget.isSessionActive ? 390.0 : 320.0;
+        final collapsedHeight = 132.0;
+        final expandedHeight = widget.isSessionActive ? 400.0 : 320.0;
         final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
 
         return Align(

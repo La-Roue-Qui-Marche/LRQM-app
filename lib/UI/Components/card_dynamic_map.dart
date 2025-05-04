@@ -156,6 +156,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     double zoom = min(latZoom, lonZoom);
 
     if (!zoom.isFinite || zoom < 2.0) zoom = 5.0;
+    zoom -= 0.4; // Adjust zoom to fit the map better
     if (zoom < 2.0) zoom = 2.0;
 
     _animatedMove(center, zoom);

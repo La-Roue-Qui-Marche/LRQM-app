@@ -233,7 +233,7 @@ class _CardPathMapState extends State<CardPathMap> {
                       return Polyline(
                         points: [start, end],
                         color: color,
-                        strokeWidth: 3,
+                        strokeWidth: 3.5,
                       );
                     }),
                   ),
