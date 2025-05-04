@@ -105,8 +105,30 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     if (_currentLatLng == null || !_isMapReady) return;
     const double followZoomLevel = 17.0;
     try {
-      _mapController.move(_currentLatLng!, followZoomLevel);
+      // Offset the user marker 100px below the center of the map
+      final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), followZoomLevel);
+      _mapController.move(offsetLatLng, followZoomLevel);
     } catch (_) {}
+  }
+
+  /// Converts a pixel offset (from center) to a LatLng at the given zoom.
+  LatLng _latLngFromOffset(LatLng center, Offset offset, double zoom) {
+    // Get the map size in pixels at the current zoom
+    final mapSize = 256 * pow(2, zoom);
+    // Convert LatLng to world coordinates
+    double x = (center.longitude + 180.0) / 360.0 * mapSize;
+    double sinLat = sin(center.latitude * pi / 180.0);
+    double y = (0.5 - log((1 + sinLat) / (1 - sinLat)) / (4 * pi)) * mapSize;
+
+    // Apply pixel offset (y is inverted in screen coordinates)
+    x += offset.dx;
+    y += offset.dy;
+
+    // Convert back to LatLng
+    double lon = x / mapSize * 360.0 - 180.0;
+    double n = pi - 2.0 * pi * y / mapSize;
+    double lat = 180.0 / pi * atan(0.5 * (exp(n) - exp(-n)));
+    return LatLng(lat, lon);
   }
 
   void _fitMapBounds() {
@@ -206,15 +228,40 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
             ),
           )
         else if (widget.fullScreen)
-          Container(
-            // Calculate available height by subtracting system padding and collapsed card height
-            height: MediaQuery.of(context).size.height -
-                MediaQuery.of(context).padding.top -
-                MediaQuery.of(context).padding.bottom -
-                290, // collapsed card height
-            width: double.infinity,
-            child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, polygonColor,
-                polygonBorderColor, userColor, meetingPointColor),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final mediaQuery = MediaQuery.of(context);
+              // Top bar height (from AppTopBar.preferredSize)
+              const double topBarHeight = 50.0;
+              // Bottom nav bar height (from AppNavBar, including floating button)
+              const double navBarHeight = 80.0;
+              // Personal info card collapsed height (should match CardPersonalInfo)
+              const double personalInfoCollapsedHeight = 130.0;
+              // Calculate available height
+              final double availableHeight = mediaQuery.size.height -
+                  mediaQuery.padding.top -
+                  mediaQuery.padding.bottom -
+                  topBarHeight -
+                  navBarHeight -
+                  personalInfoCollapsedHeight;
+
+              return Container(
+                height: availableHeight > 0 ? availableHeight : 0,
+                width: double.infinity,
+                child: _buildMapStack(
+                  userLat,
+                  userLon,
+                  urlTemplate,
+                  subdomains,
+                  icon,
+                  tooltip,
+                  polygonColor,
+                  polygonBorderColor,
+                  userColor,
+                  meetingPointColor,
+                ),
+              );
+            },
           )
         else
           // When not in fullScreen mode, use the fixed height (50% of screen)
@@ -306,10 +353,10 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           top: 12,
           left: 12,
           child: Container(
-            width: 40,
-            height: 40,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
+              color: Colors.black54,
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -320,9 +367,9 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                   Text(
                     "N",
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Colors.white,
                       height: 1.1,
                     ),
                   ),
@@ -332,43 +379,36 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           ),
         ),
 
-        // Button stack (top right)
+        // Button stack (info, map type, and tracing all top right)
         Positioned(
           top: 12,
           right: 12,
           child: Column(
             children: [
-              FloatingActionButton(
-                heroTag: "legend",
-                mini: true,
-                backgroundColor: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
-                onPressed: () {
+              _modernMapButton(
+                icon: Icons.question_mark,
+                onTap: () {
                   setState(() {
                     _showLegend = !_showLegend;
                   });
                 },
-                child: const Icon(Icons.question_mark, color: Colors.black87),
               ),
-              const SizedBox(height: 12),
-              FloatingActionButton(
-                heroTag: "map-type",
-                mini: true,
-                backgroundColor: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
-                onPressed: () {
+              const SizedBox(height: 14),
+              _modernMapButton(
+                icon: icon,
+                onTap: () {
                   setState(() {
                     _mapBaseType =
                         _mapBaseType == _MapBaseType.satellite ? _MapBaseType.voyager : _MapBaseType.satellite;
                   });
                 },
                 tooltip: tooltip,
-                child: Icon(icon, color: Colors.black87),
               ),
-              const SizedBox(height: 12),
-              FloatingActionButton(
-                heroTag: "follow-user",
-                mini: true,
-                backgroundColor: Colors.white.withOpacity(_MapStyles.legendBgOpacity),
-                onPressed: () {
+              const SizedBox(height: 14),
+              _modernMapButton(
+                icon: Icons.navigation,
+                iconColor: _followUserMode ? userColor : Colors.black87,
+                onTap: () {
                   setState(() {
                     _followUserMode = !_followUserMode;
                     if (_followUserMode) {
@@ -378,10 +418,6 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                     }
                   });
                 },
-                child: Icon(
-                  _followUserMode ? Icons.gps_fixed : Icons.gps_not_fixed,
-                  color: _followUserMode ? userColor : Colors.black87,
-                ),
               ),
             ],
           ),
@@ -478,6 +514,14 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                       const Text("Votre position", style: TextStyle(fontSize: 14)),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.navigation, color: userColor, size: 22),
+                      const SizedBox(width: 10),
+                      const Text("Suivi/centrage", style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -503,6 +547,42 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           ),
         ),
       ],
+    );
+  }
+
+  // --- Modern flat round map button ---
+  Widget _modernMapButton({
+    required IconData icon,
+    VoidCallback? onTap,
+    String? tooltip,
+    Color iconColor = Colors.black87,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(40),
+        onTap: onTap,
+        child: Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(1),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.18),
+              width: 1.2,
+            ),
+          ),
+          padding: const EdgeInsets.all(0),
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 28,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -591,5 +671,4 @@ class _MapStyles {
   static const Color zoneBorderColor = Color(Config.primaryColor);
   static const Color zoneFillColor = Color(Config.primaryColor);
   static const double zoneFillOpacity = 0.05;
-  static const double legendBgOpacity = 0.95;
 }

@@ -241,8 +241,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final collapsedHeight = 120.0;
-        final expandedHeight = widget.isSessionActive ? 380.0 : 300.0;
+        final collapsedHeight = 130.0;
+        final expandedHeight = widget.isSessionActive ? 380.0 : 320.0;
         final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
 
         return Align(
@@ -255,8 +255,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
               children: [
                 _buildDraggableBottomSheet(),
                 Positioned(
-                  top: 16,
-                  right: 12,
+                  top: 20,
+                  right: 24,
                   child: _statusBadge(),
                 ),
               ],
@@ -278,8 +278,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
               offset: const Offset(0, -2),
             ),
           ],
@@ -289,7 +289,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
             // Drag handle with reduced padding
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Center(
                 child: Container(
                   width: 40,
@@ -303,7 +303,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
             ),
             // Add title with reduced top padding
             Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 0), // Reduced top padding from 4 to 0
+              padding: const EdgeInsets.only(left: 24, right: 24, top: 0, bottom: 0),
               child: Row(
                 children: [
                   Expanded(
@@ -315,13 +315,57 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                           return ValueListenableBuilder<String>(
                             valueListenable: _bibNumberNotifier,
                             builder: (context, bibNumber, _) {
-                              return Text(
-                                "${userName.isNotEmpty ? userName : ""} ${bibNumber.isNotEmpty ? '• N°$bibNumber' : ""}",
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
+                              final hasName = userName.isNotEmpty;
+                              final hasBib = bibNumber.isNotEmpty;
+                              if (!hasName && !hasBib) {
+                                return const SizedBox.shrink();
+                              }
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (hasName)
+                                    Text(
+                                      userName,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                  if (hasBib)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 10.0),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Color(Config.accentColor).withOpacity(0.12),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Color(Config.accentColor).withOpacity(0.10),
+                                              blurRadius: 4,
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
+                                          border: Border.all(
+                                            color: Color(Config.accentColor).withOpacity(0.4),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "N°$bibNumber",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(Config.accentColor),
+                                            letterSpacing: 0.2,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               );
                             },
                           );
@@ -341,14 +385,14 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                   children: [
                     // Info cards with distance at the top - no padding
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
                       child: _buildInfoCards(),
                     ),
                     // Always build additional content, it will be hidden when collapsed
                     Column(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                          padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: _buildFunMessage(),
@@ -356,7 +400,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                         ),
                         if (widget.isSessionActive)
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
                             child: ContributionGraph(geolocation: widget.geolocation),
                           ),
                         // Add message and animated arrow if session is not active

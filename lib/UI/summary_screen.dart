@@ -164,7 +164,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
       margin: const EdgeInsets.only(top: 0),
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

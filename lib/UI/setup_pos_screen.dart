@@ -234,15 +234,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             child: Column(
               children: [
                 _buildInfoCard(),
-                const SizedBox(height: 12),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Text(
-                    "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(fontSize: 14, color: Colors.black87),
-                  ),
-                ),
               ],
             ),
           ),
@@ -287,7 +278,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           ),
           CardInfo(
             title: "Prépares-toi !",
-            data: "Rends-toi au point de départ de l'évènement.",
+            data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
             actionItems: [
               ActionItem(
                 icon: SvgPicture.asset('assets/icons/map.svg', color: Colors.black87, width: 28, height: 28),
