@@ -95,7 +95,7 @@ class _AppTopBarState extends State<AppTopBar> {
                             )
                           : Image.asset(
                               'assets/pictures/LogoText.png',
-                              height: 26,
+                              height: 22,
                               fit: BoxFit.contain,
                             ),
                     ),
