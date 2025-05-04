@@ -258,7 +258,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               // Bottom nav bar height (from AppNavBar, including floating button)
               const double navBarHeight = 80.0;
               // Personal info card collapsed height (should match CardPersonalInfo)
-              const double personalInfoCollapsedHeight = 140.0;
+              const double personalInfoCollapsedHeight = 150.0;
               // Calculate available height
               final double availableHeight = mediaQuery.size.height -
                   mediaQuery.padding.top -
