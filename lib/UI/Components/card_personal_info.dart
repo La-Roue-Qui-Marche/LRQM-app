@@ -250,17 +250,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
           child: Container(
             height: height,
             width: double.infinity,
-            // Wrap the bottom sheet in a Stack to allow fixed positioning inside it
-            child: Stack(
-              children: [
-                _buildDraggableBottomSheet(),
-                Positioned(
-                  top: 20,
-                  right: 24,
-                  child: _statusBadge(),
-                ),
-              ],
-            ),
+            // Remove Stack, just use the sheet
+            child: _buildDraggableBottomSheet(),
           ),
         );
       },
@@ -324,44 +315,44 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  if (hasName)
-                                    Text(
-                                      userName,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                        letterSpacing: 0.2,
+                                  if (hasBib)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Color(Config.accentColor).withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Color(Config.accentColor).withOpacity(0.10),
+                                            blurRadius: 4,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                        border: Border.all(
+                                          color: Color(Config.accentColor).withOpacity(0.4),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        "N°$bibNumber",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(Config.accentColor),
+                                          letterSpacing: 0.2,
+                                        ),
                                       ),
                                     ),
-                                  if (hasBib)
+                                  if (hasName)
                                     Padding(
                                       padding: const EdgeInsets.only(left: 10.0),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Color(Config.accentColor).withOpacity(0.12),
-                                          borderRadius: BorderRadius.circular(16),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(Config.accentColor).withOpacity(0.10),
-                                              blurRadius: 4,
-                                              offset: Offset(0, 2),
-                                            ),
-                                          ],
-                                          border: Border.all(
-                                            color: Color(Config.accentColor).withOpacity(0.4),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "N°$bibNumber",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(Config.accentColor),
-                                            letterSpacing: 0.2,
-                                          ),
+                                      child: Text(
+                                        userName,
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                          letterSpacing: 0.2,
                                         ),
                                       ),
                                     ),
@@ -373,6 +364,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                       ),
                     ),
                   ),
+                  // Status badge aligned right
+                  _statusBadge(),
                 ],
               ),
             ),
@@ -587,38 +580,63 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       builder: (context, isCountingInZone, _) {
         String statusText;
         Color badgeColor;
-        Color textColor = Colors.white;
+        Color textColor;
+        IconData icon;
+        Color iconColor;
+        Color borderColor;
 
         if (!widget.isSessionActive) {
           statusText = 'En pause';
-          badgeColor = const Color(Config.backgroundColor);
+          badgeColor = Colors.grey.shade200;
           textColor = Colors.black87;
+          icon = Icons.pause_circle_filled_rounded;
+          iconColor = Colors.grey.shade500;
+          borderColor = Colors.grey.shade400.withOpacity(0.4);
         } else if (!isCountingInZone) {
           statusText = 'Hors Zone';
-          badgeColor = Colors.red.shade400;
+          badgeColor = Colors.red.shade50;
+          textColor = Colors.red.shade700;
+          icon = Icons.location_off_rounded;
+          iconColor = Colors.red.shade400;
+          borderColor = Colors.red.shade200.withOpacity(0.4);
         } else {
           statusText = 'Actif';
-          badgeColor = Colors.green.shade400;
+          badgeColor = Colors.green.shade50;
+          textColor = Colors.green.shade700;
+          icon = Icons.play_circle_fill_rounded;
+          iconColor = Colors.green.shade400;
+          borderColor = Colors.green.shade200.withOpacity(0.4);
         }
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
             color: badgeColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: borderColor,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: borderColor.withOpacity(0.25),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.circle,
-                size: 10,
-                color: !widget.isSessionActive ? Colors.black87 : Colors.white,
+                icon,
+                size: 18,
+                color: iconColor,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 7),
               Text(
                 statusText,
-                style: TextStyle(fontSize: 14, color: textColor),
+                style: TextStyle(fontSize: 15, color: textColor, fontWeight: FontWeight.w600),
               ),
             ],
           ),

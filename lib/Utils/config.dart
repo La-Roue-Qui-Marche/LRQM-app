@@ -21,7 +21,7 @@ class Config {
   static const int distanceThreshold = 60;
   static const double speedThreshold = 12;
   static const Duration apiInterval = Duration(seconds: 10);
-  static const int outsideCounterMax = 5;
+  static const int outsideCounterMax = 2;
 
   // ----------------- Couleurs -----------------
   static const int primaryColor = 0xFF403c74;

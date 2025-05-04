@@ -57,62 +57,78 @@ class EventData {
         : null;
   }
 
+  // ---- DateTime parsing helper ----
+
+  static DateTime? _parseUtcToLocal(String? rawDate) {
+    if (rawDate == null) return null;
+    try {
+      final dateUtc = DateTime.parse(rawDate.endsWith('Z') ? rawDate : '${rawDate}Z');
+      return dateUtc.toLocal();
+    } catch (e) {
+      debugPrint('Failed to parse UTC date: $e');
+      return null;
+    }
+  }
+
   // ---- Status and timing ----
 
   static Future<bool> hasEventStarted() async {
     final start = await getStartDate();
-    if (start == null) return false;
+    final startDateTime = _parseUtcToLocal(start);
+    if (startDateTime == null) return false;
 
-    try {
-      // Parse the date from the server and ensure it's in local timezone for comparison
-      final startDateTime = DateTime.parse(start).toLocal();
-      return DateTime.now().isAfter(startDateTime);
-    } catch (e) {
-      debugPrint('Error parsing start date: $e');
-      return false;
-    }
+    debugPrint('Event start time (Local): $startDateTime');
+    return DateTime.now().isAfter(startDateTime);
   }
 
   static Future<bool> isEventOver() async {
     final end = await getEndDate();
-    if (end == null) return false;
+    final endDateTime = _parseUtcToLocal(end);
+    if (endDateTime == null) return false;
 
-    try {
-      // Parse the date from the server and ensure it's in local timezone for comparison
-      final endDateTime = DateTime.parse(end).toLocal();
-      return DateTime.now().isAfter(endDateTime);
-    } catch (e) {
-      debugPrint('Error parsing end date: $e');
-      return false;
-    }
+    debugPrint('Event end time (Local): $endDateTime');
+    return DateTime.now().isAfter(endDateTime);
   }
 
   static Future<EventStatus> getEventStatus() async {
-    if (await isEventOver()) return EventStatus.over;
-    if (await hasEventStarted()) return EventStatus.inProgress;
+    if (await isEventOver()) {
+      debugPrint('Event status: over');
+      return EventStatus.over;
+    }
+    if (await hasEventStarted()) {
+      debugPrint('Event status: inProgress');
+      return EventStatus.inProgress;
+    }
+    debugPrint('Event status: notStarted');
     return EventStatus.notStarted;
   }
 
   static Future<int> getTimeUntilStartInSeconds() async {
     final start = await getStartDate();
-    return start == null ? 0 : DateTime.parse(start).toLocal().difference(DateTime.now()).inSeconds;
+    final startDateTime = _parseUtcToLocal(start);
+    if (startDateTime == null) return 0;
+
+    final now = DateTime.now();
+    debugPrint('Event start time: $startDateTime, Current time: $now');
+    return startDateTime.difference(now).inSeconds;
   }
 
   static Future<int> getRemainingTimeInSeconds() async {
     final end = await getEndDate();
-    if (end == null) return 0;
+    final endDateTime = _parseUtcToLocal(end);
+    if (endDateTime == null) return 0;
 
     final now = DateTime.now();
-    final endDateTime = DateTime.parse(end).toLocal();
-    int seconds = endDateTime.difference(now).inSeconds;
-    return seconds < 0 ? 0 : seconds; // Return 0 if negative
+    final seconds = endDateTime.difference(now).inSeconds;
+    return seconds < 0 ? 0 : seconds;
   }
 
   static Future<int> getRemainingTimeUntilEndInSeconds() async {
     final end = await getEndDate();
-    if (end == null) return 0;
+    final endDateTime = _parseUtcToLocal(end);
+    if (endDateTime == null) return 0;
 
-    return DateTime.parse(end).toLocal().difference(DateTime.now()).inSeconds;
+    return endDateTime.difference(DateTime.now()).inSeconds;
   }
 
   // ---- Time Formatting ----
@@ -139,7 +155,8 @@ class EventData {
     if (seconds < 0) return "L'évènement est terminé !";
 
     final start = await getStartDate();
-    if (start == null || DateTime.now().isBefore(DateTime.parse(start).toLocal())) {
+    final startDateTime = _parseUtcToLocal(start);
+    if (startDateTime == null || DateTime.now().isBefore(startDateTime)) {
       return "L'évènement n'a pas encore commencé !";
     }
 
@@ -149,12 +166,12 @@ class EventData {
   static Future<double> getEventCompletionPercentage() async {
     final start = await getStartDate();
     final end = await getEndDate();
-    if (start == null || end == null) return 0.0;
+    final startDate = _parseUtcToLocal(start);
+    final endDate = _parseUtcToLocal(end);
 
-    final startDate = DateTime.parse(start).toLocal();
-    final endDate = DateTime.parse(end).toLocal();
+    if (startDate == null || endDate == null) return 0.0;
+
     final now = DateTime.now();
-
     if (now.isBefore(startDate)) return 0.0;
     if (now.isAfter(endDate)) return 100.0;
 

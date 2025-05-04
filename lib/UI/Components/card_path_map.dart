@@ -220,13 +220,22 @@ class _CardPathMapState extends State<CardPathMap> {
                 ),
                 if (_animatedPath.length > 1)
                   PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: _animatedPath,
-                        color: const Color(Config.accentColor),
-                        strokeWidth: 5,
-                      ),
-                    ],
+                    polylines: List.generate(_animatedPath.length - 1, (i) {
+                      final start = _animatedPath[i];
+                      final end = _animatedPath[i + 1];
+                      final progress = i / (_animatedPath.length - 1);
+                      final color = HSVColor.lerp(
+                        HSVColor.fromColor(Colors.blue),
+                        HSVColor.fromColor(Colors.red),
+                        progress,
+                      )!
+                          .toColor();
+                      return Polyline(
+                        points: [start, end],
+                        color: color,
+                        strokeWidth: 3,
+                      );
+                    }),
                   ),
                 MarkerLayer(
                   markers: [

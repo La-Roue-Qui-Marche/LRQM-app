@@ -60,17 +60,25 @@ class GeolocationController with WidgetsBindingObserver {
   bool _positionStreamStarted = false;
   int _distance = 0;
   int _outsideCounter = 0;
-  DateTime _startTime = DateTime.now();
   bool _resetPosition = false;
   bool _isSending = false;
   bool _isCountingInZone = true;
+
+  Duration _accumulatedActiveDuration = Duration.zero;
+  DateTime? _lastActiveTimestamp;
 
   List<mp.LatLng>? _zonePoints;
 
   Stream<Map<String, int>> get stream => _streamController.stream;
 
   int get currentDistance => _distance;
-  int get elapsedTimeInSeconds => _elapsedTimeInSeconds;
+
+  int get elapsedTimeInSeconds {
+    if (_isCountingInZone && _lastActiveTimestamp != null) {
+      return (_accumulatedActiveDuration + DateTime.now().difference(_lastActiveTimestamp!)).inSeconds;
+    }
+    return _accumulatedActiveDuration.inSeconds;
+  }
 
   Future<void> _initZone() async {
     _zonePoints = await EventData.getSiteCoordLatLngList();
@@ -113,8 +121,6 @@ class GeolocationController with WidgetsBindingObserver {
     }
   }
 
-  int get _elapsedTimeInSeconds => DateTime.now().difference(_startTime).inSeconds;
-
   Future<void> startListening() async {
     LogHelper.staticLogInfo("[GEO] Starting geolocation...");
 
@@ -127,9 +133,10 @@ class GeolocationController with WidgetsBindingObserver {
     }
 
     _positionStreamStarted = true;
-    _startTime = DateTime.now();
     _distance = 0;
     _outsideCounter = 0;
+    _accumulatedActiveDuration = Duration.zero;
+    _lastActiveTimestamp = DateTime.now();
 
     lastEvent = {
       "time": 0,
@@ -150,7 +157,7 @@ class GeolocationController with WidgetsBindingObserver {
     _streamTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_streamController.isClosed) {
         _streamController.sink.add({
-          "time": _elapsedTimeInSeconds,
+          "time": elapsedTimeInSeconds,
           "distance": _distance,
           "isCountingInZone": _isCountingInZone ? 1 : 0,
           "speed": _oldPos != null ? 0 : 0,
@@ -188,11 +195,11 @@ class GeolocationController with WidgetsBindingObserver {
 
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
     if (_resetPosition || _oldPos == null) {
-      LogHelper.staticLogInfo("[GEO] First update or reset position. Acc=${acc.toStringAsFixed(1)}m");
+      LogHelper.staticLogInfo("[GEO] First update or reset position. Acc=\${acc.toStringAsFixed(1)}m");
       _saveOldPos(lat, lng, acc, timestamp);
       _resetPosition = false;
       _streamController.sink.add({
-        "time": _elapsedTimeInSeconds,
+        "time": elapsedTimeInSeconds,
         "distance": _distance,
         "isCountingInZone": _isCountingInZone ? 1 : 0,
         "speed": 0,
@@ -212,14 +219,22 @@ class GeolocationController with WidgetsBindingObserver {
 
     final inZone = await isLocationInZone(lat, lng);
     if (inZone) {
-      if (!_isCountingInZone) LogHelper.staticLogInfo("[ZONE] Re-entered zone.");
+      if (!_isCountingInZone) {
+        LogHelper.staticLogInfo("[ZONE] Re-entered zone.");
+        _lastActiveTimestamp = DateTime.now();
+      }
       _outsideCounter = 0;
       _isCountingInZone = true;
       _distance += dist;
     } else {
       _outsideCounter++;
       if (_outsideCounter > config.outsideCounterMax) {
-        if (_isCountingInZone) LogHelper.staticLogError("[ZONE] Outside too long, pausing count.");
+        if (_isCountingInZone) {
+          LogHelper.staticLogError("[ZONE] Outside too long, pausing count.");
+          if (_lastActiveTimestamp != null) {
+            _accumulatedActiveDuration += DateTime.now().difference(_lastActiveTimestamp!);
+          }
+        }
         _isCountingInZone = false;
         _saveOldPos(lat, lng, acc, timestamp);
         return;
@@ -235,11 +250,11 @@ class GeolocationController with WidgetsBindingObserver {
       timestamp: timestamp,
       lat: lat,
       lng: lng,
-      duration: _elapsedTimeInSeconds,
+      duration: elapsedTimeInSeconds,
     );
 
     lastEvent = {
-      "time": _elapsedTimeInSeconds,
+      "time": elapsedTimeInSeconds,
       "distance": _distance,
       "isCountingInZone": _isCountingInZone ? 1 : 0,
       "speed": speed.toInt(),
