@@ -27,7 +27,7 @@ class CardDynamicMap extends StatefulWidget {
   _CardDynamicMapState createState() => _CardDynamicMapState();
 }
 
-class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAliveClientMixin {
+class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   final MapController _mapController = MapController();
   LatLng? _currentLatLng;
   bool _isFetchingPosition = true;
@@ -40,6 +40,8 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   List<LatLng> _zonePoints = [];
   LatLng? _meetingPoint;
   _MapBaseType _mapBaseType = _MapBaseType.voyager;
+
+  AnimationController? _moveAnimController;
 
   @override
   void initState() {
@@ -107,7 +109,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     try {
       // Offset the user marker 100px below the center of the map
       final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), followZoomLevel);
-      _mapController.move(offsetLatLng, followZoomLevel);
+      _animatedMove(offsetLatLng, followZoomLevel);
     } catch (_) {}
   }
 
@@ -156,7 +158,30 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     zoom -= 0.3;
     if (zoom < 2.0) zoom = 2.0;
 
-    _mapController.move(center, zoom);
+    _animatedMove(center, zoom);
+  }
+
+  void _animatedMove(LatLng dest, double zoom) {
+    final from = _mapController.camera.center;
+    final fromZoom = _mapController.camera.zoom;
+    _moveAnimController?.dispose();
+    _moveAnimController = AnimationController(
+      duration: const Duration(milliseconds: 700),
+      vsync: this,
+    );
+
+    final latTween = Tween<double>(begin: from.latitude, end: dest.latitude);
+    final lngTween = Tween<double>(begin: from.longitude, end: dest.longitude);
+    final zoomTween = Tween<double>(begin: fromZoom, end: zoom);
+
+    _moveAnimController!.addListener(() {
+      final lat = latTween.evaluate(_moveAnimController!);
+      final lng = lngTween.evaluate(_moveAnimController!);
+      final z = zoomTween.evaluate(_moveAnimController!);
+      _mapController.move(LatLng(lat, lng), z);
+    });
+
+    _moveAnimController!.forward();
   }
 
   double _latRad(double lat) => log((1 + sin(lat * pi / 180)) / (1 - sin(lat * pi / 180))) / 2;
@@ -165,6 +190,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   @override
   void dispose() {
     _positionTimer?.cancel();
+    _moveAnimController?.dispose();
     super.dispose();
   }
 
