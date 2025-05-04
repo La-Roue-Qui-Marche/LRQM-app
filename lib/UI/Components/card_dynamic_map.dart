@@ -36,6 +36,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   bool _showLegend = false;
   bool _followUserMode = false;
   bool _initialFitDone = false;
+  bool _enableZoomAnimation = true;
 
   List<LatLng> _zonePoints = [];
   LatLng? _meetingPoint;
@@ -105,7 +106,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
 
   void _centerOnUser() {
     if (_currentLatLng == null || !_isMapReady) return;
-    const double followZoomLevel = 17.0;
+    const double followZoomLevel = 17.5;
     try {
       // Offset the user marker 100px below the center of the map
       final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), followZoomLevel);
@@ -155,29 +156,34 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     double zoom = min(latZoom, lonZoom);
 
     if (!zoom.isFinite || zoom < 2.0) zoom = 5.0;
-    zoom -= 0.3;
     if (zoom < 2.0) zoom = 2.0;
 
     _animatedMove(center, zoom);
   }
 
   void _animatedMove(LatLng dest, double zoom) {
+    if (!_enableZoomAnimation) {
+      _mapController.move(dest, zoom);
+      return;
+    }
     final from = _mapController.camera.center;
     final fromZoom = _mapController.camera.zoom;
     _moveAnimController?.dispose();
     _moveAnimController = AnimationController(
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
+
+    final animation = CurvedAnimation(parent: _moveAnimController!, curve: Curves.easeOut);
 
     final latTween = Tween<double>(begin: from.latitude, end: dest.latitude);
     final lngTween = Tween<double>(begin: from.longitude, end: dest.longitude);
     final zoomTween = Tween<double>(begin: fromZoom, end: zoom);
 
-    _moveAnimController!.addListener(() {
-      final lat = latTween.evaluate(_moveAnimController!);
-      final lng = lngTween.evaluate(_moveAnimController!);
-      final z = zoomTween.evaluate(_moveAnimController!);
+    animation.addListener(() {
+      final lat = latTween.evaluate(animation);
+      final lng = lngTween.evaluate(animation);
+      final z = zoomTween.evaluate(animation);
       _mapController.move(LatLng(lat, lng), z);
     });
 
@@ -205,14 +211,12 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     final userLat = _currentLatLng?.latitude ?? defaultLat;
     final userLon = _currentLatLng?.longitude ?? defaultLon;
 
+    final styles = _mapBaseType == _MapBaseType.voyager ? _MapStyles.voyager : _MapStyles.satellite;
+
     String urlTemplate;
     List<String> subdomains;
     IconData icon;
     String tooltip;
-    Color polygonColor;
-    Color polygonBorderColor;
-    Color userColor;
-    Color meetingPointColor;
 
     switch (_mapBaseType) {
       case _MapBaseType.voyager:
@@ -220,20 +224,12 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
         subdomains = ['a', 'b', 'c', 'd'];
         icon = Icons.map;
         tooltip = "Vue satellite";
-        polygonColor = _MapStyles.zoneFillColor.withOpacity(_MapStyles.zoneFillOpacity);
-        polygonBorderColor = _MapStyles.zoneBorderColor;
-        userColor = Color(Config.primaryColor);
-        meetingPointColor = Colors.redAccent;
         break;
       case _MapBaseType.satellite:
         urlTemplate = "https://wmts10.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg";
         subdomains = [];
         icon = Icons.satellite_alt;
         tooltip = "Vue Swisstopo";
-        polygonColor = Colors.grey.shade400.withOpacity(_MapStyles.zoneFillOpacity);
-        polygonBorderColor = Colors.grey.shade400;
-        userColor = Colors.pinkAccent;
-        meetingPointColor = Colors.tealAccent;
         break;
     }
 
@@ -262,7 +258,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               // Bottom nav bar height (from AppNavBar, including floating button)
               const double navBarHeight = 80.0;
               // Personal info card collapsed height (should match CardPersonalInfo)
-              const double personalInfoCollapsedHeight = 130.0;
+              const double personalInfoCollapsedHeight = 140.0;
               // Calculate available height
               final double availableHeight = mediaQuery.size.height -
                   mediaQuery.padding.top -
@@ -281,10 +277,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                   subdomains,
                   icon,
                   tooltip,
-                  polygonColor,
-                  polygonBorderColor,
-                  userColor,
-                  meetingPointColor,
+                  styles,
                 ),
               );
             },
@@ -293,8 +286,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           // When not in fullScreen mode, use the fixed height (50% of screen)
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.5,
-            child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, polygonColor,
-                polygonBorderColor, userColor, meetingPointColor),
+            child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, styles),
           ),
       ],
     );
@@ -307,10 +299,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     List<String> subdomains,
     IconData icon,
     String tooltip,
-    Color polygonColor,
-    Color polygonBorderColor,
-    Color userColor,
-    Color meetingPointColor,
+    _MapStyleParams styles,
   ) {
     return Stack(
       children: [
@@ -319,7 +308,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           mapController: _mapController,
           options: MapOptions(
             initialCenter: LatLng(userLat, userLon),
-            initialZoom: 5.0,
+            initialZoom: 6.0,
             // Block map rotation by removing InteractiveFlag.rotate
             interactionOptions: InteractionOptions(
               flags: _followUserMode ? (InteractiveFlag.none) : (InteractiveFlag.all & ~InteractiveFlag.rotate),
@@ -347,9 +336,12 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               polygons: [
                 Polygon(
                   points: _zonePoints,
-                  color: polygonColor,
-                  borderColor: polygonBorderColor,
-                  borderStrokeWidth: 2,
+                  color: styles.polygonFillColor.withOpacity(styles.polygonFillOpacity),
+                  borderColor: styles.polygonBorderColor.withOpacity(1),
+                  borderStrokeWidth: 1,
+                  strokeJoin: StrokeJoin.round,
+                  pattern: StrokePattern.dashed(segments: [5, 5]),
+                  strokeCap: StrokeCap.round,
                 ),
               ],
             ),
@@ -360,14 +352,14 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                     point: _meetingPoint!,
                     width: 34,
                     height: 34,
-                    child: Icon(Icons.location_pin, size: 34, color: meetingPointColor),
+                    child: Icon(Icons.location_pin, size: 34, color: styles.meetingPointColor),
                   ),
                 if (_currentLatLng != null)
                   Marker(
                     point: _currentLatLng!,
                     width: 40,
                     height: 40,
-                    child: PulsingLocationMarker(color: userColor),
+                    child: PulsingLocationMarker(color: styles.userColor),
                   ),
               ],
             ),
@@ -433,7 +425,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               const SizedBox(height: 14),
               _modernMapButton(
                 icon: Icons.navigation,
-                iconColor: _followUserMode ? userColor : Colors.black87,
+                iconColor: _followUserMode ? styles.userColor : Colors.black87,
                 onTap: () {
                   setState(() {
                     _followUserMode = !_followUserMode;
@@ -488,8 +480,8 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                         width: 18,
                         height: 18,
                         decoration: BoxDecoration(
-                          color: polygonColor,
-                          border: Border.all(color: polygonBorderColor, width: 1),
+                          color: styles.polygonFillColor.withOpacity(styles.polygonFillOpacity),
+                          border: Border.all(color: styles.polygonBorderColor, width: 1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -500,7 +492,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Icon(Icons.location_pin, color: meetingPointColor, size: 24),
+                      Icon(Icons.location_pin, color: styles.meetingPointColor, size: 24),
                       const SizedBox(width: 10),
                       const Text("Point de rassemblement", style: TextStyle(fontSize: 14)),
                     ],
@@ -519,7 +511,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                               height: 16,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: userColor,
+                                color: styles.userColor,
                                 border: Border.all(
                                   color: Colors.white,
                                   width: 2,
@@ -543,7 +535,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Icon(Icons.navigation, color: userColor, size: 22),
+                      Icon(Icons.navigation, color: styles.userColor, size: 22),
                       const SizedBox(width: 10),
                       const Text("Suivi/centrage", style: TextStyle(fontSize: 14)),
                     ],
@@ -694,7 +686,37 @@ class _PulsingLocationMarkerState extends State<PulsingLocationMarker> with Sing
 enum _MapBaseType { satellite, voyager }
 
 class _MapStyles {
-  static const Color zoneBorderColor = Color(Config.primaryColor);
-  static const Color zoneFillColor = Color(Config.primaryColor);
   static const double zoneFillOpacity = 0.05;
+
+  static const voyager = _MapStyleParams(
+    userColor: Color(Config.primaryColor),
+    meetingPointColor: Colors.redAccent,
+    polygonFillOpacity: zoneFillOpacity,
+    polygonBorderColor: Color(Config.primaryColor),
+    polygonFillColor: Color(Config.primaryColor),
+  );
+
+  static final satellite = _MapStyleParams(
+    userColor: Colors.pinkAccent,
+    meetingPointColor: Colors.tealAccent,
+    polygonFillOpacity: zoneFillOpacity,
+    polygonBorderColor: Colors.white,
+    polygonFillColor: Colors.white,
+  );
+}
+
+class _MapStyleParams {
+  final Color userColor;
+  final Color meetingPointColor;
+  final double polygonFillOpacity;
+  final Color polygonBorderColor;
+  final Color polygonFillColor;
+
+  const _MapStyleParams({
+    required this.userColor,
+    required this.meetingPointColor,
+    required this.polygonFillOpacity,
+    required this.polygonBorderColor,
+    required this.polygonFillColor,
+  });
 }

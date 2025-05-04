@@ -206,7 +206,7 @@ class _PulsingDotState extends State<PulsingDot> with SingleTickerProviderStateM
     );
 
     // Simple repeating pulse animation
-    _animation = Tween<double>(begin: 0.3, end: 1.5).animate(
+    _animation = Tween<double>(begin: 1.3, end: 1.5).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeInOut,
