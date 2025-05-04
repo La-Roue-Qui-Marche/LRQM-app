@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pinput/pinput.dart';
 
-import '../Data/UserData.dart';
-import '../Utils/config.dart';
-import 'Components/button_action.dart';
-import 'Components/button_discard.dart';
-import 'working_screen.dart';
+import 'package:lrqm/data/user_data.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/ui/components/button_action.dart';
+import 'package:lrqm/ui/components/button_discard.dart';
+import 'package:lrqm/ui/working_screen.dart';
 
 class ConfirmScreen extends StatelessWidget {
   final Map<String, dynamic> userData;

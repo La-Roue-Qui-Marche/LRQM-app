@@ -6,15 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../API/NewEventController.dart';
-import '../API/NewUserController.dart';
-import '../Utils/config.dart';
-import '../Data/EventData.dart';
-import 'confirm_screen.dart';
-import 'loading_screen.dart';
-import 'Components/button_action.dart';
-import 'Components/TextModal.dart';
-import 'Components/app_toast.dart';
+import 'package:lrqm/api/event_controller.dart';
+import 'package:lrqm/api/user_controller.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/ui/confirm_screen.dart';
+import 'package:lrqm/ui/loading_screen.dart';
+import 'package:lrqm/ui/components/button_action.dart';
+import 'package:lrqm/ui/components/modal_bottom_text.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -46,7 +46,7 @@ class _LoginState extends State<Login> {
   Future<void> _checkEventStatus() async {
     setState(() => _isEventActive = false);
 
-    final eventsResult = await NewEventController.getAllEvents();
+    final eventsResult = await EventController.getAllEvents();
     if (eventsResult.hasError) {
       log("Error fetching events: ${eventsResult.error}");
       AppToast.showError("Erreur lors de la récupération des évènements.");
@@ -80,7 +80,7 @@ class _LoginState extends State<Login> {
   void _showErrorModal(String message) {
     setState(() => _isEventActive = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      showTextModal(
+      showModalBottomText(
         context,
         "Erreur",
         message,
@@ -93,7 +93,7 @@ class _LoginState extends State<Login> {
   void _showEventSelectionModal() {
     dynamic selectedEvent = _events.first;
 
-    showTextModal(
+    showModalBottomText(
       context,
       "Sélectionne ton évènement",
       "Merci de sélectionner ton évènement",
@@ -110,7 +110,7 @@ class _LoginState extends State<Login> {
 
     if (_controller.text.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showTextModal(
+        showModalBottomText(
           context,
           "Numéro de dossard manquant",
           "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM",
@@ -127,7 +127,7 @@ class _LoginState extends State<Login> {
     try {
       int.parse(_controller.text);
 
-      final loginResult = await NewUserController.login(_controller.text, _selectedEvent['id']);
+      final loginResult = await UserController.login(_controller.text, _selectedEvent['id']);
       final user = loginResult.value;
 
       if (loginResult.error != null ||
@@ -138,7 +138,7 @@ class _LoginState extends State<Login> {
           user['event_id'] == null) {
         Navigator.pop(context);
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          showTextModal(
+          showModalBottomText(
             context,
             "Utilisateur non trouvé",
             "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",

@@ -3,18 +3,19 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../Data/MeasureData.dart';
-import '../../Utils/config.dart';
 
-class RunPathMap extends StatefulWidget {
-  const RunPathMap({super.key});
+import 'package:lrqm/data/measure_data.dart';
+import 'package:lrqm/utils/config.dart';
+
+class CardPathMap extends StatefulWidget {
+  const CardPathMap({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _RunPathMapState createState() => _RunPathMapState();
+  _CardPathMapState createState() => _CardPathMapState();
 }
 
-class _RunPathMapState extends State<RunPathMap> {
+class _CardPathMapState extends State<CardPathMap> {
   final MapController _mapController = MapController();
   List<LatLng> _fullPath = [];
   List<LatLng> _animatedPath = [];
@@ -192,7 +193,7 @@ class _RunPathMapState extends State<RunPathMap> {
         ClipRRect(
           borderRadius: BorderRadius.circular(0),
           child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6,
+            height: MediaQuery.of(context).size.height * 0.4,
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
@@ -219,13 +220,22 @@ class _RunPathMapState extends State<RunPathMap> {
                 ),
                 if (_animatedPath.length > 1)
                   PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: _animatedPath,
-                        color: const Color(Config.accentColor),
-                        strokeWidth: 5,
-                      ),
-                    ],
+                    polylines: List.generate(_animatedPath.length - 1, (i) {
+                      final start = _animatedPath[i];
+                      final end = _animatedPath[i + 1];
+                      final progress = i / (_animatedPath.length - 1);
+                      final color = HSVColor.lerp(
+                        HSVColor.fromColor(Colors.blue),
+                        HSVColor.fromColor(Colors.red),
+                        progress,
+                      )!
+                          .toColor();
+                      return Polyline(
+                        points: [start, end],
+                        color: color,
+                        strokeWidth: 3.5,
+                      );
+                    }),
                   ),
                 MarkerLayer(
                   markers: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../Utils/config.dart';
+
+import 'package:lrqm/utils/config.dart';
 
 class ButtonAction extends StatelessWidget {
   final IconData? icon;

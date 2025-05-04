@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart'; // Add this import for shimmer effect
-import '../../Utils/config.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:lrqm/utils/config.dart';
 
-class InfoCard extends StatefulWidget {
+class CardInfo extends StatefulWidget {
   final Widget? logo;
   final String title;
-  final String? data; // Make data nullable to handle loading state
+  final String? data;
   final String? additionalDetails;
   final List<ActionItem>? actionItems;
 
-  const InfoCard({
+  const CardInfo({
     super.key,
     this.logo,
     required this.title,
-    this.data, // Allow null for loading state
+    this.data,
     this.additionalDetails,
     this.actionItems,
   });
 
   @override
-  _InfoCardState createState() => _InfoCardState();
+  _CardInfoState createState() => _CardInfoState();
 }
 
 class ActionItem {
-  final Widget icon; // Changed from Icon to Widget
+  final Widget icon;
   final String label;
   final VoidCallback onPressed;
 
   ActionItem({required this.icon, required this.label, required this.onPressed});
 }
 
-class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin {
+class _CardInfoState extends State<CardInfo> with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -76,10 +76,10 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.transparent, // Ensure white background
-          borderRadius: BorderRadius.circular(16.0), // Rounded corners
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16.0),
         ),
-        padding: const EdgeInsets.only(bottom: 10.0), // Consistent padding
+        padding: const EdgeInsets.only(bottom: 10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -91,19 +91,19 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                     height: 48,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(Config.backgroundColor), // Subtle background for logo
+                      color: Color(Config.backgroundColor),
                     ),
                     child: Center(
                       child: IconTheme(
                         data: const IconThemeData(
                           size: 28,
-                          color: Colors.black87, // Updated color
+                          color: Colors.black87,
                         ),
                         child: widget.logo!,
                       ),
                     ),
                   ),
-                if (widget.logo != null) const SizedBox(width: 16), // Adjust spacing
+                if (widget.logo != null) const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +112,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       Text(
                         widget.title,
                         style: const TextStyle(
-                          fontSize: 22, // Slightly larger font
+                          fontSize: 22,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -122,8 +122,8 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                           ? Text(
                               widget.data!,
                               style: const TextStyle(
-                                fontSize: 16, // Larger font for data
-                                color: Colors.black87, // Updated color
+                                fontSize: 16,
+                                color: Colors.black87,
                               ),
                             )
                           : Shimmer.fromColors(
@@ -141,7 +141,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                 if (_canExpand)
                   Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.black87, // Updated color
+                    color: Colors.black87,
                   ),
               ],
             ),
@@ -157,7 +157,7 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                       widget.additionalDetails!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.black54, // Updated color
+                        color: Colors.black54,
                       ),
                     ),
                   if (widget.additionalDetails != null) const SizedBox(height: 16),
@@ -174,15 +174,15 @@ class _InfoCardState extends State<InfoCard> with SingleTickerProviderStateMixin
                     child: Column(
                       children: [
                         IconButton(
-                          icon: actionItem.icon, // Updated to use Widget
+                          icon: actionItem.icon,
                           onPressed: actionItem.onPressed,
-                          color: Colors.black87, // Updated color
+                          color: Colors.black87,
                         ),
                         Text(
                           actionItem.label,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: Colors.black87, // Updated color
+                            color: Colors.black87,
                           ),
                         ),
                       ],

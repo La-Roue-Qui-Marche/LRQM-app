@@ -1,12 +1,11 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../Utils/LogHelper.dart';
-import './Components/app_toast.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
+import 'package:lrqm/utils/log_helper.dart';
 
 class LogScreen extends StatefulWidget {
   const LogScreen({super.key});
@@ -26,7 +25,7 @@ class _LogScreenState extends State<LogScreen> {
   @override
   void initState() {
     super.initState();
-    LogHelper.forceRefresh();
+    LogHelper.staticForceRefresh();
   }
 
   void _scrollToBottom() {
@@ -41,10 +40,10 @@ class _LogScreenState extends State<LogScreen> {
     setState(() => _autoScroll = !_autoScroll);
   }
 
-  void _clearLogs() => LogHelper.clearLogs();
+  void _clearLogs() => LogHelper.staticClearLogs();
 
   Future<void> _shareLogs() async {
-    final logs = LogHelper.getLogs();
+    final logs = LogHelper.staticGetLogs();
     if (logs.isEmpty) {
       AppToast.showError("No logs to share.");
       return;
@@ -145,7 +144,8 @@ class _LogScreenState extends State<LogScreen> {
         elevation: 0,
         actions: [
           IconButton(icon: const Icon(Icons.delete), tooltip: "Clear logs", onPressed: _clearLogs),
-          IconButton(icon: const Icon(Icons.refresh), tooltip: "Force refresh", onPressed: LogHelper.forceRefresh),
+          IconButton(
+              icon: const Icon(Icons.refresh), tooltip: "Force refresh", onPressed: LogHelper.staticForceRefresh),
           IconButton(icon: const Icon(Icons.share), tooltip: "Share logs", onPressed: _shareLogs),
         ],
       ),
@@ -156,7 +156,7 @@ class _LogScreenState extends State<LogScreen> {
             child: Container(
               color: Colors.white,
               child: StreamBuilder<List<String>>(
-                stream: LogHelper.logStream,
+                stream: LogHelper.staticLogStream,
                 builder: (context, snapshot) {
                   return _buildLogList(snapshot.data ?? []);
                 },

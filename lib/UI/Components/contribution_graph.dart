@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
-import '../../Utils/config.dart';
-import '../../Geolocalisation/Geolocation.dart';
+
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/geo/geolocation.dart';
 
 class ContributionGraph extends StatefulWidget {
-  final Geolocation? geolocation;
+  final GeolocationController? geolocation;
 
   const ContributionGraph({
     super.key,
@@ -169,13 +170,12 @@ class ContributionGraphState extends State<ContributionGraph> {
             "Contribution moyenne (m/s)",
             style: TextStyle(
               fontSize: 16,
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
+              color: Colors.black54,
             ),
           ),
           const SizedBox(height: 8),
           SizedBox(
-            height: 140,
+            height: 130,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -250,7 +250,7 @@ class ContributionGraphState extends State<ContributionGraph> {
           ),
           if (!hasEnoughData)
             const Padding(
-              padding: EdgeInsets.only(top: 12.0),
+              padding: EdgeInsets.only(top: 6.0),
               child: Text(
                 "Continue d'avancer pour voir ta progression !",
                 style: TextStyle(fontSize: 13, color: Colors.black45),

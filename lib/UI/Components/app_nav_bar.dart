@@ -1,17 +1,16 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../Utils/config.dart';
 
-class NavBar extends StatelessWidget {
+import 'package:lrqm/utils/config.dart';
+
+class AppNavBar extends StatelessWidget {
   final int currentPage;
   final Function(int) onPageSelected;
   final bool isMeasureActive;
   final bool canStartNewSession;
   final VoidCallback onStartStopPressed;
 
-  const NavBar({
+  const AppNavBar({
     super.key,
     required this.currentPage,
     required this.onPageSelected,
@@ -23,32 +22,28 @@ class NavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.amber.withOpacity(0.2), // For debugging: visualize the area
+      color: Colors.amber.withOpacity(0.2),
       child: Stack(
-        clipBehavior: Clip.none, // allows the button to overflow
+        clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
         children: [
           // Background bar
           Container(
-            height: 80, // Slightly increased for better vertical balance
+            height: 80,
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0)
                 .copyWith(bottom: 6.0), // Increased bottom padding
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               border: Border(
-                top: BorderSide(color: Color(0x11000000), width: 1),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, -2),
+                top: BorderSide(
+                  color: const Color(Config.backgroundColor),
+                  width: 1.0,
                 ),
-              ],
+              ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Even horizontal spacing
-              crossAxisAlignment: CrossAxisAlignment.center, // Vertically center items
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Align(
@@ -63,7 +58,7 @@ class NavBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 100), // Space for center button, matches floating button size
+                const SizedBox(width: 100),
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
@@ -83,7 +78,7 @@ class NavBar extends StatelessWidget {
 
           // Floating button
           Positioned(
-            top: -10, // Adjusted for new button size to keep it centered
+            top: -10,
             left: 0,
             right: 0,
             child: Center(
@@ -113,13 +108,21 @@ class NavBar extends StatelessWidget {
                         color: Colors.white,
                         width: 6,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(Config.backgroundColor),
+                          offset: const Offset(0, -1),
+                          spreadRadius: 0,
+                          blurRadius: 0,
+                        ),
+                      ],
                     ),
                     child: Center(
                       child: canStartNewSession
                           ? (isMeasureActive
                               ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
-                              : const Icon(Icons.radio_button_on, color: Colors.white, size: 38))
-                          : Icon(Icons.radio_button_on, color: Colors.grey.shade50, size: 38),
+                              : _buildAnimatedGlowingDot(Colors.white))
+                          : _buildAnimatedGlowingDot(Colors.grey.shade50),
                     ),
                   ),
                 ),
@@ -171,6 +174,84 @@ class NavBar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAnimatedGlowingDot(Color color) {
+    return RepaintBoundary(
+      child: PulsingDot(color: color),
+    );
+  }
+}
+
+class PulsingDot extends StatefulWidget {
+  final Color color;
+
+  const PulsingDot({super.key, required this.color});
+
+  @override
+  State<PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<PulsingDot> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // Simple repeating pulse animation
+    _animation = Tween<double>(begin: 1.3, end: 1.5).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Simple pulsing circle
+        AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Container(
+              width: 24 + (_animation.value * 8),
+              height: 24 + (_animation.value * 8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.color.withOpacity(0.2 + (_animation.value * 0.2)),
+              ),
+            );
+          },
+        ),
+
+        // Center dot
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.color,
+          ),
+        ),
+      ],
     );
   }
 }
