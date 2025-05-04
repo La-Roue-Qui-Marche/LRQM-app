@@ -559,7 +559,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                 )
               : Align(
                   alignment: Alignment.centerLeft,
-                  child: _buildShimmer(width: 80, height: 26),
+                  child: _buildShimmer(width: 80, height: 32),
                 ),
         ],
       ),
