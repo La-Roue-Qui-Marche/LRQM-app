@@ -32,11 +32,11 @@ class AppNavBar extends StatelessWidget {
             height: 80,
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0)
                 .copyWith(bottom: 6.0), // Increased bottom padding
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(
                 top: BorderSide(
-                  color: const Color(Config.backgroundColor),
+                  color: Color(Config.backgroundColor),
                   width: 1.0,
                 ),
               ),
@@ -108,10 +108,10 @@ class AppNavBar extends StatelessWidget {
                         color: Colors.white,
                         width: 6,
                       ),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
-                          color: const Color(Config.backgroundColor),
-                          offset: const Offset(0, -1),
+                          color: Color(Config.backgroundColor),
+                          offset: Offset(0, -1),
                           spreadRadius: 0,
                           blurRadius: 0,
                         ),

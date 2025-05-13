@@ -63,7 +63,7 @@ class CardSupportEvent extends StatelessWidget {
               onPressed: () => _launchUrl('https://larouequimarche.ch/'),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: const [
                   Text(
                     'Visiter le site',
                     style: TextStyle(
