@@ -123,142 +123,116 @@ class ContributionGraphState extends State<ContributionGraph> {
 
   @override
   Widget build(BuildContext context) {
-    // If no geolocation is provided, show a message instead of an empty graph
-    if (widget.geolocation == null) {
-      return const Padding(
-        padding: EdgeInsets.only(top: 0, bottom: 16),
-        child: Text(
-          "La mesure n'est pas active. Démarrez une mesure pour voir votre progression.",
-          style: TextStyle(fontSize: 13, color: Colors.black45),
-          textAlign: TextAlign.left,
-        ),
-      );
-    }
-
-    final bool hasEnoughData = _graphData.length >= minGraphPoints;
-
-    // Generate placeholder data if we don't have enough real data
-    List<FlSpot> displayData;
-    if (hasEnoughData) {
-      displayData = _graphData;
-    } else {
-      // Create placeholder wave-like data
-      displayData = List.generate(10, (index) {
-        return FlSpot(index.toDouble(), 1.0 + (index % 3) * 0.5 // Creates a gentle wave pattern between 1.0 and 2.0
-            );
-      });
-    }
-
-    double maxY = 3;
-    if (hasEnoughData) {
-      final maxDataValue = _graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b);
-      if (maxDataValue > 3) {
-        maxY = maxDataValue + 1;
-      }
-    }
-
-    // Set min and max X based on the data indices
-    double minX = hasEnoughData && _graphData.isNotEmpty ? _graphData.first.x : 0;
-    double maxX = hasEnoughData && _graphData.isNotEmpty ? _graphData.last.x + 1 : 10;
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 0, top: 0, bottom: 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Contribution moyenne (m/s)",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 130,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AnimatedOpacity(
-                  opacity: _showGraph ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  child: LineChart(
-                    LineChartData(
-                      lineTouchData: const LineTouchData(enabled: false),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        horizontalInterval: 1,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: Colors.grey.withOpacity(0.1),
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 12,
-                            interval: 1,
-                            getTitlesWidget: (value, meta) {
-                              if (value % 1 != 0) return const Text('');
-                              return Text(
-                                value.toInt().toString(),
-                                style: const TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 10,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: displayData,
-                          isCurved: true,
-                          preventCurveOverShooting: true,
-                          preventCurveOvershootingThreshold: 0.0,
-                          color: hasEnoughData
-                              ? const Color(Config.accentColor).withOpacity(1)
-                              : Colors.black26.withOpacity(0.2),
-                          barWidth: 3,
-                          isStrokeCapRound: true,
-                          dotData: const FlDotData(show: false),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: hasEnoughData
-                                ? const Color(Config.accentColor).withOpacity(0.15)
-                                : Colors.black26.withOpacity(0.05),
-                          ),
-                        ),
-                      ],
-                      minX: minX,
-                      maxX: maxX,
-                      minY: 0,
-                      maxY: maxY,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!hasEnoughData)
-            const Padding(
-              padding: EdgeInsets.only(top: 6.0),
-              child: Text(
-                "Continue d'avancer pour voir ta progression !",
-                style: TextStyle(fontSize: 13, color: Colors.black45),
-                textAlign: TextAlign.left,
+    // Prevent all text in this widget from being resizable by the OS
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 0, top: 0, bottom: 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Contribution moyenne (m/s)",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black54,
               ),
             ),
-          SizedBox(height: hasEnoughData ? 6 : 0),
-        ],
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 130,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AnimatedOpacity(
+                    opacity: _showGraph ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: LineChart(
+                      LineChartData(
+                        lineTouchData: const LineTouchData(enabled: false),
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          horizontalInterval: 1,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: Colors.grey.withOpacity(0.1),
+                            strokeWidth: 1,
+                          ),
+                        ),
+                        titlesData: FlTitlesData(
+                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 12,
+                              interval: 1,
+                              getTitlesWidget: (value, meta) {
+                                if (value % 1 != 0) return const Text('');
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: const TextStyle(
+                                    color: Colors.black54,
+                                    fontSize: 10,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: _graphData.length >= minGraphPoints
+                                ? _graphData
+                                : List.generate(10, (index) {
+                                    return FlSpot(index.toDouble(), 1.0 + (index % 3) * 0.5);
+                                  }),
+                            isCurved: true,
+                            preventCurveOverShooting: true,
+                            preventCurveOvershootingThreshold: 0.0,
+                            color: _graphData.length >= minGraphPoints
+                                ? const Color(Config.accentColor).withOpacity(1)
+                                : Colors.black26.withOpacity(0.2),
+                            barWidth: 3,
+                            isStrokeCapRound: true,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: _graphData.length >= minGraphPoints
+                                  ? const Color(Config.accentColor).withOpacity(0.15)
+                                  : Colors.black26.withOpacity(0.05),
+                            ),
+                          ),
+                        ],
+                        minX: _graphData.length >= minGraphPoints && _graphData.isNotEmpty ? _graphData.first.x : 0,
+                        maxX: _graphData.length >= minGraphPoints && _graphData.isNotEmpty ? _graphData.last.x + 1 : 10,
+                        minY: 0,
+                        maxY: _graphData.length >= minGraphPoints
+                            ? (_graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b) > 3
+                                ? _graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b) + 1
+                                : 3)
+                            : 3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_graphData.length < minGraphPoints)
+              const Padding(
+                padding: EdgeInsets.only(top: 6.0),
+                child: Text(
+                  "Continue d'avancer pour voir ta progression !",
+                  style: TextStyle(fontSize: 13, color: Colors.black45),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            SizedBox(height: _graphData.length >= minGraphPoints ? 6 : 0),
+          ],
+        ),
       ),
     );
   }

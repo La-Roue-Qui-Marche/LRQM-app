@@ -30,8 +30,7 @@ class AppNavBar extends StatelessWidget {
           // Background bar
           Container(
             height: 80,
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0.0)
-                .copyWith(bottom: 6.0), // Increased bottom padding
+            padding: const EdgeInsets.symmetric(horizontal: 24.0).copyWith(bottom: 6.0),
             decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(
@@ -43,39 +42,25 @@ class AppNavBar extends StatelessWidget {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: _navBarButton(
-                      context,
-                      svgActive: 'assets/icons/user-fill.svg',
-                      svgInactive: 'assets/icons/user.svg',
-                      label: 'Personnel',
-                      selected: currentPage == 0,
-                      onTap: () => onPageSelected(0),
-                    ),
-                  ),
+                _NavBarButton(
+                  svgActive: 'assets/icons/user-fill.svg',
+                  svgInactive: 'assets/icons/user.svg',
+                  label: 'Personnel',
+                  selected: currentPage == 0,
+                  onTap: () => onPageSelected(0),
                 ),
                 const SizedBox(width: 100),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: _navBarButton(
-                      context,
-                      svgActive: 'assets/icons/calendar-fill.svg',
-                      svgInactive: 'assets/icons/calendar.svg',
-                      label: 'Événement',
-                      selected: currentPage == 1,
-                      onTap: () => onPageSelected(1),
-                    ),
-                  ),
+                _NavBarButton(
+                  svgActive: 'assets/icons/calendar-fill.svg',
+                  svgInactive: 'assets/icons/calendar.svg',
+                  label: 'Événement',
+                  selected: currentPage == 1,
+                  onTap: () => onPageSelected(1),
                 ),
               ],
             ),
           ),
-
           // Floating button
           Positioned(
             top: -10,
@@ -91,19 +76,15 @@ class AppNavBar extends StatelessWidget {
                     height: 74,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: canStartNewSession
-                          ? LinearGradient(
-                              colors: isMeasureActive
-                                  ? [Colors.redAccent, Colors.red]
-                                  : [const Color(Config.accentColor), const Color(Config.accentColor)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : LinearGradient(
-                              colors: [Colors.grey.shade100, Colors.grey.shade200],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                      gradient: LinearGradient(
+                        colors: canStartNewSession
+                            ? (isMeasureActive
+                                ? [Colors.redAccent, Colors.red]
+                                : [const Color(Config.accentColor), const Color(Config.accentColor)])
+                            : [Colors.grey.shade100, Colors.grey.shade200],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       border: Border.all(
                         color: Colors.white,
                         width: 6,
@@ -112,8 +93,6 @@ class AppNavBar extends StatelessWidget {
                         BoxShadow(
                           color: Color(Config.backgroundColor),
                           offset: Offset(0, -1),
-                          spreadRadius: 0,
-                          blurRadius: 0,
                         ),
                       ],
                     ),
@@ -121,8 +100,8 @@ class AppNavBar extends StatelessWidget {
                       child: canStartNewSession
                           ? (isMeasureActive
                               ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
-                              : _buildAnimatedGlowingDot(Colors.white))
-                          : _buildAnimatedGlowingDot(Colors.grey.shade50),
+                              : _GlowingDot(color: Colors.white))
+                          : _GlowingDot(color: Colors.grey.shade50),
                     ),
                   ),
                 ),
@@ -133,28 +112,34 @@ class AppNavBar extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _navBarButton(
-    BuildContext context, {
-    required String svgActive,
-    required String svgInactive,
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
+class _NavBarButton extends StatelessWidget {
+  final String svgActive;
+  final String svgInactive;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavBarButton({
+    required this.svgActive,
+    required this.svgInactive,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(
-          minWidth: 64,
-          minHeight: 64,
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+        constraints: const BoxConstraints(minWidth: 64, minHeight: 64),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         alignment: Alignment.center,
-        color: Colors.transparent, // Remove debug color
+        color: Colors.transparent,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SvgPicture.asset(
               selected ? svgActive : svgInactive,
@@ -166,7 +151,7 @@ class AppNavBar extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: selected ? const Color(Config.primaryColor) : Colors.black87,
               ),
@@ -176,24 +161,17 @@ class AppNavBar extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildAnimatedGlowingDot(Color color) {
-    return RepaintBoundary(
-      child: PulsingDot(color: color),
-    );
-  }
 }
 
-class PulsingDot extends StatefulWidget {
+class _GlowingDot extends StatefulWidget {
   final Color color;
-
-  const PulsingDot({super.key, required this.color});
+  const _GlowingDot({required this.color});
 
   @override
-  State<PulsingDot> createState() => _PulsingDotState();
+  State<_GlowingDot> createState() => _GlowingDotState();
 }
 
-class _PulsingDotState extends State<PulsingDot> with SingleTickerProviderStateMixin {
+class _GlowingDotState extends State<_GlowingDot> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -204,16 +182,13 @@ class _PulsingDotState extends State<PulsingDot> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-
-    // Simple repeating pulse animation
-    _animation = Tween<double>(begin: 1.3, end: 1.5).animate(
+    _animation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Curves.easeInOut,
+        curve: Curves.easeOut,
       ),
     );
-
-    _controller.repeat(reverse: true);
+    _controller.repeat();
   }
 
   @override
@@ -224,34 +199,34 @@ class _PulsingDotState extends State<PulsingDot> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Simple pulsing circle
-        AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Container(
-              width: 24 + (_animation.value * 8),
-              height: 24 + (_animation.value * 8),
+    final double baseSize = 24;
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final double waveSize = baseSize + (_animation.value * 24);
+        final double waveOpacity = (1 - _animation.value) * 0.3;
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: waveSize,
+              height: waveSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: widget.color.withOpacity(0.2 + (_animation.value * 0.2)),
+                color: widget.color.withOpacity(waveOpacity),
               ),
-            );
-          },
-        ),
-
-        // Center dot
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: widget.color,
-          ),
-        ),
-      ],
+            ),
+            Container(
+              width: baseSize,
+              height: baseSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.color,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

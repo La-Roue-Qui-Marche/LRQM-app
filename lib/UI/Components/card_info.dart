@@ -71,127 +71,130 @@ class _CardInfoState extends State<CardInfo> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _toggleExpanded,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        padding: const EdgeInsets.only(bottom: 10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (widget.logo != null)
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(Config.backgroundColor),
-                    ),
-                    child: Center(
-                      child: IconTheme(
-                        data: const IconThemeData(
-                          size: 28,
-                          color: Colors.black87,
-                        ),
-                        child: widget.logo!,
-                      ),
-                    ),
-                  ),
-                if (widget.logo != null) const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      widget.data != null
-                          ? Text(
-                              widget.data!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                            )
-                          : Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: Container(
-                                height: 16,
-                                width: 100,
-                                color: Colors.grey,
-                              ),
-                            ),
-                    ],
-                  ),
-                ),
-                if (_canExpand)
-                  Icon(
-                    _isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.black87,
-                  ),
-              ],
-            ),
-            SizeTransition(
-              sizeFactor: _animation,
-              axisAlignment: -1.0,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.additionalDetails != null) const SizedBox(height: 16),
-                  if (widget.additionalDetails != null)
-                    Text(
-                      widget.additionalDetails!,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  if (widget.additionalDetails != null) const SizedBox(height: 16),
-                ],
-              ),
-            ),
-            if (widget.actionItems != null && widget.actionItems!.isNotEmpty) ...[
-              const SizedBox(height: 16),
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: GestureDetector(
+        onTap: _toggleExpanded,
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: widget.actionItems!.map((actionItem) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 16.0),
-                    child: Column(
-                      children: [
-                        IconButton(
-                          icon: actionItem.icon,
-                          onPressed: actionItem.onPressed,
-                          color: Colors.black87,
+                children: [
+                  if (widget.logo != null)
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(Config.backgroundColor),
+                      ),
+                      child: Center(
+                        child: IconTheme(
+                          data: const IconThemeData(
+                            size: 28,
+                            color: Colors.black87,
+                          ),
+                          child: widget.logo!,
                         ),
+                      ),
+                    ),
+                  if (widget.logo != null) const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         Text(
-                          actionItem.label,
+                          widget.title,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
                             color: Colors.black87,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        widget.data != null
+                            ? Text(
+                                widget.data!,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              )
+                            : Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  height: 16,
+                                  width: 100,
+                                  color: Colors.grey,
+                                ),
+                              ),
                       ],
                     ),
-                  );
-                }).toList(),
+                  ),
+                  if (_canExpand)
+                    Icon(
+                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: Colors.black87,
+                    ),
+                ],
               ),
+              SizeTransition(
+                sizeFactor: _animation,
+                axisAlignment: -1.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (widget.additionalDetails != null) const SizedBox(height: 16),
+                    if (widget.additionalDetails != null)
+                      Text(
+                        widget.additionalDetails!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    if (widget.additionalDetails != null) const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+              if (widget.actionItems != null && widget.actionItems!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: widget.actionItems!.map((actionItem) {
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 16.0),
+                      child: Column(
+                        children: [
+                          IconButton(
+                            icon: actionItem.icon,
+                            onPressed: actionItem.onPressed,
+                            color: Colors.black87,
+                          ),
+                          Text(
+                            actionItem.label,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

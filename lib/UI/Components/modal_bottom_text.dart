@@ -33,20 +33,23 @@ void showModalBottomText(
         return SafeArea(
           top: false,
           bottom: true,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-            child: _ModalBottomTextContent(
-              title: title,
-              message: message,
-              showConfirmButton: showConfirmButton,
-              onConfirm: onConfirm,
-              showDiscardButton: showDiscardButton,
-              onDiscard: onDiscard,
-              dropdownItems: dropdownItems,
-              onDropdownChanged: onDropdownChanged,
-              selectedDropdownValue: selectedDropdownValue,
-              externalUrl: externalUrl,
-              externalUrlLabel: externalUrlLabel,
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              child: _ModalBottomTextContent(
+                title: title,
+                message: message,
+                showConfirmButton: showConfirmButton,
+                onConfirm: onConfirm,
+                showDiscardButton: showDiscardButton,
+                onDiscard: onDiscard,
+                dropdownItems: dropdownItems,
+                onDropdownChanged: onDropdownChanged,
+                selectedDropdownValue: selectedDropdownValue,
+                externalUrl: externalUrl,
+                externalUrlLabel: externalUrlLabel,
+              ),
             ),
           ),
         );
@@ -162,11 +165,14 @@ class _ModalBottomTextContentState extends State<_ModalBottomTextContent> {
               items: widget.dropdownItems!.map((item) {
                 return DropdownMenuItem(
                   value: item,
-                  child: Text(
-                    item.toString(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                    child: Text(
+                      item.toString(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 );

@@ -35,10 +35,13 @@ class ButtonDiscard extends StatelessWidget {
                 size: 20,
               ),
             if (icon != null) const SizedBox(width: 8),
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 18,
+            MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 18,
+                ),
               ),
             ),
           ],

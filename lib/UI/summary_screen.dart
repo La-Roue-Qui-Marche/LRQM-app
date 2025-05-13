@@ -102,56 +102,59 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(Config.backgroundColor),
-      appBar: AppTopBar(
-        title: "Résumé",
-        showBackButton: false,
-        showCloseButton: true,
-        showInfoButton: false,
-        showLogoutButton: false,
-        onClose: _handleClose,
-      ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildCelebrationCard(),
-                      const CardPathMap(),
-                    ],
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Scaffold(
+        backgroundColor: const Color(Config.backgroundColor),
+        appBar: AppTopBar(
+          title: "Résumé",
+          showBackButton: false,
+          showCloseButton: true,
+          showInfoButton: false,
+          showLogoutButton: false,
+          onClose: _handleClose,
+        ),
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildCelebrationCard(),
+                        const CardPathMap(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Positioned confetti at the top of the screen
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 50),
+                child: SizedBox(
+                  child: ConfettiWidget(
+                    confettiController: _confettiController,
+                    blastDirectionality: BlastDirectionality.explosive,
+                    shouldLoop: false,
+                    colors: const [Colors.blue, Colors.pink, Colors.orange, Colors.green, Colors.purple],
+                    emissionFrequency: 0.02,
+                    numberOfParticles: 15,
+                    maxBlastForce: 20,
+                    minBlastForce: 5,
+                    gravity: 0.2,
+                    particleDrag: 0.05,
                   ),
                 ),
               ),
-            ],
-          ),
-          // Positioned confetti at the top of the screen
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 50),
-              child: SizedBox(
-                child: ConfettiWidget(
-                  confettiController: _confettiController,
-                  blastDirectionality: BlastDirectionality.explosive,
-                  shouldLoop: false,
-                  colors: const [Colors.blue, Colors.pink, Colors.orange, Colors.green, Colors.purple],
-                  emissionFrequency: 0.02,
-                  numberOfParticles: 15,
-                  maxBlastForce: 20,
-                  minBlastForce: 5,
-                  gravity: 0.2,
-                  particleDrag: 0.05,
-                ),
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

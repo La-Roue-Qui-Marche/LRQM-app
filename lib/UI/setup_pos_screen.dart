@@ -195,7 +195,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       builder: (_) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.5,
+          height: MediaQuery.of(context).size.height * 0.60,
           width: double.infinity,
           child: Stack(
             children: [
@@ -203,7 +203,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                 child: SingleChildScrollView(
                   physics: const NeverScrollableScrollPhysics(),
                   child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.50,
+                    height: MediaQuery.of(context).size.height * 0.60,
                     child: CardDynamicMap(geolocation: widget.geolocation),
                   ),
                 ),
@@ -217,39 +217,42 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(Config.backgroundColor),
-      appBar: _isLoading
-          ? null
-          : const AppTopBar(
-              title: "Position",
-              showInfoButton: false,
-              showBackButton: true,
-              showLogoutButton: false,
-            ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 0.0, bottom: 12.0),
-            child: Column(
-              children: [
-                _buildInfoCard(),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
-              child: ButtonAction(
-                icon: Icons.arrow_forward,
-                text: 'Suivant',
-                onPressed: _navigateToSetupTeamScreen,
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Scaffold(
+        backgroundColor: const Color(Config.backgroundColor),
+        appBar: _isLoading
+            ? null
+            : const AppTopBar(
+                title: "Position",
+                showInfoButton: false,
+                showBackButton: true,
+                showLogoutButton: false,
+              ),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 0.0, bottom: 12.0),
+              child: Column(
+                children: [
+                  _buildInfoCard(),
+                ],
               ),
             ),
-          ),
-          if (_isLoading) const LoadingScreen(),
-        ],
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
+                child: ButtonAction(
+                  icon: Icons.arrow_forward,
+                  text: 'Suivant',
+                  onPressed: _navigateToSetupTeamScreen,
+                ),
+              ),
+            ),
+            if (_isLoading) const LoadingScreen(),
+          ],
+        ),
       ),
     );
   }

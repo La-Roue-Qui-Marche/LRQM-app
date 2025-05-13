@@ -20,7 +20,7 @@ class AppToast {
       timeInSecForIosWeb: 2,
       backgroundColor: backgroundColor,
       textColor: Colors.white,
-      fontSize: 16.0,
+      fontSize: 16.0, // This disables OS scaling for the toast text
     );
   }
 }

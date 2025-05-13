@@ -130,21 +130,24 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(Config.backgroundColor),
-      appBar: _isCameraOpen
-          ? null
-          : const AppTopBar(
-              title: "Scanner",
-              showBackButton: true,
-              showInfoButton: false,
-              showLogoutButton: false,
-            ),
-      body: Stack(
-        children: [
-          _buildBody(context),
-          if (_isCameraOpen) _buildCameraOverlay() else _buildCameraButton(),
-        ],
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Scaffold(
+        backgroundColor: const Color(Config.backgroundColor),
+        appBar: _isCameraOpen
+            ? null
+            : const AppTopBar(
+                title: "Scanner",
+                showBackButton: true,
+                showInfoButton: false,
+                showLogoutButton: false,
+              ),
+        body: Stack(
+          children: [
+            _buildBody(context),
+            if (_isCameraOpen) _buildCameraOverlay() else _buildCameraButton(),
+          ],
+        ),
       ),
     );
   }

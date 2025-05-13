@@ -46,40 +46,43 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(Config.backgroundColor),
-      appBar: _isLoading
-          ? null
-          : const AppTopBar(
-              title: "Équipe",
-              showBackButton: true,
-              showInfoButton: false,
-              showLogoutButton: false,
-            ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 0.0, bottom: 120.0),
-            child: Column(
-              children: [
-                _buildTeamSelector(),
-              ],
-            ),
-          ),
-          if (_selectedContributors > 0 && _selectedContributors < 5)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
-                child: ButtonAction(
-                  icon: Icons.arrow_forward,
-                  text: 'Suivant',
-                  onPressed: _navigateToSetupScanScreen,
-                ),
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Scaffold(
+        backgroundColor: const Color(Config.backgroundColor),
+        appBar: _isLoading
+            ? null
+            : const AppTopBar(
+                title: "Équipe",
+                showBackButton: true,
+                showInfoButton: false,
+                showLogoutButton: false,
+              ),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 0.0, bottom: 120.0),
+              child: Column(
+                children: [
+                  _buildTeamSelector(),
+                ],
               ),
             ),
-          if (_isLoading) const LoadingScreen(),
-        ],
+            if (_selectedContributors > 0 && _selectedContributors < 5)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
+                  child: ButtonAction(
+                    icon: Icons.arrow_forward,
+                    text: 'Suivant',
+                    onPressed: _navigateToSetupScanScreen,
+                  ),
+                ),
+              ),
+            if (_isLoading) const LoadingScreen(),
+          ],
+        ),
       ),
     );
   }

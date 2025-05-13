@@ -56,102 +56,105 @@ class ConfirmScreen extends StatelessWidget {
       enableDrag: false,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16.0))),
       builder: (_) => StatefulBuilder(
-        builder: (context, setState) => SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(24, 32, 24, MediaQuery.of(context).viewInsets.bottom + 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Code de confirmation",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(Config.primaryColor))),
-                SizedBox(height: 8),
-                Text(
-                  'Le code de confirmation commence par la lettre "$prefix-" suivie de 4 chiffres. Tu l\'as reçu par email lors de ton inscription.',
-                  style: TextStyle(fontSize: 16, color: Colors.black87),
-                  textAlign: TextAlign.left,
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('$prefix-',
-                        style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Color(Config.primaryColor),
-                            letterSpacing: 2)),
-                    SizedBox(
-                      height: 68,
-                      width: 260,
-                      child: Pinput(
-                        length: 4,
-                        controller: pinController,
-                        focusNode: focusNode,
-                        defaultPinTheme: defaultPinTheme,
-                        focusedPinTheme: focusedPinTheme,
-                        errorPinTheme: errorPinTheme,
-                        separatorBuilder: (index) => SizedBox(width: 6),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        onChanged: (_) {
-                          if (errorText != null || showRetry) {
-                            setState(() {
-                              errorText = null;
-                              showRetry = false;
-                            });
-                          }
-                        },
-                        onCompleted: (code) async {
-                          if (code == expectedCode) {
-                            await UserData.saveUser({
-                              "id": userData['id'],
-                              "username": userData['username'],
-                              "bib_id": userData['bib_id'],
-                              "event_id": userData['event_id'],
-                            });
-                            Navigator.pop(context);
-                            Navigator.pushReplacement(
-                                context, MaterialPageRoute(builder: (_) => const WorkingScreen()));
-                          } else {
-                            setState(() {
-                              errorText = "Le code de confirmation est incorrect. Merci de réessayer.";
-                              showRetry = true;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                if (errorText != null) ...[
-                  SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(errorText!, style: TextStyle(color: Colors.red, fontSize: 16)),
+        builder: (context, setState) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(24, 32, 24, MediaQuery.of(context).viewInsets.bottom + 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Code de confirmation",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(Config.primaryColor))),
+                  SizedBox(height: 8),
+                  Text(
+                    'Le code de confirmation commence par la lettre "$prefix-" suivie de 4 chiffres. Tu l\'as reçu par email lors de ton inscription.',
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
+                    textAlign: TextAlign.left,
                   ),
-                ],
-                SizedBox(height: 16),
-                if (showRetry)
+                  SizedBox(height: 16),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(child: ButtonDiscard(text: "Annuler", onPressed: () => Navigator.pop(context))),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ButtonAction(
-                          icon: Icons.refresh,
-                          text: "Réessayer",
-                          onPressed: () {
-                            pinController.clear();
-                            setState(() {
-                              errorText = null;
-                              showRetry = false;
-                            });
+                      Text('$prefix-',
+                          style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Color(Config.primaryColor),
+                              letterSpacing: 2)),
+                      SizedBox(
+                        height: 68,
+                        width: 260,
+                        child: Pinput(
+                          length: 4,
+                          controller: pinController,
+                          focusNode: focusNode,
+                          defaultPinTheme: defaultPinTheme,
+                          focusedPinTheme: focusedPinTheme,
+                          errorPinTheme: errorPinTheme,
+                          separatorBuilder: (index) => SizedBox(width: 6),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          onChanged: (_) {
+                            if (errorText != null || showRetry) {
+                              setState(() {
+                                errorText = null;
+                                showRetry = false;
+                              });
+                            }
+                          },
+                          onCompleted: (code) async {
+                            if (code == expectedCode) {
+                              await UserData.saveUser({
+                                "id": userData['id'],
+                                "username": userData['username'],
+                                "bib_id": userData['bib_id'],
+                                "event_id": userData['event_id'],
+                              });
+                              Navigator.pop(context);
+                              Navigator.pushReplacement(
+                                  context, MaterialPageRoute(builder: (_) => const WorkingScreen()));
+                            } else {
+                              setState(() {
+                                errorText = "Le code de confirmation est incorrect. Merci de réessayer.";
+                                showRetry = true;
+                              });
+                            }
                           },
                         ),
                       ),
                     ],
                   ),
-              ],
+                  if (errorText != null) ...[
+                    SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(errorText!, style: TextStyle(color: Colors.red, fontSize: 16)),
+                    ),
+                  ],
+                  SizedBox(height: 16),
+                  if (showRetry)
+                    Row(
+                      children: [
+                        Expanded(child: ButtonDiscard(text: "Annuler", onPressed: () => Navigator.pop(context))),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: ButtonAction(
+                            icon: Icons.refresh,
+                            text: "Réessayer",
+                            onPressed: () {
+                              pinController.clear();
+                              setState(() {
+                                errorText = null;
+                                showRetry = false;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -171,74 +174,77 @@ class ConfirmScreen extends StatelessWidget {
     final name = userData['username'] ?? '';
     final dossard = int.tryParse(userData['bib_id'].toString()) ?? 0;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Card(
-                      elevation: 0,
-                      margin: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                      color: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.help_outline, size: 60, color: Color(Config.primaryColor)),
-                            SizedBox(height: 24),
-                            Text("Est-ce bien toi ?",
-                                style: TextStyle(fontSize: 16, color: Color(Config.primaryColor))),
-                            SizedBox(height: 16),
-                            Text(name,
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold, color: Color(Config.primaryColor))),
-                          ],
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Card(
+                        elevation: 0,
+                        margin: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        color: Colors.white,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.help_outline, size: 60, color: Color(Config.primaryColor)),
+                              SizedBox(height: 24),
+                              Text("Est-ce bien toi ?",
+                                  style: TextStyle(fontSize: 16, color: Color(Config.primaryColor))),
+                              SizedBox(height: 16),
+                              Text(name,
+                                  style: TextStyle(
+                                      fontSize: 20, fontWeight: FontWeight.bold, color: Color(Config.primaryColor))),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 160),
-              ],
-            ),
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 0,
-              child: SafeArea(
-                top: false,
-                bottom: true,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: Column(
-                    children: [
-                      ButtonAction(
-                        icon: Icons.check,
-                        text: 'Oui',
-                        onPressed: () {
-                          log("Name: $name");
-                          log("Dossard: $dossard");
-                          _showConfirmationModal(context, dossard);
-                        },
-                      ),
-                      SizedBox(height: 6),
-                      ButtonDiscard(
-                        icon: Icons.close,
-                        text: 'Non',
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
+                  SizedBox(height: 160),
+                ],
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 0,
+                child: SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Column(
+                      children: [
+                        ButtonAction(
+                          icon: Icons.check,
+                          text: 'Oui',
+                          onPressed: () {
+                            log("Name: $name");
+                            log("Dossard: $dossard");
+                            _showConfirmationModal(context, dossard);
+                          },
+                        ),
+                        SizedBox(height: 6),
+                        ButtonDiscard(
+                          icon: Icons.close,
+                          text: 'Non',
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

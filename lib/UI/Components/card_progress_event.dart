@@ -258,254 +258,257 @@ class _CardProgressEventState extends State<CardProgressEvent> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 0.0),
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(0.0),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Event name using ValueListenableBuilder
-              ValueListenableBuilder<String?>(
-                valueListenable: _eventNameNotifier,
-                builder: (context, eventName, _) {
-                  return Text(
-                    eventName ?? 'Nom de l\'événement',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(bottom: 0.0, right: 0.0, left: 0.0, top: 0.0),
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(0.0),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Event name using ValueListenableBuilder
+                ValueListenableBuilder<String?>(
+                  valueListenable: _eventNameNotifier,
+                  builder: (context, eventName, _) {
+                    return Text(
+                      eventName ?? 'Nom de l\'événement',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 2),
+                ValueListenableBuilder<EventStatus>(
+                  valueListenable: _eventStatusNotifier,
+                  builder: (context, status, _) {
+                    return getColoredEventStatusText(status);
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Objectif Info using ValueListenableBuilder
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Objectif',
+                      style: TextStyle(fontSize: 16, color: Colors.black87),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 2),
-              ValueListenableBuilder<EventStatus>(
-                valueListenable: _eventStatusNotifier,
-                builder: (context, status, _) {
-                  return getColoredEventStatusText(status);
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              // Objectif Info using ValueListenableBuilder
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Objectif',
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
-                  ),
-                  ValueListenableBuilder<String?>(
-                    valueListenable: _currentValueNotifier,
-                    builder: (context, currentValue, _) {
-                      return ValueListenableBuilder<String?>(
-                        valueListenable: _objectifNotifier,
-                        builder: (context, objectif, _) {
-                          if (currentValue != null && objectif != null && objectif != '-1') {
-                            return Row(
-                              children: [
-                                _styledValue(currentValue, color: const Color(Config.primaryColor)),
-                                const Text(
-                                  ' / ',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.normal,
-                                    color: Colors.black87,
+                    ValueListenableBuilder<String?>(
+                      valueListenable: _currentValueNotifier,
+                      builder: (context, currentValue, _) {
+                        return ValueListenableBuilder<String?>(
+                          valueListenable: _objectifNotifier,
+                          builder: (context, objectif, _) {
+                            if (currentValue != null && objectif != null && objectif != '-1') {
+                              return Row(
+                                children: [
+                                  _styledValue(currentValue, color: const Color(Config.primaryColor)),
+                                  const Text(
+                                    ' / ',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.normal,
+                                      color: Colors.black87,
+                                    ),
                                   ),
-                                ),
-                                _styledValue(objectif, color: Colors.black54),
-                              ],
-                            );
-                          } else {
-                            return _buildShimmer(width: 100);
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-
-              // Percentage using ValueListenableBuilder
-              ValueListenableBuilder<String?>(
-                valueListenable: _currentValueNotifier,
-                builder: (context, currentValue, _) {
-                  return ValueListenableBuilder<String?>(
-                    valueListenable: _objectifNotifier,
-                    builder: (context, objectif, _) {
-                      if (currentValue != null && objectif != null && objectif != '-1') {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 2.0, bottom: 2.0),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '${(_sanitizeValue(currentValue) / _sanitizeValue(objectif) * 100).toStringAsFixed(1)}%',
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    },
-                  );
-                },
-              ),
-
-              // Progress Bar
-              ValueListenableBuilder<String?>(
-                valueListenable: _currentValueNotifier,
-                builder: (context, currentValue, _) {
-                  return ValueListenableBuilder<String?>(
-                    valueListenable: _objectifNotifier,
-                    builder: (context, objectif, _) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: LinearProgressIndicator(
-                                value: currentValue != null && objectif != null && objectif != '-1'
-                                    ? _sanitizeValue(currentValue) / _sanitizeValue(objectif)
-                                    : 0.0,
-                                backgroundColor: Color(Config.backgroundColor),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(Config.primaryColor),
-                                ),
-                                minHeight: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Time and Participants section
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Countdown with dynamic label and value
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
-                        child: ValueListenableBuilder<String?>(
-                          valueListenable: _countdownLabelNotifier,
-                          builder: (context, label, _) {
-                            return Text(
-                              label ?? "Temps restant",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                            );
+                                  _styledValue(objectif, color: Colors.black54),
+                                ],
+                              );
+                            } else {
+                              return _buildShimmer(width: 100);
+                            }
                           },
-                        ),
-                      ),
-                      ValueListenableBuilder<String?>(
-                        valueListenable: _countdownValueNotifier,
-                        builder: (context, countdownValue, _) {
-                          return ValueListenableBuilder<EventStatus>(
-                            valueListenable: _eventStatusNotifier,
-                            builder: (context, status, _) {
-                              // Get the appropriate color based on event status
-                              final statusColor = _getStatusColor(status);
+                        );
+                      },
+                    ),
+                  ],
+                ),
 
-                              // For standard countdown format
-                              if (countdownValue != null) {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: _buildCountdownTimer(
-                                    countdownValue,
-                                    color: statusColor,
-                                  ),
-                                );
-                              } else {
-                                return _buildShimmer(width: 240);
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Participants active
-                  ValueListenableBuilder<String?>(
-                    valueListenable: _participantsNotifier,
-                    builder: (context, participants, _) {
-                      if (participants != null) {
-                        return Row(
-                          children: [
-                            if (int.tryParse(participants) != null)
-                              Container(
-                                width: 10,
-                                height: 10,
-                                margin: const EdgeInsets.only(right: 8),
-                                decoration: BoxDecoration(
-                                  color: int.parse(participants) > 1
-                                      ? Colors.green
-                                      : int.parse(participants) == 0
-                                          ? Colors.grey
-                                          : Colors.green,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            Text(
-                              participants,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Expanded(
+                // Percentage using ValueListenableBuilder
+                ValueListenableBuilder<String?>(
+                  valueListenable: _currentValueNotifier,
+                  builder: (context, currentValue, _) {
+                    return ValueListenableBuilder<String?>(
+                      valueListenable: _objectifNotifier,
+                      builder: (context, objectif, _) {
+                        if (currentValue != null && objectif != null && objectif != '-1') {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 2.0, bottom: 2.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
                               child: Text(
-                                'participant(s) ou groupe(s) actif(s) sur le parcours',
-                                style: TextStyle(
-                                  fontSize: 16,
+                                '${(_sanitizeValue(currentValue) / _sanitizeValue(objectif) * 100).toStringAsFixed(1)}%',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.black87,
                                 ),
-                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          );
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      },
+                    );
+                  },
+                ),
+
+                // Progress Bar
+                ValueListenableBuilder<String?>(
+                  valueListenable: _currentValueNotifier,
+                  builder: (context, currentValue, _) {
+                    return ValueListenableBuilder<String?>(
+                      valueListenable: _objectifNotifier,
+                      builder: (context, objectif, _) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: LinearProgressIndicator(
+                                  value: currentValue != null && objectif != null && objectif != '-1'
+                                      ? _sanitizeValue(currentValue) / _sanitizeValue(objectif)
+                                      : 0.0,
+                                  backgroundColor: Color(Config.backgroundColor),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Color(Config.primaryColor),
+                                  ),
+                                  minHeight: 12,
+                                ),
                               ),
                             ),
                           ],
                         );
-                      } else {
-                        return _buildShimmer(width: 120);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ],
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Time and Participants section
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Countdown with dynamic label and value
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+                          child: ValueListenableBuilder<String?>(
+                            valueListenable: _countdownLabelNotifier,
+                            builder: (context, label, _) {
+                              return Text(
+                                label ?? "Temps restant",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        ValueListenableBuilder<String?>(
+                          valueListenable: _countdownValueNotifier,
+                          builder: (context, countdownValue, _) {
+                            return ValueListenableBuilder<EventStatus>(
+                              valueListenable: _eventStatusNotifier,
+                              builder: (context, status, _) {
+                                // Get the appropriate color based on event status
+                                final statusColor = _getStatusColor(status);
+
+                                // For standard countdown format
+                                if (countdownValue != null) {
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: _buildCountdownTimer(
+                                      countdownValue,
+                                      color: statusColor,
+                                    ),
+                                  );
+                                } else {
+                                  return _buildShimmer(width: 240);
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Participants active
+                    ValueListenableBuilder<String?>(
+                      valueListenable: _participantsNotifier,
+                      builder: (context, participants, _) {
+                        if (participants != null) {
+                          return Row(
+                            children: [
+                              if (int.tryParse(participants) != null)
+                                Container(
+                                  width: 10,
+                                  height: 10,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: int.parse(participants) > 1
+                                        ? Colors.green
+                                        : int.parse(participants) == 0
+                                            ? Colors.grey
+                                            : Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              Text(
+                                participants,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Expanded(
+                                child: Text(
+                                  'participant(s) ou groupe(s) actif(s) sur le parcours',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          return _buildShimmer(width: 120);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        // Add a 1 height divider with background color
-        Container(
-          height: 1,
-          width: double.infinity,
-          color: Color(Config.backgroundColor),
-        ),
-      ],
+          // Add a 1 height divider with background color
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: Color(Config.backgroundColor),
+          ),
+        ],
+      ),
     );
   }
 

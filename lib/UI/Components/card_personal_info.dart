@@ -238,23 +238,26 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     // Always use the bottom sheet implementation
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        final collapsedHeight = 132.0;
-        final expandedHeight = widget.isSessionActive ? 400.0 : 320.0;
-        final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          const collapsedHeight = 180.0;
+          final expandedHeight = widget.isSessionActive ? 400.0 : 320.0;
+          final height = collapsedHeight + (_animation.value * (expandedHeight - collapsedHeight));
 
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            height: height,
-            width: double.infinity,
-            // Remove Stack, just use the sheet
-            child: _buildDraggableBottomSheet(),
-          ),
-        );
-      },
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: height,
+              width: double.infinity,
+              // Remove Stack, just use the sheet
+              child: _buildDraggableBottomSheet(),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -315,37 +318,9 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  if (hasBib)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Color(Config.accentColor).withOpacity(0.12),
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Color(Config.accentColor).withOpacity(0.10),
-                                            blurRadius: 4,
-                                            offset: Offset(0, 2),
-                                          ),
-                                        ],
-                                        border: Border.all(
-                                          color: Color(Config.accentColor).withOpacity(0.4),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        "N°$bibNumber",
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(Config.accentColor),
-                                          letterSpacing: 0.2,
-                                        ),
-                                      ),
-                                    ),
                                   if (hasName)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 10.0),
+                                    MediaQuery(
+                                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
                                       child: Text(
                                         userName,
                                         style: TextStyle(
@@ -353,6 +328,38 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                                           fontWeight: FontWeight.bold,
                                           color: Colors.black87,
                                           letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                    ),
+                                  if (hasName && hasBib) const SizedBox(width: 10),
+                                  if (hasBib)
+                                    MediaQuery(
+                                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Color(Config.accentColor).withOpacity(0.12),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Color(Config.accentColor).withOpacity(0.10),
+                                              blurRadius: 4,
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
+                                          border: Border.all(
+                                            color: Color(Config.accentColor).withOpacity(0.4),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "N°$bibNumber",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(Config.accentColor),
+                                            letterSpacing: 0.2,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -485,7 +492,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     );
   }
 
-  // Remove fullWidth, add fontSize param
   Widget _infoCard({required String label, String? value, required Color color, double fontSize = 20}) {
     String mainValue = '';
     String unit = '';
@@ -510,41 +516,48 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Label row without icon
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black54,
+          MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black54,
+              ),
             ),
           ),
-
           const SizedBox(height: 0),
-
           // Value display
           value != null && value.isNotEmpty
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text(
-                      mainValue,
-                      style: TextStyle(
-                        fontSize: fontSize,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                        letterSpacing: 0.5,
+                    MediaQuery(
+                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                      child: Text(
+                        mainValue,
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                     if (unit.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(left: 4.0, bottom: 2.0),
-                        child: Text(
-                          unit,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: color.withOpacity(0.8),
+                        child: MediaQuery(
+                          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                          child: Text(
+                            unit,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: color.withOpacity(0.8),
+                            ),
                           ),
                         ),
                       ),
@@ -634,10 +647,18 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                 color: iconColor,
               ),
               const SizedBox(width: 7),
-              Text(
-                statusText,
-                style: TextStyle(fontSize: 15, color: textColor, fontWeight: FontWeight.w600),
-              ),
+              (statusText == 'En pause')
+                  ? MediaQuery(
+                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                      child: Text(
+                        statusText,
+                        style: TextStyle(fontSize: 15, color: textColor, fontWeight: FontWeight.w600),
+                      ),
+                    )
+                  : Text(
+                      statusText,
+                      style: TextStyle(fontSize: 15, color: textColor, fontWeight: FontWeight.w600),
+                    ),
             ],
           ),
         );

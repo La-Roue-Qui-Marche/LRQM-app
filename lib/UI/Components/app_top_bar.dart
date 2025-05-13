@@ -104,16 +104,19 @@ class _AppTopBarState extends State<AppTopBar> {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 60),
-                        child: Text(
-                          widget.title,
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            overflow: TextOverflow.ellipsis,
+                        child: MediaQuery(
+                          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                          child: Text(
+                            widget.title,
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
                           ),
-                          maxLines: 1,
-                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),

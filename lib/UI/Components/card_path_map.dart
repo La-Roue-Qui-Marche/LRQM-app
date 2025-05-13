@@ -148,175 +148,193 @@ class _CardPathMapState extends State<CardPathMap> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    // Prevent all text in this widget from being resizable by the OS
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: Builder(
+        builder: (context) {
+          if (_isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-    if (_isError) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-            const SizedBox(height: 12),
-            const Text(
-              'Impossible de charger le parcours',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Réessayer'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_fullPath.isEmpty) {
-      return const Center(
-        child: Text(
-          'Aucun point de mesure disponible',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      );
-    }
-
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(0),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.4,
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _fullPath.isNotEmpty ? _fullPath.first : const LatLng(0, 0),
-                initialZoom: 15.0,
-                interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
-                onMapReady: () {
-                  _isMapReady = true;
-                  if (_fullPath.isNotEmpty) {
-                    Future.delayed(const Duration(milliseconds: 200), () {
-                      if (mounted) {
-                        _fitMapToPath();
-                        _startPathAnimation();
-                      }
-                    });
-                  }
-                },
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                  subdomains: const ['a', 'b', 'c', 'd'],
-                  retinaMode: RetinaMode.isHighDensity(context),
-                ),
-                if (_animatedPath.length > 1)
-                  PolylineLayer(
-                    polylines: List.generate(_animatedPath.length - 1, (i) {
-                      final start = _animatedPath[i];
-                      final end = _animatedPath[i + 1];
-                      final progress = i / (_animatedPath.length - 1);
-                      final color = HSVColor.lerp(
-                        HSVColor.fromColor(Colors.blue),
-                        HSVColor.fromColor(Colors.red),
-                        progress,
-                      )!
-                          .toColor();
-                      return Polyline(
-                        points: [start, end],
-                        color: color,
-                        strokeWidth: 3.5,
-                      );
-                    }),
+          if (_isError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Impossible de charger le parcours',
+                    style: TextStyle(fontSize: 16),
                   ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: _fullPath.first,
-                      width: 40,
-                      height: 40,
-                      child: const Icon(Icons.location_on, color: Color(Config.primaryColor), size: 40),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _loadData,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Réessayer'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    if (_animatedPath.length == _fullPath.length)
-                      Marker(
-                        point: _fullPath.last,
-                        width: 40,
-                        height: 40,
-                        child: const Icon(Icons.flag, color: Colors.redAccent, size: 36),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (_fullPath.isEmpty) {
+            return const Center(
+              child: Text(
+                'Aucun point de mesure disponible',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
+          }
+
+          return Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(0),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: _fullPath.isNotEmpty ? _fullPath.first : const LatLng(0, 0),
+                      initialZoom: 15.0,
+                      interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+                      onMapReady: () {
+                        _isMapReady = true;
+                        if (_fullPath.isNotEmpty) {
+                          Future.delayed(const Duration(milliseconds: 200), () {
+                            if (mounted) {
+                              _fitMapToPath();
+                              _startPathAnimation();
+                            }
+                          });
+                        }
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                        subdomains: const ['a', 'b', 'c', 'd'],
+                        retinaMode: RetinaMode.isHighDensity(context),
                       ),
+                      if (_animatedPath.length > 1)
+                        PolylineLayer(
+                          polylines: List.generate(_animatedPath.length - 1, (i) {
+                            final start = _animatedPath[i];
+                            final end = _animatedPath[i + 1];
+                            final progress = i / (_animatedPath.length - 1);
+                            final color = HSVColor.lerp(
+                              HSVColor.fromColor(Colors.blue),
+                              HSVColor.fromColor(Colors.red),
+                              progress,
+                            )!
+                                .toColor();
+                            return Polyline(
+                              points: [start, end],
+                              color: color,
+                              strokeWidth: 3.5,
+                            );
+                          }),
+                        ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: _fullPath.first,
+                            width: 40,
+                            height: 40,
+                            child: const Icon(Icons.location_on, color: Color(Config.primaryColor), size: 40),
+                          ),
+                          if (_animatedPath.length == _fullPath.length)
+                            Marker(
+                              point: _fullPath.last,
+                              width: 40,
+                              height: 40,
+                              child: const Icon(Icons.flag, color: Colors.redAccent, size: 36),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // BETA badge at top left
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'BETA',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+              // Copyright at top center, subtle and hidden from OS scaling
+              Positioned(
+                top: 10,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      '© OpenStreetMap × © CARTO',
+                      style: TextStyle(
+                        color: Colors.black38,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Column(
+                  children: [
+                    FloatingActionButton(
+                      heroTag: "replay",
+                      mini: true,
+                      backgroundColor: Colors.white,
+                      onPressed: _startPathAnimation,
+                      tooltip: 'Rejouer le tracé',
+                      child: const Icon(Icons.replay, color: Colors.black87),
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ),
-        // BETA badge at top left
-        Positioned(
-          top: 16,
-          left: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'BETA',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        ),
-        // Copyright at bottom right
-        Positioned(
-          bottom: 8,
-          right: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(0),
-            ),
-            child: const Text(
-              '© OpenStreetMap × © CARTO',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 16,
-          right: 16,
-          child: Column(
-            children: [
-              FloatingActionButton(
-                heroTag: "replay",
-                mini: true,
-                backgroundColor: Colors.white,
-                onPressed: _startPathAnimation,
-                tooltip: 'Rejouer le tracé',
-                child: const Icon(Icons.replay, color: Colors.black87),
               ),
             ],
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 }

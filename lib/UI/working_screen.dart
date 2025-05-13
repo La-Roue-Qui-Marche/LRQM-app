@@ -320,21 +320,24 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (_) async {},
-      child: Scaffold(
-        backgroundColor: Color(Config.backgroundColor),
-        appBar: AppTopBar(
-          title: 'Accueil',
-          showInfoButton: true,
-          showLogoutButton: true,
-          geolocation: _geolocation,
-          onInfo: _handleInfoButton,
-          onLogout: _handleLogoutButton,
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: PopScope(
+        canPop: false,
+        onPopInvoked: (_) async {},
+        child: Scaffold(
+          backgroundColor: Color(Config.backgroundColor),
+          appBar: AppTopBar(
+            title: 'Accueil',
+            showInfoButton: true,
+            showLogoutButton: true,
+            geolocation: _geolocation,
+            onInfo: _handleInfoButton,
+            onLogout: _handleLogoutButton,
+          ),
+          body: _buildMainContent(),
+          bottomNavigationBar: _buildBottomNavigation(),
         ),
-        body: _buildMainContent(),
-        bottomNavigationBar: _buildBottomNavigation(),
       ),
     );
   }

@@ -207,89 +207,92 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final defaultLat = _meetingPoint?.latitude ?? Config.defaultLat1;
-    final defaultLon = _meetingPoint?.longitude ?? Config.defaultLon1;
-    final userLat = _currentLatLng?.latitude ?? defaultLat;
-    final userLon = _currentLatLng?.longitude ?? defaultLon;
+    // Prevent all text in this widget from being resizable by the OS
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: Builder(
+        builder: (context) {
+          final defaultLat = _meetingPoint?.latitude ?? Config.defaultLat1;
+          final defaultLon = _meetingPoint?.longitude ?? Config.defaultLon1;
+          final userLat = _currentLatLng?.latitude ?? defaultLat;
+          final userLon = _currentLatLng?.longitude ?? defaultLon;
 
-    final styles = _mapBaseType == _MapBaseType.voyager ? _MapStyles.voyager : _MapStyles.satellite;
+          final styles = _mapBaseType == _MapBaseType.voyager ? _MapStyles.voyager : _MapStyles.satellite;
 
-    String urlTemplate;
-    List<String> subdomains;
-    IconData icon;
-    String tooltip;
+          String urlTemplate;
+          List<String> subdomains;
+          IconData icon;
+          String tooltip;
 
-    switch (_mapBaseType) {
-      case _MapBaseType.voyager:
-        urlTemplate = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-        subdomains = ['a', 'b', 'c', 'd'];
-        icon = Icons.map;
-        tooltip = "Vue satellite";
-        break;
-      case _MapBaseType.satellite:
-        urlTemplate = "https://wmts10.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg";
-        subdomains = [];
-        icon = Icons.satellite_alt;
-        tooltip = "Vue Swisstopo";
-        break;
-    }
+          switch (_mapBaseType) {
+            case _MapBaseType.voyager:
+              urlTemplate = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+              subdomains = ['a', 'b', 'c', 'd'];
+              icon = Icons.map;
+              tooltip = "Vue satellite";
+              break;
+            case _MapBaseType.satellite:
+              urlTemplate =
+                  "https://wmts10.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg";
+              subdomains = [];
+              icon = Icons.satellite_alt;
+              tooltip = "Vue Swisstopo";
+              break;
+          }
 
-    return Column(
-      children: [
-        if (_isFetchingPosition)
-          Expanded(
-            child: Container(
-              color: Colors.white,
-              width: double.infinity,
-              child: Center(
-                // Using only one Center widget with proper alignment
-                child: Image.asset(
-                  'assets/pictures/LogoSimpleAnimated.gif',
-                  width: 32.0,
+          return Column(
+            children: [
+              if (_isFetchingPosition)
+                Expanded(
+                  child: Container(
+                    color: Colors.white,
+                    width: double.infinity,
+                    child: Center(
+                      child: Image.asset(
+                        'assets/pictures/LogoSimpleAnimated.gif',
+                        width: 32.0,
+                      ),
+                    ),
+                  ),
+                )
+              else if (widget.fullScreen)
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final mediaQuery = MediaQuery.of(context);
+                    const double topBarHeight = 50.0;
+                    const double navBarHeight = 80.0;
+                    const double personalInfoCollapsedHeight = 190.0;
+                    final double availableHeight = mediaQuery.size.height -
+                        mediaQuery.padding.top -
+                        mediaQuery.padding.bottom -
+                        topBarHeight -
+                        navBarHeight -
+                        personalInfoCollapsedHeight;
+
+                    return Container(
+                      height: availableHeight > 0 ? availableHeight : 0,
+                      width: double.infinity,
+                      child: _buildMapStack(
+                        userLat,
+                        userLon,
+                        urlTemplate,
+                        subdomains,
+                        icon,
+                        tooltip,
+                        styles,
+                      ),
+                    );
+                  },
+                )
+              else
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, styles),
                 ),
-              ),
-            ),
-          )
-        else if (widget.fullScreen)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final mediaQuery = MediaQuery.of(context);
-              // Top bar height (from AppTopBar.preferredSize)
-              const double topBarHeight = 50.0;
-              // Bottom nav bar height (from AppNavBar, including floating button)
-              const double navBarHeight = 80.0;
-              // Personal info card collapsed height (should match CardPersonalInfo)
-              const double personalInfoCollapsedHeight = 150.0;
-              // Calculate available height
-              final double availableHeight = mediaQuery.size.height -
-                  mediaQuery.padding.top -
-                  mediaQuery.padding.bottom -
-                  topBarHeight -
-                  navBarHeight -
-                  personalInfoCollapsedHeight;
-
-              return Container(
-                height: availableHeight > 0 ? availableHeight : 0,
-                width: double.infinity,
-                child: _buildMapStack(
-                  userLat,
-                  userLon,
-                  urlTemplate,
-                  subdomains,
-                  icon,
-                  tooltip,
-                  styles,
-                ),
-              );
-            },
-          )
-        else
-          // When not in fullScreen mode, use the fixed height (50% of screen)
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.5,
-            child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, styles),
-          ),
-      ],
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -541,30 +544,44 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                       const Text("Suivi/centrage", style: TextStyle(fontSize: 14)),
                     ],
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
 
-        // --- Map credits bottom right ---
-        Positioned(
-          bottom: 32,
-          right: 12,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(0),
-            ),
-            child: Text(
-              _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.black87,
+        // --- Map credits centered top ---
+        if (!_showLegend)
+          Positioned(
+            top: 10,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.55),
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 2,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.black38,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.1,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
