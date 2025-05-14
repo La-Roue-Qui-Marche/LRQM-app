@@ -22,7 +22,7 @@ class AppNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.amber.withOpacity(0.2),
+      color: Colors.transparent, // Remove amber debug color
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
@@ -43,20 +43,36 @@ class AppNavBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _NavBarButton(
-                  svgActive: 'assets/icons/user-fill.svg',
-                  svgInactive: 'assets/icons/user.svg',
-                  label: 'Personnel',
-                  selected: currentPage == 0,
-                  onTap: () => onPageSelected(0),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16.0), // Push to the left
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: _NavBarButton(
+                        svgActive: 'assets/icons/user-fill.svg',
+                        svgInactive: 'assets/icons/user.svg',
+                        label: 'Personnel',
+                        selected: currentPage == 0,
+                        onTap: () => onPageSelected(0),
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 100),
-                _NavBarButton(
-                  svgActive: 'assets/icons/calendar-fill.svg',
-                  svgInactive: 'assets/icons/calendar.svg',
-                  label: 'Événement',
-                  selected: currentPage == 1,
-                  onTap: () => onPageSelected(1),
+                const SizedBox(width: 74), // Space for center button
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16.0), // Push to the right
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _NavBarButton(
+                        svgActive: 'assets/icons/calendar-fill.svg',
+                        svgInactive: 'assets/icons/calendar.svg',
+                        label: 'Événement',
+                        selected: currentPage == 1,
+                        onTap: () => onPageSelected(1),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
