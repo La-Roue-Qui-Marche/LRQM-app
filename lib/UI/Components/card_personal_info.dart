@@ -400,7 +400,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                         ),
                         if (widget.isSessionActive)
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                             child: ContributionGraph(geolocation: widget.geolocation),
                           ),
                         // Add message and animated arrow if session is not active

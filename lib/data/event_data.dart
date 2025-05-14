@@ -1,5 +1,4 @@
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
-import 'package:flutter/foundation.dart';
 import 'package:lrqm/data/management_data.dart';
 
 enum EventStatus { notStarted, inProgress, over }
@@ -65,7 +64,6 @@ class EventData {
       final dateUtc = DateTime.parse(rawDate.endsWith('Z') ? rawDate : '${rawDate}Z');
       return dateUtc.toLocal();
     } catch (e) {
-      debugPrint('Failed to parse UTC date: $e');
       return null;
     }
   }
@@ -77,7 +75,6 @@ class EventData {
     final startDateTime = _parseUtcToLocal(start);
     if (startDateTime == null) return false;
 
-    debugPrint('Event start time (Local): $startDateTime');
     return DateTime.now().isAfter(startDateTime);
   }
 
@@ -86,20 +83,16 @@ class EventData {
     final endDateTime = _parseUtcToLocal(end);
     if (endDateTime == null) return false;
 
-    debugPrint('Event end time (Local): $endDateTime');
     return DateTime.now().isAfter(endDateTime);
   }
 
   static Future<EventStatus> getEventStatus() async {
     if (await isEventOver()) {
-      debugPrint('Event status: over');
       return EventStatus.over;
     }
     if (await hasEventStarted()) {
-      debugPrint('Event status: inProgress');
       return EventStatus.inProgress;
     }
-    debugPrint('Event status: notStarted');
     return EventStatus.notStarted;
   }
 
@@ -109,7 +102,6 @@ class EventData {
     if (startDateTime == null) return 0;
 
     final now = DateTime.now();
-    debugPrint('Event start time: $startDateTime, Current time: $now');
     return startDateTime.difference(now).inSeconds;
   }
 
