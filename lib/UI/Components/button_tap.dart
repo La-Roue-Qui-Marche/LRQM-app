@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../Utils/config.dart';
 
-class TapCard extends StatelessWidget {
+import 'package:lrqm/utils/config.dart';
+
+class ButtonTap extends StatelessWidget {
   final Widget logo;
   final String text;
   final VoidCallback onTap;
   final bool isSelected;
 
-  const TapCard({
+  const ButtonTap({
     super.key,
     required this.logo,
     required this.text,
@@ -39,12 +40,15 @@ class TapCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w600,
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                    child: Text(
+                      text,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isSelected ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),

@@ -9,21 +9,21 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../Data/EventData.dart';
-import '../Utils/Permission.dart';
-import '../Utils/config.dart';
-import '../Geolocalisation/Geolocation.dart';
-import 'Components/button_action.dart';
-import 'Components/DynamicMapCard.dart';
-import 'Components/InfoCard.dart';
-import 'Components/TextModal.dart';
-import 'Components/top_app_bar.dart';
-import 'loading_screen.dart';
-import 'setup_team_screen.dart';
-import 'Components/app_toast.dart';
+import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/utils/permission_helper.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/geo/geolocation.dart';
+import 'package:lrqm/ui/components/button_action.dart';
+import 'package:lrqm/ui/components/card_dynamic_map.dart';
+import 'package:lrqm/ui/components/card_info.dart';
+import 'package:lrqm/ui/components/modal_bottom_text.dart';
+import 'package:lrqm/ui/components/app_top_bar.dart';
+import 'package:lrqm/ui/loading_screen.dart';
+import 'package:lrqm/ui/setup_team_screen.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
 
 class SetupPosScreen extends StatefulWidget {
-  final Geolocation geolocation;
+  final GeolocationController geolocation;
 
   const SetupPosScreen({super.key, required this.geolocation});
 
@@ -50,17 +50,22 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   Future<void> _checkPermissions() async {
-    final granted = await PermissionHelper.isLocationAlwaysGranted();
+    final granted = await PermissionHelper.isProperLocationPermissionGranted();
     if (!granted) _showLocationPermissionModal();
   }
 
   void _showLocationPermissionModal() {
-    showTextModal(
+    String title = Platform.isIOS ? "Position en arrière-plan" : "Autorisation de position";
+    String message = Platform.isIOS
+        ? "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?"
+        : "Peux-tu autoriser l'accès à ta position afin que nous puissions calculer ta distance parcourue ?";
+
+    showModalBottomText(
       context,
-      "Position en arrière-plan",
-      "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?",
+      title,
+      message,
       showConfirmButton: true,
-      onConfirm: () => PermissionHelper.requestLocationAlwaysPermission(),
+      onConfirm: () => PermissionHelper.requestProperLocationPermission(),
     );
   }
 
@@ -92,12 +97,17 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     });
 
     try {
-      final granted = await PermissionHelper.isLocationAlwaysGranted();
+      final granted = await PermissionHelper.isProperLocationPermissionGranted();
       if (!granted) {
-        showTextModal(
+        String title = Platform.isIOS ? "Position en arrière-plan" : "Autorisation de position";
+        String message = Platform.isIOS
+            ? "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?"
+            : "Peux-tu autoriser l'accès à ta position afin que nous puissions calculer ta distance parcourue ?";
+
+        showModalBottomText(
           context,
-          "Position en arrière-plan",
-          "Peux-tu sélectionner 'TOUJOURS AUTORISER' afin que nous puissions calculer ta distance parcourue, même si ton téléphone est inactif, dans ta poche par exemple ?",
+          title,
+          message,
           showConfirmButton: true,
           onConfirm: () => PermissionHelper.openLocationSettings(),
         );
@@ -121,7 +131,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           timeoutTimer.cancel();
           return;
         }
-        showTextModal(
+        showModalBottomText(
           context,
           "Hors de la zone",
           "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'événement.\nUtilise la carte pour trouver la localisation de l'événement et te rendre au point de départ.",
@@ -185,7 +195,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
       builder: (_) => ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.5,
+          height: MediaQuery.of(context).size.height * 0.60,
           width: double.infinity,
           child: Stack(
             children: [
@@ -193,8 +203,8 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                 child: SingleChildScrollView(
                   physics: const NeverScrollableScrollPhysics(),
                   child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.50,
-                    child: DynamicMapCard(geolocation: widget.geolocation),
+                    height: MediaQuery.of(context).size.height * 0.60,
+                    child: CardDynamicMap(geolocation: widget.geolocation),
                   ),
                 ),
               ),
@@ -207,48 +217,42 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(Config.backgroundColor),
-      appBar: _isLoading
-          ? null
-          : const TopAppBar(
-              title: "Position",
-              showInfoButton: false,
-              showBackButton: true,
-              showLogoutButton: false,
-            ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 6.0, bottom: 12.0),
-            child: Column(
-              children: [
-                _buildInfoCard(),
-                const SizedBox(height: 12),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Text(
-                    "Appuie sur 'Suivant' quand tu es sur le lieu de l'évènement.",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(fontSize: 14, color: Colors.black87),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
-              child: ButtonAction(
-                icon: Icons.arrow_forward,
-                text: 'Suivant',
-                onPressed: _navigateToSetupTeamScreen,
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Scaffold(
+        backgroundColor: const Color(Config.backgroundColor),
+        appBar: _isLoading
+            ? null
+            : const AppTopBar(
+                title: "Position",
+                showInfoButton: false,
+                showBackButton: true,
+                showLogoutButton: false,
+              ),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 0.0, bottom: 12.0),
+              child: Column(
+                children: [
+                  _buildInfoCard(),
+                ],
               ),
             ),
-          ),
-          if (_isLoading) const LoadingScreen(),
-        ],
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
+                child: ButtonAction(
+                  icon: Icons.arrow_forward,
+                  text: 'Suivant',
+                  onPressed: _navigateToSetupTeamScreen,
+                ),
+              ),
+            ),
+            if (_isLoading) const LoadingScreen(),
+          ],
+        ),
       ),
     );
   }
@@ -275,9 +279,9 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
               ),
             ),
           ),
-          InfoCard(
+          CardInfo(
             title: "Prépares-toi !",
-            data: "Rends-toi au point de départ de l'évènement.",
+            data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
             actionItems: [
               ActionItem(
                 icon: SvgPicture.asset('assets/icons/map.svg', color: Colors.black87, width: 28, height: 28),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../Utils/config.dart';
+
+import 'package:lrqm/utils/config.dart';
 
 class ButtonAction extends StatelessWidget {
   final IconData? icon;
@@ -39,12 +40,15 @@ class ButtonAction extends StatelessWidget {
                 size: 22,
               ),
             if (icon != null) const SizedBox(width: 10),
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(Config.backgroundColor),
+            MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(Config.backgroundColor),
+                ),
               ),
             ),
           ],

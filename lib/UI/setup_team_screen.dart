@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import '../Utils/config.dart';
-import 'Components/InfoCard.dart';
-import 'Components/button_action.dart';
-import 'setup_scan_screen.dart';
-import 'loading_screen.dart';
-import 'Components/TapCard.dart';
-import 'Components/top_app_bar.dart';
+import 'package:lrqm/utils/config.dart';
+import 'package:lrqm/ui/components/card_info.dart';
+import 'package:lrqm/ui/components/button_action.dart';
+import 'package:lrqm/ui/setup_scan_screen.dart';
+import 'package:lrqm/ui/loading_screen.dart';
+import 'package:lrqm/ui/components/button_tap.dart';
+import 'package:lrqm/ui/components/app_top_bar.dart';
 
 class SetupTeamScreen extends StatefulWidget {
   const SetupTeamScreen({super.key});
@@ -46,40 +46,43 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(Config.backgroundColor),
-      appBar: _isLoading
-          ? null
-          : const TopAppBar(
-              title: "Équipe",
-              showBackButton: true,
-              showInfoButton: false,
-              showLogoutButton: false,
-            ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 6.0, bottom: 120.0),
-            child: Column(
-              children: [
-                _buildTeamSelector(),
-              ],
-            ),
-          ),
-          if (_selectedContributors > 0 && _selectedContributors < 5)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
-                child: ButtonAction(
-                  icon: Icons.arrow_forward,
-                  text: 'Suivant',
-                  onPressed: _navigateToSetupScanScreen,
-                ),
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+      child: Scaffold(
+        backgroundColor: const Color(Config.backgroundColor),
+        appBar: _isLoading
+            ? null
+            : const AppTopBar(
+                title: "Équipe",
+                showBackButton: true,
+                showInfoButton: false,
+                showLogoutButton: false,
+              ),
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 0.0, bottom: 120.0),
+              child: Column(
+                children: [
+                  _buildTeamSelector(),
+                ],
               ),
             ),
-          if (_isLoading) const LoadingScreen(),
-        ],
+            if (_selectedContributors > 0 && _selectedContributors < 5)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 48.0),
+                  child: ButtonAction(
+                    icon: Icons.arrow_forward,
+                    text: 'Suivant',
+                    onPressed: _navigateToSetupScanScreen,
+                  ),
+                ),
+              ),
+            if (_isLoading) const LoadingScreen(),
+          ],
+        ),
       ),
     );
   }
@@ -105,7 +108,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
               ),
             ),
           ),
-          const InfoCard(
+          const CardInfo(
             title: "L'équipe !",
             data: "Pour combien de personnes comptes-tu les mètres ?",
             actionItems: [],
@@ -121,7 +124,7 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
     final texts = ["Je pars en solo", "On fait la paire", "On se lance en triplettte", "La monstre équipe"];
     return Column(
       children: [
-        TapCard(
+        ButtonTap(
           logo: SvgPicture.asset(
             'assets/icons/square-$number.svg',
             width: 32,
@@ -130,10 +133,6 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
           text: texts[number - 1],
           onTap: () => _selectParticipants(number),
           isSelected: _selectedContributors == number,
-        ),
-        Container(
-          height: 1,
-          color: const Color(Config.backgroundColor),
         ),
       ],
     );

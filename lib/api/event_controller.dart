@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import '../Utils/Result.dart';
-import '../Utils/config.dart';
 
-class NewEventController {
+import 'package:lrqm/utils/Result.dart';
+import 'package:lrqm/utils/config.dart';
+
+class EventController {
   static final http.Client _client = http.Client(); // Reusable HTTP client
 
   /// Create a new event with the provided details.

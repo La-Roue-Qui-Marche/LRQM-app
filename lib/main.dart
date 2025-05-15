@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lrqm/UI/working_screen.dart';
-import 'package:lrqm/UI/login_screen.dart';
 
-import 'Data/UserData.dart';
+import 'package:lrqm/ui/working_screen.dart';
+import 'package:lrqm/ui/login_screen.dart';
+import 'package:lrqm/data/user_data.dart';
 
 void main() async {
   /// Ensure that the WidgetsBinding is initialized
