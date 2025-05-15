@@ -531,8 +531,12 @@ class _CardProgressEventState extends State<CardProgressEvent> {
             margin: const EdgeInsets.symmetric(horizontal: 8),
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Color(Config.backgroundColor),
+              color: Colors.white, // white background
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: color.withOpacity(0.7), // outline color matches status color
+                width: 1.2,
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

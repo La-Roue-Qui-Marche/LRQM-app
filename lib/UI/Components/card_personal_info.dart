@@ -299,79 +299,75 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
             Padding(
               padding: const EdgeInsets.only(left: 24, right: 24, top: 0, bottom: 0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Bib badge first
+                  ValueListenableBuilder<String>(
+                    valueListenable: _bibNumberNotifier,
+                    builder: (context, bibNumber, _) {
+                      if (bibNumber.isEmpty) return SizedBox(width: 0);
+                      return Container(
+                        margin: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Color(Config.accentColor).withOpacity(0.7),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.confirmation_number_rounded,
+                              size: 15,
+                              color: Color(Config.accentColor).withOpacity(0.8),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "N°$bibNumber",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(Config.accentColor),
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  // Username (center, expanded)
                   Expanded(
                     child: Container(
                       alignment: Alignment.centerLeft,
                       child: ValueListenableBuilder<String>(
                         valueListenable: _userNameNotifier,
                         builder: (context, userName, _) {
-                          return ValueListenableBuilder<String>(
-                            valueListenable: _bibNumberNotifier,
-                            builder: (context, bibNumber, _) {
-                              final hasName = userName.isNotEmpty;
-                              final hasBib = bibNumber.isNotEmpty;
-                              if (!hasName && !hasBib) {
-                                return const SizedBox.shrink();
-                              }
-                              return Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  if (hasName)
-                                    MediaQuery(
-                                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-                                      child: Text(
-                                        userName,
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                          letterSpacing: 0.2,
-                                        ),
-                                      ),
-                                    ),
-                                  if (hasName && hasBib) const SizedBox(width: 10),
-                                  if (hasBib)
-                                    MediaQuery(
-                                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Color(Config.accentColor).withOpacity(0.12),
-                                          borderRadius: BorderRadius.circular(16),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(Config.accentColor).withOpacity(0.10),
-                                              blurRadius: 4,
-                                              offset: Offset(0, 2),
-                                            ),
-                                          ],
-                                          border: Border.all(
-                                            color: Color(Config.accentColor).withOpacity(0.4),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "N°$bibNumber",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(Config.accentColor),
-                                            letterSpacing: 0.2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              );
-                            },
+                          final hasName = userName.isNotEmpty;
+                          if (!hasName) {
+                            return const SizedBox.shrink();
+                          }
+                          return MediaQuery(
+                            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                            child: Text(
+                              userName,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
                           );
                         },
                       ),
                     ),
                   ),
-                  // Status badge aligned right
+                  // Status badge (right)
                   _statusBadge(),
                 ],
               ),
@@ -565,7 +561,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                 )
               : Align(
                   alignment: Alignment.centerLeft,
-                  child: _buildShimmer(width: 80, height: 32),
+                  child: _buildShimmer(width: 80, height: 40),
                 ),
         ],
       ),
@@ -630,13 +626,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
               color: borderColor,
               width: 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: borderColor.withOpacity(0.25),
-                blurRadius: 4,
-                offset: Offset(0, 2),
-              ),
-            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -647,18 +636,10 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                 color: iconColor,
               ),
               const SizedBox(width: 7),
-              (statusText == 'En pause')
-                  ? MediaQuery(
-                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-                      child: Text(
-                        statusText,
-                        style: TextStyle(fontSize: 15, color: textColor, fontWeight: FontWeight.w600),
-                      ),
-                    )
-                  : Text(
-                      statusText,
-                      style: TextStyle(fontSize: 15, color: textColor, fontWeight: FontWeight.w600),
-                    ),
+              Text(
+                statusText,
+                style: TextStyle(fontSize: 15, color: textColor, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         );
@@ -671,7 +652,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       valueListenable: _isLoadingNotifier,
       builder: (context, isLoading, _) {
         if (isLoading) {
-          return _buildShimmer(width: double.infinity, height: 16);
+          return _buildShimmer(width: double.infinity, height: 24);
         }
         return ValueListenableBuilder<int>(
           valueListenable: widget.isSessionActive ? _sessionDistanceNotifier : _totalDistanceNotifier,

@@ -91,8 +91,12 @@ class CardSupportEvent extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(Config.backgroundColor),
+          color: Colors.white, // white background
           shape: BoxShape.circle,
+          border: Border.all(
+            color: Color(Config.primaryColor).withOpacity(0.7), // outline color
+            width: 1.2,
+          ),
         ),
         child: SvgPicture.asset(
           assetPath,

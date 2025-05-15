@@ -344,7 +344,6 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                   borderColor: styles.polygonBorderColor.withOpacity(1),
                   borderStrokeWidth: 1,
                   strokeJoin: StrokeJoin.round,
-                  pattern: StrokePattern.dashed(segments: [5, 5]),
                   strokeCap: StrokeCap.round,
                 ),
               ],
