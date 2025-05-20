@@ -396,7 +396,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                         // Add message and animated arrow if session is not active
                         if (!widget.isSessionActive)
                           Padding(
-                            padding: const EdgeInsets.only(top: 24, bottom: 16),
+                            padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 16),
                             child: Column(
                               children: [
                                 Text(
