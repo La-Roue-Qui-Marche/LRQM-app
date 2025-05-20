@@ -158,8 +158,7 @@ class _LoginState extends State<Login> {
 
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
-    // Use in-app webview (SFSafariViewController on iOS)
-    if (!await launchUrl(uri, mode: LaunchMode.inAppWebView)) {
+    if (!await launchUrl(uri, mode: LaunchMode.inAppBrowserView)) {
       AppToast.showError("Impossible d'ouvrir le lien d'inscription.");
     }
   }

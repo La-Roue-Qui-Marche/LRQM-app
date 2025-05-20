@@ -83,7 +83,7 @@ class InfoScreen extends StatelessWidget {
                             GestureDetector(
                               onTap: () async {
                                 final Uri uri = Uri.parse('https://larouequimarche.ch');
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
                               },
                               child: Text(
                                 "Plus d'information sur le site de la manifestation: ici",
@@ -180,7 +180,7 @@ class InfoScreen extends StatelessWidget {
                               child: ElevatedButton.icon(
                                 onPressed: () async {
                                   final Uri uri = Uri.parse('mailto:larqm.app.feedback@gmail.com');
-                                  await launchUrl(uri);
+                                  await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
                                 },
                                 icon: const Icon(Icons.email, color: Colors.white),
                                 label: const Text(
@@ -274,7 +274,7 @@ class InfoScreen extends StatelessWidget {
       onTap: url != null
           ? () async {
               final Uri uri = Uri.parse(url);
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
+              await launchUrl(uri, mode: LaunchMode.platformDefault);
             }
           : null,
       child: Column(
