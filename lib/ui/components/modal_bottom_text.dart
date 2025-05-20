@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:lrqm/ui/components/button_action.dart';
 import 'package:lrqm/ui/components/button_discard.dart';
@@ -16,8 +15,6 @@ void showModalBottomText(
   List<dynamic>? dropdownItems,
   Function(dynamic)? onDropdownChanged,
   dynamic selectedDropdownValue,
-  String? externalUrl,
-  String? externalUrlLabel,
 }) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     showModalBottomSheet(
@@ -47,8 +44,6 @@ void showModalBottomText(
                 dropdownItems: dropdownItems,
                 onDropdownChanged: onDropdownChanged,
                 selectedDropdownValue: selectedDropdownValue,
-                externalUrl: externalUrl,
-                externalUrlLabel: externalUrlLabel,
               ),
             ),
           ),
@@ -68,8 +63,6 @@ class _ModalBottomTextContent extends StatefulWidget {
   final List<dynamic>? dropdownItems;
   final Function(dynamic)? onDropdownChanged;
   final dynamic selectedDropdownValue;
-  final String? externalUrl;
-  final String? externalUrlLabel;
 
   const _ModalBottomTextContent({
     required this.title,
@@ -81,8 +74,6 @@ class _ModalBottomTextContent extends StatefulWidget {
     this.dropdownItems,
     this.onDropdownChanged,
     this.selectedDropdownValue,
-    this.externalUrl,
-    this.externalUrlLabel,
   });
 
   @override
@@ -90,13 +81,6 @@ class _ModalBottomTextContent extends StatefulWidget {
 }
 
 class _ModalBottomTextContentState extends State<_ModalBottomTextContent> {
-  Future<void> _launchUrl(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception('Impossible d\'ouvrir $url');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -184,39 +168,6 @@ class _ModalBottomTextContentState extends State<_ModalBottomTextContent> {
               },
             ),
           ),
-        if (widget.externalUrl != null) ...[
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: InkWell(
-              onTap: () => _launchUrl(widget.externalUrl!),
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.open_in_new, color: Color(Config.primaryColor)),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Text(
-                        widget.externalUrlLabel ?? "S'inscrire sur le site web",
-                        style: const TextStyle(
-                          color: Color(Config.primaryColor),
-                          fontWeight: FontWeight.w700,
-                          decoration: TextDecoration.underline,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
         const SizedBox(height: 24),
         if (widget.showConfirmButton || widget.showDiscardButton)
           Row(

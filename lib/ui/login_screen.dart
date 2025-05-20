@@ -115,8 +115,6 @@ class _LoginState extends State<Login> {
           "Numéro de dossard manquant",
           "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM",
           showConfirmButton: true,
-          externalUrl: "https://larouequimarche.ch/levenement/inscription/",
-          externalUrlLabel: "S'inscrire en ligne",
         );
       });
       return;
@@ -143,8 +141,6 @@ class _LoginState extends State<Login> {
             "Utilisateur non trouvé",
             "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
             showConfirmButton: true,
-            externalUrl: "https://larouequimarche.ch/levenement/inscription/",
-            externalUrlLabel: "S'inscrire en ligne",
           );
         });
         return;
