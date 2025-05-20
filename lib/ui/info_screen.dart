@@ -180,7 +180,7 @@ class InfoScreen extends StatelessWidget {
                               child: ElevatedButton.icon(
                                 onPressed: () async {
                                   final Uri uri = Uri.parse('mailto:larqm.app.feedback@gmail.com');
-                                  await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+                                  await launchUrl(uri);
                                 },
                                 icon: const Icon(Icons.email, color: Colors.white),
                                 label: const Text(
