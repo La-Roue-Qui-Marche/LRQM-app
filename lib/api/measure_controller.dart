@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-import 'package:lrqm/utils/Result.dart';
+import 'package:lrqm/utils/result.dart';
 import 'package:lrqm/utils/config.dart';
 import 'package:lrqm/data/measure_data.dart';
 
