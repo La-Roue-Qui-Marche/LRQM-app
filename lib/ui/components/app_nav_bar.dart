@@ -116,7 +116,7 @@ class AppNavBar extends StatelessWidget {
                       child: canStartNewSession
                           ? (isMeasureActive
                               ? const Icon(Icons.stop_rounded, color: Colors.white, size: 38)
-                              : _GlowingDot(color: Colors.white))
+                              : const _GlowingDot(color: Colors.white))
                           : _GlowingDot(color: Colors.grey.shade50),
                     ),
                   ),
@@ -215,7 +215,7 @@ class _GlowingDotState extends State<_GlowingDot> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    final double baseSize = 24;
+    const double baseSize = 24;
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {

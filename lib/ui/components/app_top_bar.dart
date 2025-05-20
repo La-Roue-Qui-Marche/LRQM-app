@@ -61,11 +61,11 @@ class _AppTopBarState extends State<AppTopBar> {
         GestureDetector(
           onTap: _incrementInfoButtonClickCount,
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(
                 bottom: BorderSide(
-                  color: const Color(Config.backgroundColor),
+                  color: Color(Config.backgroundColor),
                   width: 1.0,
                 ),
               ),
