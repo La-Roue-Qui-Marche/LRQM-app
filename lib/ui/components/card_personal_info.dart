@@ -249,7 +249,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
           return Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
+            child: SizedBox(
               height: height,
               width: double.infinity,
               // Remove Stack, just use the sheet
@@ -320,12 +320,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.confirmation_number_rounded,
-                              size: 15,
-                              color: Color(Config.accentColor).withOpacity(0.8),
-                            ),
-                            const SizedBox(width: 4),
                             Text(
                               "N°$bibNumber",
                               style: TextStyle(
@@ -456,7 +450,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
           ),
         ),
         // Vertical divider
-        Container(
+        SizedBox(
           height: 60,
           child: VerticalDivider(
             color: Color(Config.backgroundColor),
