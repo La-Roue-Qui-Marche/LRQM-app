@@ -9,7 +9,7 @@ import 'package:lrqm/utils/config.dart';
 import 'package:lrqm/geo/geolocation.dart';
 import 'package:lrqm/data/user_data.dart';
 import 'package:lrqm/api/user_controller.dart';
-import 'package:lrqm/ui/Components/contribution_graph.dart';
+import 'package:lrqm/ui/components/contribution_graph.dart';
 
 class CardPersonalInfo extends StatefulWidget {
   final bool isSessionActive;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:lrqm/ui/Components/button_action.dart';
-import 'package:lrqm/ui/Components/button_discard.dart';
+import 'package:lrqm/ui/components/button_action.dart';
+import 'package:lrqm/ui/components/button_discard.dart';
 import 'package:lrqm/utils/config.dart';
 
 void showModalBottomText(
