@@ -21,7 +21,7 @@ class AppToast with WidgetsBindingObserver {
 
   /// Show a red error toast
   static void showError(String message) {
-    _show(message, backgroundColor: Colors.red);
+    _show(message, backgroundColor: Colors.red, toastLength: Toast.LENGTH_LONG);
   }
 
   /// Show a blue informational toast (longer)

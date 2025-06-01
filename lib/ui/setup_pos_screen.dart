@@ -14,7 +14,6 @@ import 'package:lrqm/utils/permission_helper.dart';
 import 'package:lrqm/utils/config.dart';
 import 'package:lrqm/geo/geolocation.dart';
 import 'package:lrqm/ui/components/button_action.dart';
-import 'package:lrqm/ui/components/card_dynamic_map.dart';
 import 'package:lrqm/ui/components/card_info.dart';
 import 'package:lrqm/ui/components/modal_bottom_text.dart';
 import 'package:lrqm/ui/components/app_top_bar.dart';
@@ -116,27 +115,13 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         return;
       }
 
-      final isInZone = await widget.geolocation.isInZone();
-      if (timedOut) {
-        timeoutTimer.cancel();
-        return;
-      }
-
-      if (isInZone) {
-        timeoutTimer.cancel();
+      timeoutTimer.cancel();
+      if (await widget.geolocation.isInZone()) {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const SetupTeamScreen()));
-      } else if (!isInZone) {
+      } else {
         final distance = await widget.geolocation.distanceToZone();
-        if (timedOut) {
-          timeoutTimer.cancel();
-          return;
-        }
-        showModalBottomText(
-          context,
-          "Hors de la zone",
-          "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'événement.\nUtilise la carte pour trouver la localisation de l'événement et te rendre au point de départ.",
-          showConfirmButton: true,
-        );
+        AppToast.showError(
+            "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'événement. Consulte la carte pour te rendre au point de départ.");
       }
     } catch (e) {
       if (!timedOut) {
@@ -182,37 +167,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     } catch (e) {
       AppToast.showError("Erreur de lancement de l'application de navigation: ${e.toString()}");
     }
-  }
-
-  void _showMapModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-      ),
-      builder: (_) => ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.60,
-          width: double.infinity,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.60,
-                    child: CardDynamicMap(geolocation: widget.geolocation),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -283,11 +237,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
             title: "Prépares-toi !",
             data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
             actionItems: [
-              ActionItem(
-                icon: SvgPicture.asset('assets/icons/map.svg', color: Colors.black87, width: 28, height: 28),
-                label: 'Carte',
-                onPressed: _showMapModal,
-              ),
               ActionItem(
                 icon: SvgPicture.asset('assets/icons/diamond-turn-right.svg',
                     color: Colors.black87, width: 28, height: 28),
