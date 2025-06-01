@@ -3,16 +3,16 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 class AppToast with WidgetsBindingObserver {
   static final AppToast _instance = AppToast._internal();
-
   factory AppToast() => _instance;
 
   AppToast._internal() {
     WidgetsBinding.instance.addObserver(this);
   }
 
-  static String? _lastMessage;
-  static Color? _lastBackgroundColor;
-  static Toast? _lastToastLength;
+  static String? _pendingMessage;
+  static Color _pendingColor = Colors.black;
+  static Toast _pendingLength = Toast.LENGTH_SHORT;
+  static bool _isAppInForeground = true;
 
   /// Show a green success toast
   static void showSuccess(String message) {
@@ -29,50 +29,42 @@ class AppToast with WidgetsBindingObserver {
     _show(message, backgroundColor: Colors.blue, toastLength: Toast.LENGTH_LONG);
   }
 
-  /// Internal toast logic
   static void _show(
     String message, {
     required Color backgroundColor,
     Toast toastLength = Toast.LENGTH_SHORT,
   }) {
-    // Cancel any existing toast
-    Fluttertoast.cancel();
+    _pendingMessage = message;
+    _pendingColor = backgroundColor;
+    _pendingLength = toastLength;
 
-    // Save details to show later if needed
-    _lastMessage = message;
-    _lastBackgroundColor = backgroundColor;
-    _lastToastLength = toastLength;
-
-    // Show the toast
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: toastLength,
-      gravity: ToastGravity.TOP,
-      timeInSecForIosWeb: toastLength == Toast.LENGTH_LONG ? 5 : 2,
-      backgroundColor: backgroundColor,
-      textColor: Colors.white,
-      fontSize: 16.0,
-    );
+    if (_isAppInForeground) {
+      _showPendingToast();
+    }
   }
 
-  /// Re-show the last toast (if any)
-  static void showLastToast() {
-    if (_lastMessage != null && _lastBackgroundColor != null && _lastToastLength != null) {
-      _show(
-        _lastMessage!,
-        backgroundColor: _lastBackgroundColor!,
-        toastLength: _lastToastLength!,
+  static void _showPendingToast() {
+    if (_pendingMessage != null) {
+      Fluttertoast.cancel();
+      Fluttertoast.showToast(
+        msg: _pendingMessage!,
+        toastLength: _pendingLength,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: _pendingLength == Toast.LENGTH_LONG ? 5 : 2,
+        backgroundColor: _pendingColor,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
+      _pendingMessage = null; // Ensure it's only shown once
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        // Give time for UI to settle before showing toast
-        showLastToast();
-      });
+    _isAppInForeground = state == AppLifecycleState.resumed;
+
+    if (_isAppInForeground && _pendingMessage != null) {
+      Future.delayed(const Duration(milliseconds: 300), _showPendingToast);
     }
   }
 
