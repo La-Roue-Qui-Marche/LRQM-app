@@ -142,7 +142,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
       if (!stopSuccess) {
         if (mounted) {
-          AppToast.showError("Impossible d'arrêter la mesure, on réessaie dans 10 secondes...");
+          AppToast.showError("Impossible d'arrêter la mesure, on réessaie...");
           await Future.delayed(const Duration(seconds: 10));
         }
       }
