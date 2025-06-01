@@ -32,15 +32,12 @@ class WorkingScreen extends StatefulWidget {
 class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProviderStateMixin {
   final _scrollController = ScrollController();
 
-  final _eventStatusNotifier = ValueNotifier<EventStatus>(EventStatus.inProgress);
-  final _isMeasureOngoingNotifier = ValueNotifier<bool>(false);
-  final _isCountingInZoneNotifier = ValueNotifier<bool>(true);
-
+  EventStatus _eventStatus = EventStatus.notStarted;
+  bool _isMeasureOngoing = false;
+  bool _isLoading = true;
   int _currentPage = 0;
-  bool _shouldShowEventModal = false;
   bool _showMainCards = true;
   Timer? _eventCheckTimer;
-  bool _isDisposed = false;
 
   late GeolocationController _geolocation;
 
@@ -48,30 +45,23 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   void initState() {
     super.initState();
     _initializeGeolocation();
-    _initializeState();
+    _initializeMeasureStatus();
+    _initializeEventStatus();
     _startEventStatusTimer();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_shouldShowEventModal) {
-      _shouldShowEventModal = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _showEventCompletionModal();
-      });
-    }
-  }
-
-  @override
   void dispose() {
-    _isDisposed = true;
     _eventCheckTimer?.cancel();
     _geolocation.stopListening();
-    _eventStatusNotifier.dispose();
-    _isMeasureOngoingNotifier.dispose();
-    _isCountingInZoneNotifier.dispose();
     super.dispose();
+  }
+
+  Future<void> _initializeMeasureStatus() async {
+    _isMeasureOngoing = await MeasureData.isMeasureOngoing();
+    if (_isMeasureOngoing) {
+      _geolocation.startListening();
+    }
   }
 
   void _initializeGeolocation() {
@@ -87,70 +77,78 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     );
   }
 
-  void _initializeState() {
-    _checkEventStatus();
-    _syncMeasureStatus();
+  Future<void> _initializeEventStatus() async {
+    _eventStatus = await EventData.getEventStatus();
+    if (_eventStatus == EventStatus.notStarted) {
+      AppToast.showInfo("L'événement n'a pas encore commencé.");
+    } else if (_eventStatus == EventStatus.over) {
+      AppToast.showInfo("L'événement est terminé.");
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void _startEventStatusTimer() {
-    _eventCheckTimer = Timer.periodic(Duration(seconds: 1), (_) {
-      if (!_isDisposed) _checkEventStatus();
+    _eventCheckTimer = Timer.periodic(Duration(seconds: 1), (_) async {
+      await _checkEventStatus();
+      await _checkMeasureStatus();
     });
   }
 
   Future<void> _checkEventStatus() async {
-    if (_isDisposed) return;
     final currentStatus = await EventData.getEventStatus();
-    final previousStatus = _eventStatusNotifier.value;
-    if (currentStatus == previousStatus) return;
+    if (currentStatus == _eventStatus) return;
 
-    _eventStatusNotifier.value = currentStatus;
-
-    if (previousStatus == EventStatus.notStarted && currentStatus == EventStatus.inProgress) {
-      _showEventStartedModal();
-    }
-    if (currentStatus == EventStatus.over && _isMeasureOngoingNotifier.value) {
-      _shouldShowEventModal = true;
+    if (currentStatus == EventStatus.over && _isMeasureOngoing) {
+      AppToast.showInfo("L'événement est terminé. Arrêt de la session en cours.");
       await _forceStopAndShowSummary();
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (currentStatus == EventStatus.notStarted && previousStatus != EventStatus.notStarted) {
-        _showEventNotStartedModal();
-      } else if (currentStatus == EventStatus.over && previousStatus != EventStatus.over) {
-        _showEventCompletionModal();
-      }
+    if (currentStatus == EventStatus.inProgress && _eventStatus == EventStatus.notStarted) {
+      AppToast.showInfo("L'événement a commencé! \n Tu peux maintenant enregistrer ta distance.");
+    }
+
+    setState(() {
+      _eventStatus = currentStatus; // Refresh the event status
     });
   }
 
-  Future<void> _syncMeasureStatus() async {
-    final ongoing = await MeasureData.isMeasureOngoing();
-    _isMeasureOngoingNotifier.value = ongoing;
-    if (ongoing) _geolocation.startListening();
+  Future<void> _checkMeasureStatus() async {
+    if (!_geolocation.isCountingInZone && _isMeasureOngoing) {
+      AppToast.showError("Tu es hors de la zone autorisée. Arrêt de la session en cours.");
+      await _forceStopAndShowSummary();
+    }
   }
 
   Future<void> _forceStopAndShowSummary() async {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => LoadingScreen(text: 'On se repose un peu...')));
+    _eventCheckTimer?.cancel();
+
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const LoadingScreen(text: 'On se repose un peu...')));
+
     int distance = 0, duration = 0;
     bool stopSuccess = false;
-    try {
-      distance = _geolocation.currentDistance;
-      duration = _geolocation.elapsedTimeInSeconds;
-      stopSuccess = await _geolocation.stopListening();
-    } catch (e) {
-      AppToast.showError("Erreur lors de l'arrêt de la mesure : $e");
+
+    while (!stopSuccess) {
+      try {
+        distance = _geolocation.currentDistance;
+        duration = _geolocation.elapsedTimeInSeconds;
+        stopSuccess = await _geolocation.stopListening();
+      } catch (e) {
+        AppToast.showError("Erreur lors de l'arrêt de la mesure : $e, ");
+      }
+
+      if (!stopSuccess) {
+        if (mounted) {
+          AppToast.showError("Impossible d'arrêter la mesure, on réessaie dans 10 secondes...");
+          await Future.delayed(const Duration(seconds: 10));
+        }
+      }
     }
 
-    if (!stopSuccess) {
-      if (mounted) {
-        AppToast.showError("Impossible d'arrêter la mesure, veuillez réessayer.");
-        Navigator.pop(context);
-      }
-      return;
-    } else {
-      AppToast.showSuccess("Mesure arrêtée et enregistrée !");
-    }
+    AppToast.showSuccess("Mesure arrêtée et enregistrée !");
 
     final contributors = await ContributorsData.getContributors() ?? 1;
     final goal = await EventData.getMetersGoal() ?? 1;
@@ -171,13 +169,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     );
   }
 
-  void _onStartStopPressed(EventStatus status, bool isOngoing) {
+  void _onStartStopPressed(bool isOngoing) {
     if (isOngoing) {
       _confirmStopMeasure();
-    } else if (status == EventStatus.notStarted) {
-      _showEventNotStartedModal();
-    } else if (status == EventStatus.over) {
-      _showEventCompletionModal();
     } else {
       _navigateToSetupScreen();
     }
@@ -207,7 +201,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       'Es-tu sûr de vouloir te déconnecter ?\n\nCela supprimera toutes les données locales et arrêtera toute mesure en cours.',
       showConfirmButton: true,
       onConfirm: () async {
-        _isDisposed = true; // Prevent further timer/event checks
         setState(() => _showMainCards = false);
         await Future.delayed(const Duration(milliseconds: 100));
 
@@ -221,7 +214,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
         await Future.delayed(const Duration(seconds: 2));
         if (await MeasureData.isMeasureOngoing()) {
-          await _geolocation.stopListening();
+          await _geolocation.forceStopListening();
         }
 
         final cleared = await UtilsData.deleteAllData();
@@ -254,25 +247,19 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     return Stack(
       children: [
         // Full screen map that fills the entire space
-        ValueListenableBuilder(
-          valueListenable: _isMeasureOngoingNotifier,
-          builder: (_, isOngoing, __) => Positioned.fill(
-            child: CardDynamicMap(
-              geolocation: _geolocation,
-              followUser: isOngoing,
-              fullScreen: true,
-            ),
+        Positioned.fill(
+          child: CardDynamicMap(
+            geolocation: _geolocation,
+            followUser: _isMeasureOngoing,
+            fullScreen: true,
           ),
         ),
 
         // PersonalInfoCard as a draggable bottom sheet
-        ValueListenableBuilder(
-          valueListenable: _isMeasureOngoingNotifier,
-          builder: (_, isOngoing, __) => CardPersonalInfo(
-            key: const ValueKey('personalInfoCard'),
-            isSessionActive: isOngoing,
-            geolocation: _geolocation,
-          ),
+        CardPersonalInfo(
+          key: const ValueKey('personalInfoCard'),
+          isSessionActive: _isMeasureOngoing,
+          geolocation: _geolocation,
         ),
       ],
     );
@@ -293,33 +280,21 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   }
 
   Widget _buildBottomNavigation() {
-    return ValueListenableBuilder<EventStatus>(
-      valueListenable: _eventStatusNotifier,
-      builder: (_, status, __) => ValueListenableBuilder<bool>(
-        valueListenable: _isMeasureOngoingNotifier,
-        builder: (_, isOngoing, __) => AppNavBar(
-          currentPage: _currentPage,
-          onPageSelected: (int page) => setState(() => _currentPage = page),
-          isMeasureActive: isOngoing,
-          canStartNewSession: status == EventStatus.inProgress,
-          onStartStopPressed: () => _onStartStopPressed(status, isOngoing),
-        ),
-      ),
+    return AppNavBar(
+      currentPage: _currentPage,
+      onPageSelected: (int page) => setState(() => _currentPage = page),
+      isMeasureActive: _isMeasureOngoing,
+      canStartNewSession: _eventStatus == EventStatus.inProgress,
+      onStartStopPressed: () => _onStartStopPressed(_isMeasureOngoing),
     );
   }
 
-  void _showEventCompletionModal() => showModalBottomText(context, 'L\'Évènement est Terminé !',
-      "Merci pour ta participation !\n N'hésites pas à prendre une capture d'écran de ta contribution",
-      showConfirmButton: true);
-  void _showEventNotStartedModal() => showModalBottomText(
-      context, 'L\'Évènement n\'a pas Commencé', "Tu pourras démarrer une mesure dès le début de l'évènement.",
-      showConfirmButton: true);
-  void _showEventStartedModal() => showModalBottomText(context, 'L\'Évènement a Commencé !',
-      "Tu peux maintenant démarrer une session pour enregistrer ta contribution à l'évènement.",
-      showConfirmButton: true);
-
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return LoadingScreen();
+    }
+
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),
       child: PopScope(

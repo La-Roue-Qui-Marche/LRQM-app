@@ -31,7 +31,7 @@ class GeolocationConfig {
     this.accuracyThreshold = 20,
     this.distanceThreshold = 50,
     this.speedThreshold = 10,
-    this.outsideCounterMax = 10,
+    this.outsideCounterMax = 5,
     this.notificationTitle = "La RQM Background Tracking",
     this.notificationText = "Tracking in progress...",
     this.notificationIconName = 'launcher_icon',
@@ -46,8 +46,6 @@ class GeolocationController with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _initZone();
   }
-
-  Map<String, int>? lastEvent;
 
   late geo.LocationSettings _settings;
   geo.Position? _oldPos;
@@ -79,6 +77,8 @@ class GeolocationController with WidgetsBindingObserver {
     }
     return _accumulatedActiveDuration.inSeconds;
   }
+
+  bool get isCountingInZone => _isCountingInZone;
 
   Future<void> _initZone() async {
     _zonePoints = await EventData.getSiteCoordLatLngList();
@@ -125,46 +125,30 @@ class GeolocationController with WidgetsBindingObserver {
     LogHelper.staticLogInfo("[GEO] Starting geolocation...");
 
     await MeasureData.clearMeasurePoints();
-
     if (_positionStreamStarted || !(await PermissionHelper.isProperLocationPermissionGranted())) {
       LogHelper.staticLogError("Permission not granted or already started.");
       _streamController.sink.add({"time": -1, "distance": -1});
       return;
     }
-
     _positionStreamStarted = true;
     _distance = 0;
     _outsideCounter = 0;
     _accumulatedActiveDuration = Duration.zero;
     _lastActiveTimestamp = DateTime.now();
-
-    lastEvent = {
-      "time": 0,
-      "distance": 0,
-      "isCountingInZone": 1,
-      "speed": 0,
-    };
-
     _oldPos = await geo.Geolocator.getCurrentPosition();
     _resetPosition = false;
-
     _startPositionStream();
-
     _apiTimer = Timer.periodic(config.apiInterval, (_) {
       _sendCurrentDistance();
     });
-
     _streamTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_streamController.isClosed) {
         _streamController.sink.add({
           "time": elapsedTimeInSeconds,
           "distance": _distance,
-          "isCountingInZone": _isCountingInZone ? 1 : 0,
-          "speed": _oldPos != null ? 0 : 0,
         });
       }
     });
-
     LogHelper.staticLogInfo("[GEO] Geolocation started.");
   }
 
@@ -198,12 +182,6 @@ class GeolocationController with WidgetsBindingObserver {
       LogHelper.staticLogInfo("[GEO] First update or reset position. Acc=\${acc.toStringAsFixed(1)}m");
       _saveOldPos(lat, lng, acc, timestamp);
       _resetPosition = false;
-      _streamController.sink.add({
-        "time": elapsedTimeInSeconds,
-        "distance": _distance,
-        "isCountingInZone": _isCountingInZone ? 1 : 0,
-        "speed": 0,
-      });
       return;
     }
 
@@ -218,30 +196,7 @@ class GeolocationController with WidgetsBindingObserver {
     }
 
     final inZone = await isLocationInZone(lat, lng);
-    if (inZone) {
-      if (!_isCountingInZone) {
-        LogHelper.staticLogInfo("[ZONE] Re-entered zone.");
-        _lastActiveTimestamp = DateTime.now();
-      }
-      _outsideCounter = 0;
-      _isCountingInZone = true;
-      _distance += dist;
-    } else {
-      _outsideCounter++;
-      if (_outsideCounter > config.outsideCounterMax) {
-        if (_isCountingInZone) {
-          LogHelper.staticLogError("[ZONE] Outside too long, pausing count.");
-          if (_lastActiveTimestamp != null) {
-            _accumulatedActiveDuration += DateTime.now().difference(_lastActiveTimestamp!);
-          }
-        }
-        _isCountingInZone = false;
-        _saveOldPos(lat, lng, acc, timestamp);
-        return;
-      } else {
-        _distance += dist;
-      }
-    }
+    _handleZoneLogic(inZone, dist);
 
     await MeasureData.addMeasurePoint(
       distance: _distance.toDouble(),
@@ -253,18 +208,23 @@ class GeolocationController with WidgetsBindingObserver {
       duration: elapsedTimeInSeconds,
     );
 
-    lastEvent = {
-      "time": elapsedTimeInSeconds,
-      "distance": _distance,
-      "isCountingInZone": _isCountingInZone ? 1 : 0,
-      "speed": speed.toInt(),
-    };
-
-    if (!_streamController.isClosed) {
-      _streamController.sink.add(lastEvent!);
-    }
-
     _saveOldPos(lat, lng, acc, timestamp);
+  }
+
+  void _handleZoneLogic(bool inZone, int dist) {
+    if (inZone) {
+      _outsideCounter = 0;
+      _isCountingInZone = true;
+      _distance += dist;
+    } else {
+      if (_outsideCounter <= config.outsideCounterMax) {
+        _outsideCounter++;
+        _distance += dist;
+      } else {
+        _isCountingInZone = false;
+        // Do not accumulate duration or change timestamps, just set flag
+      }
+    }
   }
 
   void _saveOldPos(double lat, double lng, double acc, DateTime timestamp) {
@@ -323,7 +283,6 @@ class GeolocationController with WidgetsBindingObserver {
       LogHelper.staticLogError("[GEO] Error during sending final distance: $e");
       return false;
     }
-
     try {
       final result = await MeasureController.stopMeasure();
       if (result.value != true) {
@@ -335,22 +294,38 @@ class GeolocationController with WidgetsBindingObserver {
       LogHelper.staticLogError("[GEO] Error during stopMeasure: $e");
       return false;
     }
+    await _cleanupResources();
+    return true;
+  }
 
+  Future<void> forceStopListening() async {
+    LogHelper.staticLogInfo("[GEO] Force stopping geolocation...");
+    try {
+      await _sendFinalDistance();
+    } catch (e) {
+      LogHelper.staticLogError("[GEO] Error during sending final distance: $e");
+    }
+    try {
+      await MeasureController.stopMeasure();
+    } catch (e) {
+      LogHelper.staticLogError("[GEO] Error during stopMeasure: $e");
+    }
+    await _cleanupResources();
+    LogHelper.staticLogInfo("[GEO] Force stop completed.");
+  }
+
+  Future<void> _cleanupResources() async {
     _positionStreamStarted = false;
     try {
       await _positionStream?.cancel();
       _apiTimer?.cancel();
       _streamTimer?.cancel();
-
       if (!_streamController.isClosed) {
         await _streamController.close();
       }
-
       await bg.BackgroundLocation.stopLocationService();
-      return true;
     } catch (e) {
       LogHelper.staticLogError("[GEO] Error during cleanup: $e");
-      return false;
     }
   }
 

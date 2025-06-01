@@ -41,9 +41,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(true);
 
-  // Internal state for zone as ValueNotifiers
-  final ValueNotifier<bool> _isCountingInZoneNotifier = ValueNotifier<bool>(true);
-
   // Sheet expansion controller
   final ValueNotifier<bool> _isExpandedNotifier = ValueNotifier<bool>(false);
   late AnimationController _animationController;
@@ -60,13 +57,16 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
   StreamSubscription? _geoSubscription;
   StreamSubscription? _zoneSubscription;
 
+  final ValueNotifier<bool> _isInZoneNotifier = ValueNotifier<bool>(true);
+  Timer? _zoneCheckTimer;
+
   @override
   void initState() {
     super.initState();
     _currentContributionNotifier.value = 0;
     _loadUserData();
     _setupGeolocationListener();
-    _listenCountingInZone();
+    _startZoneCheckTimer();
 
     // Initialize animation controller for expanding/collapsing with shorter duration for iOS-like snappiness
     _animationController = AnimationController(
@@ -90,6 +90,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     _animationController.removeStatusListener(_animationStatusListener);
     _geoSubscription?.cancel();
     _zoneSubscription?.cancel();
+    _zoneCheckTimer?.cancel();
     // Dispose all ValueNotifiers
     _currentContributionNotifier.dispose();
     _bibNumberNotifier.dispose();
@@ -99,7 +100,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     _sessionDistanceNotifier.dispose();
     _sessionTimeNotifier.dispose();
     _isLoadingNotifier.dispose();
-    _isCountingInZoneNotifier.dispose();
     _isExpandedNotifier.dispose();
     _animationController.dispose();
     super.dispose();
@@ -146,17 +146,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     }
   }
 
-  void _listenCountingInZone() {
-    if (widget.geolocation != null) {
-      _zoneSubscription = widget.geolocation!.stream.listen((event) {
-        final inZone = (event["isCountingInZone"] as num?)?.toInt() == 1;
-        if (_isCountingInZoneNotifier.value != inZone) {
-          _isCountingInZoneNotifier.value = inZone;
-        }
-      });
-    }
-  }
-
   void _setupGeolocationListener() {
     _geoSubscription?.cancel();
 
@@ -179,7 +168,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       _geoSubscription?.cancel();
       _zoneSubscription?.cancel();
       _setupGeolocationListener();
-      _listenCountingInZone();
     }
   }
 
@@ -235,9 +223,17 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     _dragDistance = 0;
   }
 
+  void _startZoneCheckTimer() {
+    _zoneCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (widget.geolocation != null) {
+        final isInZone = await widget.geolocation!.isInZone();
+        _isInZoneNotifier.value = isInZone;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Always use the bottom sheet implementation
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
       child: AnimatedBuilder(
@@ -249,178 +245,162 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
           return Align(
             alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              height: height,
-              width: double.infinity,
-              // Remove Stack, just use the sheet
-              child: _buildDraggableBottomSheet(),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDraggableBottomSheet() {
-    return GestureDetector(
-      onVerticalDragStart: _onDragStart,
-      onVerticalDragUpdate: _onDragUpdate,
-      onVerticalDragEnd: _onDragEnd,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Drag handle with reduced padding
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+            child: GestureDetector(
+              onVerticalDragStart: _onDragStart,
+              onVerticalDragUpdate: _onDragUpdate,
+              onVerticalDragEnd: _onDragEnd,
+              child: Container(
+                height: height,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            // Add title with reduced top padding
-            Padding(
-              padding: const EdgeInsets.only(left: 24, right: 24, top: 0, bottom: 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Bib badge first
-                  ValueListenableBuilder<String>(
-                    valueListenable: _bibNumberNotifier,
-                    builder: (context, bibNumber, _) {
-                      if (bibNumber.isEmpty) return SizedBox(width: 0);
-                      return Container(
-                        margin: const EdgeInsets.only(right: 10),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Color(Config.accentColor).withOpacity(0.7),
-                            width: 1.2,
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        child: Row(
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 24, right: 24, top: 0, bottom: 0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          ValueListenableBuilder<String>(
+                            valueListenable: _bibNumberNotifier,
+                            builder: (context, bibNumber, _) {
+                              if (bibNumber.isEmpty) return SizedBox(width: 0);
+                              return Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Color(Config.accentColor).withOpacity(0.7),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      "N°$bibNumber",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(Config.accentColor),
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          Expanded(
+                            child: Container(
+                              alignment: Alignment.centerLeft,
+                              child: ValueListenableBuilder<String>(
+                                valueListenable: _userNameNotifier,
+                                builder: (context, userName, _) {
+                                  final hasName = userName.isNotEmpty;
+                                  if (!hasName) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return MediaQuery(
+                                    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                                    child: Text(
+                                      userName,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          _statusBadge(),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              "N°$bibNumber",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(Config.accentColor),
-                                letterSpacing: 0.2,
-                              ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                              child: _buildInfoCards(),
+                            ),
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: _buildFunMessage(),
+                                  ),
+                                ),
+                                if (widget.isSessionActive)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                                    child: ContributionGraph(geolocation: widget.geolocation),
+                                  ),
+                                if (!widget.isSessionActive)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 16),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          "Appuie sur le bouton orange pour démarrer une session",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Color(Config.accentColor),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        _AnimatedDownArrow(),
+                                      ],
+                                    ),
+                                  ),
+                              ],
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
-                  // Username (center, expanded)
-                  Expanded(
-                    child: Container(
-                      alignment: Alignment.centerLeft,
-                      child: ValueListenableBuilder<String>(
-                        valueListenable: _userNameNotifier,
-                        builder: (context, userName, _) {
-                          final hasName = userName.isNotEmpty;
-                          if (!hasName) {
-                            return const SizedBox.shrink();
-                          }
-                          return MediaQuery(
-                            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-                            child: Text(
-                              userName,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          );
-                        },
                       ),
-                    ),
-                  ),
-                  // Status badge (right)
-                  _statusBadge(),
-                ],
-              ),
-            ),
-            // Scrollable content area
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Info cards with distance at the top - no padding
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                      child: _buildInfoCards(),
-                    ),
-                    // Always build additional content, it will be hidden when collapsed
-                    Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: _buildFunMessage(),
-                          ),
-                        ),
-                        if (widget.isSessionActive)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                            child: ContributionGraph(geolocation: widget.geolocation),
-                          ),
-                        // Add message and animated arrow if session is not active
-                        if (!widget.isSessionActive)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 16),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Appuie sur le bouton orange pour démarrer une session",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color(Config.accentColor),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12),
-                                _AnimatedDownArrow(),
-                              ],
-                            ),
-                          ),
-                      ],
                     ),
                   ],
                 ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -579,8 +559,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
   Widget _statusBadge() {
     return ValueListenableBuilder<bool>(
-      valueListenable: _isCountingInZoneNotifier,
-      builder: (context, isCountingInZone, _) {
+      valueListenable: _isInZoneNotifier,
+      builder: (context, isInZone, _) {
         String statusText;
         Color badgeColor;
         Color textColor;
@@ -588,14 +568,14 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
         Color iconColor;
         Color borderColor;
 
-        if (!widget.isSessionActive) {
+        if (!widget.isSessionActive && isInZone) {
           statusText = 'En pause';
           badgeColor = Colors.grey.shade200;
           textColor = Colors.black87;
           icon = Icons.pause_circle_filled_rounded;
           iconColor = Colors.grey.shade500;
           borderColor = Colors.grey.shade400.withOpacity(0.4);
-        } else if (!isCountingInZone) {
+        } else if (!isInZone) {
           statusText = 'Hors Zone';
           badgeColor = Colors.red.shade50;
           textColor = Colors.red.shade700;

@@ -10,12 +10,16 @@ class AppToast {
     _show(message, backgroundColor: Colors.red);
   }
 
-  static void _show(String message, {required Color backgroundColor}) {
+  static void showInfo(String message) {
+    _show(message, backgroundColor: Colors.blue, toastLength: Toast.LENGTH_LONG);
+  }
+
+  static void _show(String message, {required Color backgroundColor, Toast toastLength = Toast.LENGTH_SHORT}) {
     Fluttertoast.cancel(); // reset last toast
 
     Fluttertoast.showToast(
       msg: message,
-      toastLength: Toast.LENGTH_SHORT,
+      toastLength: toastLength,
       gravity: ToastGravity.TOP,
       timeInSecForIosWeb: 2,
       backgroundColor: backgroundColor,
