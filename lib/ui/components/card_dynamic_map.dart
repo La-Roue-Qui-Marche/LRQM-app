@@ -544,40 +544,15 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                     ],
                   ),
                   const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-
-        // --- Map credits centered top ---
-        if (!_showLegend)
-          Positioned(
-            top: 10,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.55),
-                  borderRadius: BorderRadius.circular(6),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 2,
-                      offset: Offset(0, 1),
+                  Text(
+                    _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w400,
                     ),
-                  ],
-                ),
-                child: Text(
-                  _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.black38,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.1,
                   ),
-                ),
+                ],
               ),
             ),
           ),
