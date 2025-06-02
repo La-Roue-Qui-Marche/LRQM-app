@@ -200,16 +200,16 @@ class GeolocationController with WidgetsBindingObserver {
     final speedDiff = (filteredPosition['speed']! - rawSpeed).abs();
     final distDiff = (dist - rawDist).abs();
 
-    return """[GEO] Position update comparison:
-      Time: $elapsedTime s
-      GPS Accuracy: ${rawAccuracy.toStringAsFixed(1)}m
-      Filter Uncertainty: ${filteredPosition['uncertainty']!.toStringAsFixed(1)}m)
-      Confidence: ${filteredPosition['confidence']!.toStringAsFixed(2)}
-      Speed: ${filteredPosition['speed']!.toStringAsFixed(1)} m/s (raw: ${rawSpeed.toStringAsFixed(1)}, Δ: ${speedDiff.toStringAsFixed(1)})
-      Distance: $dist m (raw: $rawDist, Δ: $distDiff)
-      Timestamp: ${timestamp.toIso8601String()}
-      lat: ${filteredPosition['latitude']!.toStringAsFixed(6)} (raw: ${lat.toStringAsFixed(6)}, Δ: ${latDiff.toStringAsFixed(6)})
-      lon: ${filteredPosition['longitude']!.toStringAsFixed(6)} (raw: ${lng.toStringAsFixed(6)}, Δ: ${lngDiff.toStringAsFixed(6)})""";
+    return """[GEO] Position update:
+    Time: $elapsedTime s
+    GPS Accuracy: ${rawAccuracy.toStringAsFixed(1)}m
+    Filter Uncertainty: ${filteredPosition['uncertainty']!.toStringAsFixed(1)}m
+    Confidence: ${filteredPosition['confidence']!.toStringAsFixed(2)}
+    Speed: ${filteredPosition['speed']!.toStringAsFixed(1)} m/s (raw: ${rawSpeed.toStringAsFixed(1)}, Δ: ${speedDiff.toStringAsFixed(1)})
+    Distance: $dist m (raw: $rawDist, Δ: $distDiff)
+    Timestamp: ${timestamp.toIso8601String()}
+    lat: ${filteredPosition['latitude']!.toStringAsFixed(6)} (raw: ${lat.toStringAsFixed(6)}, Δ: ${latDiff.toStringAsFixed(6)})
+    lon: ${filteredPosition['longitude']!.toStringAsFixed(6)} (raw: ${lng.toStringAsFixed(6)}, Δ: ${lngDiff.toStringAsFixed(6)})""";
   }
 
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {

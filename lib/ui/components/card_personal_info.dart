@@ -230,9 +230,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       if (widget.geolocation != null) {
         final isInZone = await widget.geolocation!.isInZone();
         _isInZoneNotifier.value = isInZone;
-        LogHelper.staticLogInfo("[PersonalInfoCard] isInZone: $isInZone");
       } else {
-        LogHelper.staticLogInfo("[PersonalInfoCard] geolocation is null");
+        LogHelper.staticLogWarn("[PersonalInfoCard] geolocation is null");
       }
     });
   }
