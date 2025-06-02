@@ -229,6 +229,26 @@ class _LoginState extends State<Login> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        if (_eventName != null && !_isOfficialEvent) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: const Text(
+                              "⚠️ Ceci n'est pas l'évènement officiel de La Roue Qui Marche 2025",
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 24),
                         if (_eventName != null)
                           const Padding(
@@ -293,26 +313,6 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        if (_eventName != null && !_isOfficialEvent) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.orange),
-                            ),
-                            child: const Text(
-                              "⚠️ Ceci n'est pas l'évènement officiel de La Roue Qui Marche 2025",
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
                         FutureBuilder<String>(
                           future: Config.getAppVersion(),
                           builder: (context, snapshot) {
