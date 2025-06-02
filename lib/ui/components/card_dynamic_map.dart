@@ -43,6 +43,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   _MapBaseType _mapBaseType = _MapBaseType.voyager;
 
   AnimationController? _moveAnimController;
+  double? _userSetZoom;
 
   @override
   void initState() {
@@ -106,11 +107,16 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
 
   void _centerOnUser() {
     if (_currentLatLng == null || !_isMapReady) return;
-    const double followZoomLevel = 14.6;
     try {
-      // Offset the user marker 100px below the center of the map
-      final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), followZoomLevel);
-      _animatedMove(offsetLatLng, followZoomLevel);
+      double targetZoom;
+      if (_userSetZoom != null) {
+        targetZoom = _userSetZoom!;
+      } else {
+        targetZoom = 15;
+      }
+
+      final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), targetZoom);
+      _animatedMove(offsetLatLng, targetZoom);
     } catch (_) {}
   }
 
@@ -329,6 +335,11 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                 });
               }
             },
+            onMapEvent: (MapEvent event) {
+              if (event is MapEventMove && _followUserMode) {
+                _userSetZoom = event.camera.zoom;
+              }
+            },
           ),
           children: [
             TileLayer(
@@ -428,14 +439,15 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               ),
               const SizedBox(height: 14),
               _modernMapButton(
-                icon: Icons.navigation,
-                iconColor: _followUserMode ? styles.userColor : Colors.black87,
+                icon: _followUserMode ? Icons.navigation : Icons.navigation_outlined,
+                iconColor: _followUserMode ? styles.userColor : styles.userColor,
                 onTap: () {
                   setState(() {
                     _followUserMode = !_followUserMode;
                     if (_followUserMode) {
                       _centerOnUser();
                     } else {
+                      _userSetZoom = null;
                       _fitMapBounds();
                     }
                   });
@@ -567,6 +579,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     VoidCallback? onTap,
     String? tooltip,
     Color iconColor = Colors.black87,
+    BoxDecoration? decoration,
   }) {
     return Material(
       color: Colors.transparent,
@@ -577,14 +590,15 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
         child: Container(
           width: 54,
           height: 54,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(1),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.grey.withOpacity(0.18),
-              width: 1.2,
-            ),
-          ),
+          decoration: decoration ??
+              BoxDecoration(
+                color: Colors.white.withOpacity(1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.18),
+                  width: 1.2,
+                ),
+              ),
           padding: const EdgeInsets.all(0),
           alignment: Alignment.center,
           child: Icon(

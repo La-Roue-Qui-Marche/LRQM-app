@@ -225,11 +225,14 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
   }
 
   void _startZoneCheckTimer() {
-    _zoneCheckTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+    _zoneCheckTimer?.cancel();
+    _zoneCheckTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
       if (widget.geolocation != null) {
         final isInZone = await widget.geolocation!.isInZone();
         _isInZoneNotifier.value = isInZone;
         LogHelper.staticLogInfo("[PersonalInfoCard] isInZone: $isInZone");
+      } else {
+        LogHelper.staticLogInfo("[PersonalInfoCard] geolocation is null");
       }
     });
   }
