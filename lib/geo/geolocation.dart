@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart' as geo;
@@ -10,6 +11,7 @@ import 'package:lrqm/utils/log_helper.dart';
 import 'package:lrqm/utils/permission_helper.dart';
 import 'package:lrqm/data/event_data.dart';
 import 'package:lrqm/data/measure_data.dart';
+import 'package:lrqm/geo/kalman_simple.dart';
 
 class GeolocationConfig {
   final int locationDistanceFilter;
@@ -43,11 +45,14 @@ class GeolocationController with WidgetsBindingObserver {
   final GeolocationConfig config;
   GeolocationController({required this.config}) {
     _settings = _getSettings();
+    _kalmanFilter = SimpleLocationKalmanFilter(
+        initialLat: 0.0, initialLng: 0.0); // Initialize with dummy values, will be reset on first position
     WidgetsBinding.instance.addObserver(this);
     _initZone();
   }
 
   late geo.LocationSettings _settings;
+  late SimpleLocationKalmanFilter _kalmanFilter;
   geo.Position? _oldPos;
   StreamSubscription<geo.Position>? _positionStream;
   Timer? _apiTimer;
@@ -135,7 +140,9 @@ class GeolocationController with WidgetsBindingObserver {
     _outsideCounter = 0;
     _accumulatedActiveDuration = Duration.zero;
     _lastActiveTimestamp = DateTime.now();
-    _oldPos = await geo.Geolocator.getCurrentPosition();
+    final initialPos = await geo.Geolocator.getCurrentPosition();
+    _kalmanFilter = SimpleLocationKalmanFilter(initialLat: initialPos.latitude, initialLng: initialPos.longitude);
+    _oldPos = initialPos;
     _resetPosition = false;
     _startPositionStream();
     _apiTimer = Timer.periodic(config.apiInterval, (_) {
@@ -177,38 +184,81 @@ class GeolocationController with WidgetsBindingObserver {
     );
   }
 
+  String _formatPositionComparison({
+    required int elapsedTime,
+    required Map<String, double> filteredPosition,
+    required double lat,
+    required double lng,
+    required double rawSpeed,
+    required double rawAccuracy,
+    required int dist,
+    required int rawDist,
+    required DateTime timestamp,
+  }) {
+    final latDiff = (filteredPosition['latitude']! - lat).abs();
+    final lngDiff = (filteredPosition['longitude']! - lng).abs();
+    final speedDiff = (filteredPosition['speed']! - rawSpeed).abs();
+    final distDiff = (dist - rawDist).abs();
+
+    return """[GEO] Position update comparison:
+      Time: $elapsedTime s
+      GPS Accuracy: ${rawAccuracy.toStringAsFixed(1)}m
+      Filter Uncertainty: ${filteredPosition['uncertainty']!.toStringAsFixed(1)}m)
+      Confidence: ${filteredPosition['confidence']!.toStringAsFixed(2)}
+      Speed: ${filteredPosition['speed']!.toStringAsFixed(1)} m/s (raw: ${rawSpeed.toStringAsFixed(1)}, Δ: ${speedDiff.toStringAsFixed(1)})
+      Distance: $dist m (raw: $rawDist, Δ: $distDiff)
+      Timestamp: ${timestamp.toIso8601String()}
+      lat: ${filteredPosition['latitude']!.toStringAsFixed(6)} (raw: ${lat.toStringAsFixed(6)}, Δ: ${latDiff.toStringAsFixed(6)})
+      lon: ${filteredPosition['longitude']!.toStringAsFixed(6)} (raw: ${lng.toStringAsFixed(6)}, Δ: ${lngDiff.toStringAsFixed(6)})""";
+  }
+
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
     if (_resetPosition || _oldPos == null) {
-      LogHelper.staticLogInfo("[GEO] First update or reset position. Acc=\${acc.toStringAsFixed(1)}m");
+      LogHelper.staticLogInfo("[GEO] First update or reset position. Acc=${acc.toStringAsFixed(1)}m");
       _saveOldPos(lat, lng, acc, timestamp);
       _resetPosition = false;
       return;
-    }
+    } // Update Kalman filter with the new measurement
+    final filteredPosition = _kalmanFilter.update(lat, lng, acc, timestamp.millisecondsSinceEpoch / 1000.0);
 
-    final dist = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng).round();
-    final timeDiff = timestamp.difference(_oldPos!.timestamp).inSeconds;
-    final speed = timeDiff > 0 ? dist / timeDiff : 0;
+    // Calculate distance using filtered position
+    final dist = geo.Geolocator.distanceBetween(
+            _oldPos!.latitude, _oldPos!.longitude, filteredPosition['latitude']!, filteredPosition['longitude']!)
+        .round();
 
-    if (acc > config.accuracyThreshold || dist > config.distanceThreshold || speed > config.speedThreshold) {
-      LogHelper.staticLogWarn("[GEO] Filtered point. acc=$acc, dist=$dist, speed=$speed");
-      _saveOldPos(lat, lng, acc, timestamp);
-      return;
-    }
+    final inZone = await isLocationInZone(filteredPosition['latitude']!, filteredPosition['longitude']!);
+    _handleZoneLogic(inZone, dist); // Calculate raw distance and speed from unfiltered positions
+    final rawDist = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng).round();
+    final rawSpeed = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng) /
+        (timestamp.difference(_oldPos!.timestamp).inMilliseconds / 1000);
 
-    final inZone = await isLocationInZone(lat, lng);
-    _handleZoneLogic(inZone, dist);
-
-    await MeasureData.addMeasurePoint(
-      distance: _distance.toDouble(),
-      speed: speed.toDouble(),
-      acc: acc.toDouble(),
-      timestamp: timestamp,
+    // Log position comparison with accuracy
+    LogHelper.staticLogInfo(_formatPositionComparison(
+      elapsedTime: elapsedTimeInSeconds,
+      filteredPosition: filteredPosition,
       lat: lat,
       lng: lng,
+      rawSpeed: rawSpeed,
+      rawAccuracy: acc,
+      dist: dist,
+      rawDist: rawDist,
+      timestamp: timestamp,
+    ));
+
+    // Save measurement data
+    await MeasureData.addMeasurePoint(
+      distance: _distance.toDouble(),
+      speed: filteredPosition['speed']!,
+      acc: filteredPosition['uncertainty']!,
+      timestamp: timestamp,
+      lat: filteredPosition['latitude']!,
+      lng: filteredPosition['longitude']!,
       duration: elapsedTimeInSeconds,
     );
 
-    _saveOldPos(lat, lng, acc, timestamp);
+    // Update last known position
+    _saveOldPos(
+        filteredPosition['latitude']!, filteredPosition['longitude']!, filteredPosition['uncertainty']!, timestamp);
   }
 
   void _handleZoneLogic(bool inZone, int dist) {

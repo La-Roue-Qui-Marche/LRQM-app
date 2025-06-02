@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 import 'package:lrqm/data/management_data.dart';
-import 'package:lrqm/utils/log_helper.dart';
 
 /// Class to manage measure-related data.
 class MeasureData {
@@ -41,10 +40,6 @@ class MeasureData {
       'lng': lng,
       'duration': duration,
     };
-
-    // Log the point details
-    LogHelper.staticLogInfo(
-        "[MEASURE] Added point: distance=${distance.toStringAsFixed(2)}m, speed=${speed.toStringAsFixed(2)}m/s, accuracy=${acc.toStringAsFixed(2)}m, lat=${lat.toStringAsFixed(6)}, lng=${lng.toStringAsFixed(6)}, duration=${duration}s, timestamp=${timestamp.toString()}");
 
     points.add(pointData);
     await _managementData.saveString(key, jsonEncode(points));
