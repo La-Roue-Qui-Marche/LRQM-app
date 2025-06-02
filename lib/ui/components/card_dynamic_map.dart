@@ -106,7 +106,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
 
   void _centerOnUser() {
     if (_currentLatLng == null || !_isMapReady) return;
-    const double followZoomLevel = 17.5;
+    const double followZoomLevel = 14.6;
     try {
       // Offset the user marker 100px below the center of the map
       final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), followZoomLevel);
@@ -313,9 +313,10 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           options: MapOptions(
             initialCenter: LatLng(userLat, userLon),
             initialZoom: 6.0,
-            // Block map rotation by removing InteractiveFlag.rotate
             interactionOptions: InteractionOptions(
-              flags: _followUserMode ? (InteractiveFlag.none) : (InteractiveFlag.all & ~InteractiveFlag.rotate),
+              flags: _followUserMode
+                  ? InteractiveFlag.pinchZoom | InteractiveFlag.scrollWheelZoom
+                  : (InteractiveFlag.all & ~InteractiveFlag.rotate),
             ),
             onMapReady: () {
               _isMapReady = true;
