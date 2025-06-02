@@ -30,6 +30,8 @@ class _LoginState extends State<Login> {
   String? _eventName;
   List<dynamic> _events = [];
   dynamic _selectedEvent;
+  int _logoTapCount = 0;
+  bool _isOfficialEvent = false;
 
   @override
   void initState() {
@@ -63,15 +65,23 @@ class _LoginState extends State<Login> {
 
     setState(() => _events = _events);
 
-    if (_events.length == 1) {
-      _handleEventSelected(_events.first);
+    // Try to find "la roue qui marche 2025"
+    final defaultEvent = _events.firstWhere(
+      (e) => e['name'].toString().toLowerCase().contains('la roue qui marche 2025'),
+      orElse: () => null,
+    );
+
+    if (defaultEvent != null) {
+      _handleEventSelected(defaultEvent);
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _showEventSelectionModal());
+      // If default event not found, show selection modal
+      _showEventSelectionModal();
     }
   }
 
   Future<void> _handleEventSelected(dynamic event) async {
     _selectedEvent = event;
+    _isOfficialEvent = event['name'].toString().toLowerCase().contains('la roue qui marche 2025');
     await EventData.saveEvent(event);
     _loadSavedEvent();
     setState(() => _isEventActive = true);
@@ -163,6 +173,14 @@ class _LoginState extends State<Login> {
     }
   }
 
+  void _handleLogoTap() {
+    _logoTapCount++;
+    if (_logoTapCount >= 5) {
+      _logoTapCount = 0;
+      _showEventSelectionModal();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isEventActive) return const LoadingScreen();
@@ -202,10 +220,13 @@ class _LoginState extends State<Login> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 10),
-                        const Center(
-                          child: Image(
-                            image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
-                            height: 100,
+                        Center(
+                          child: GestureDetector(
+                            onTap: _handleLogoTap,
+                            child: const Image(
+                              image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
+                              height: 100,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -272,6 +293,26 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        if (_eventName != null && !_isOfficialEvent) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: const Text(
+                              "⚠️ Ceci n'est pas l'évènement officiel de La Roue Qui Marche 2025",
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         FutureBuilder<String>(
                           future: Config.getAppVersion(),
                           builder: (context, snapshot) {
