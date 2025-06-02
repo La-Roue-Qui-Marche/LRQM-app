@@ -10,6 +10,7 @@ import 'package:lrqm/geo/geolocation.dart';
 import 'package:lrqm/data/user_data.dart';
 import 'package:lrqm/api/user_controller.dart';
 import 'package:lrqm/ui/components/contribution_graph.dart';
+import 'package:lrqm/utils/log_helper.dart';
 
 class CardPersonalInfo extends StatefulWidget {
   final bool isSessionActive;
@@ -228,6 +229,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
       if (widget.geolocation != null) {
         final isInZone = await widget.geolocation!.isInZone();
         _isInZoneNotifier.value = isInZone;
+        LogHelper.staticLogInfo("[PersonalInfoCard] isInZone: $isInZone");
       }
     });
   }
