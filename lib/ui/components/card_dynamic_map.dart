@@ -36,7 +36,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   bool _showLegend = false;
   bool _followUserMode = false;
   bool _initialFitDone = false;
-  bool _enableZoomAnimation = true;
+  final bool _enableZoomAnimation = true;
 
   List<LatLng> _zonePoints = [];
   LatLng? _meetingPoint;
