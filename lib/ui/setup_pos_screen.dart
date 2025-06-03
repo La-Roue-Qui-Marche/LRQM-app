@@ -84,17 +84,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   Future<void> _navigateToSetupTeamScreen() async {
     setState(() => _isLoading = true);
 
-    // Use a Timer to allow cancellation
-    bool timedOut = false;
-    Timer? timeoutTimer;
-    timeoutTimer = Timer(const Duration(seconds: 10), () {
-      if (_isLoading) {
-        setState(() => _isLoading = false);
-        timedOut = true;
-        AppToast.showError("Temps de chargement dépassé. Veuillez réessayer.");
-      }
-    });
-
     try {
       final granted = await PermissionHelper.isProperLocationPermissionGranted();
       if (!granted) {
@@ -111,11 +100,9 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           onConfirm: () => PermissionHelper.openLocationSettings(),
         );
         setState(() => _isLoading = false);
-        timeoutTimer.cancel();
         return;
       }
 
-      timeoutTimer.cancel();
       if (await widget.geolocation.isInZone()) {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const SetupTeamScreen()));
       } else {
@@ -128,13 +115,10 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         );
       }
     } catch (e) {
-      if (!timedOut) {
-        AppToast.showError("Une erreur est survenue. Vérifie les paramètres et réessaie.");
-      }
+      AppToast.showError("Une erreur est survenue. Vérifie les paramètres et réessaie.");
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    if (!timedOut) setState(() => _isLoading = false);
-    timeoutTimer.cancel();
   }
 
   void _copyCoordinates() {
@@ -208,7 +192,13 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                 ),
               ),
             ),
-            if (_isLoading) const LoadingScreen(),
+            if (_isLoading)
+              LoadingScreen(
+                  timeout: const Duration(seconds: 10),
+                  onTimeout: () {
+                    setState(() => _isLoading = false);
+                  },
+                  timeoutMessage: "Temps de chargement dépassé. Veuillez réessayer."),
           ],
         ),
       ),
