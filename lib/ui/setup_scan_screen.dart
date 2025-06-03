@@ -35,6 +35,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   );
 
   bool _isCameraOpen = false;
+  bool _isLoading = false; // Add state variable for loading
 
   @override
   void didChangeDependencies() {
@@ -84,41 +85,42 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
   void _startSession() async {
     controller.stop();
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LoadingScreen(text: "À vos marques, prêts, partez !"),
-      ),
-    );
+    setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2));
-    await ContributorsData.saveContributors(widget.contributors);
-    final userId = await UserData.getUserId();
+    try {
+      await Future.delayed(const Duration(seconds: 1));
+      await ContributorsData.saveContributors(widget.contributors);
+      final userId = await UserData.getUserId();
 
-    if (userId == null) {
-      log("User ID is null. Cannot start measure.");
-      AppToast.showError("Utilisateur introuvable.");
-      Navigator.pop(context); // Retour depuis LoadingScreen
-      return;
+      if (userId == null) {
+        log("User ID is null. Cannot start measure.");
+        AppToast.showError("Utilisateur introuvable.");
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final result = await MeasureController.startMeasure(
+        userId,
+        contributorsNumber: widget.contributors,
+      );
+
+      if (result.hasError) {
+        AppToast.showError("Impossible de démarrer la mesure. Veuillez réessayer.");
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      AppToast.showSuccess("Mesure démarrée, c'est parti !");
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const WorkingScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      log("Error starting session: $e");
+      AppToast.showError("Une erreur est survenue. Veuillez réessayer.");
+      setState(() => _isLoading = false);
     }
-
-    final result = await MeasureController.startMeasure(
-      userId,
-      contributorsNumber: widget.contributors,
-    );
-
-    if (result.hasError) {
-      AppToast.showError("Impossible de démarrer la mesure. Veuillez réessayer.");
-      Navigator.pop(context);
-      return;
-    }
-
-    AppToast.showSuccess("Mesure démarrée, c'est parti !");
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const WorkingScreen()),
-      (route) => false,
-    );
   }
 
   @override
@@ -134,7 +136,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
       data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.0)),
       child: Scaffold(
         backgroundColor: const Color(Config.backgroundColor),
-        appBar: _isCameraOpen
+        appBar: _isCameraOpen || _isLoading
             ? null
             : const AppTopBar(
                 title: "Scanner",
@@ -146,6 +148,16 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
           children: [
             _buildBody(context),
             if (_isCameraOpen) _buildCameraOverlay() else _buildCameraButton(),
+            // Add loading screen overlay
+            if (_isLoading)
+              LoadingScreen(
+                text: "À vos marques, prêts, partez !",
+                timeout: const Duration(seconds: 10),
+                onTimeout: () {
+                  setState(() => _isLoading = false);
+                },
+                timeoutMessage: "Temps de chargement dépassé. Veuillez réessayer.",
+              ),
           ],
         ),
       ),

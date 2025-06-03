@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -26,7 +25,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final TextEditingController _controller = TextEditingController();
 
-  bool _isEventActive = false;
+  bool _isLoading = false; // Add this state variable
   String? _eventName;
   List<dynamic> _events = [];
   dynamic _selectedEvent;
@@ -46,19 +45,18 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> _checkEventStatus() async {
-    setState(() => _isEventActive = false);
+    setState(() => _isLoading = true);
 
     final eventsResult = await EventController.getAllEvents();
     if (eventsResult.hasError) {
-      log("Error fetching events: ${eventsResult.error}");
-      AppToast.showError("Erreur lors de la récupération des évènements.");
+      AppToast.showError("Erreur lors de la récupération des évènements. ${eventsResult.error}");
       _showErrorModal("Erreur lors de la récupération de l'évènement.");
       return;
     }
 
     _events = eventsResult.value ?? [];
     if (_events.isEmpty) {
-      AppToast.showError("Erreur lors de la récupération des évènements.");
+      AppToast.showError("Aucun évènement trouvé.");
       _showErrorModal("Aucun évènement trouvé.");
       return;
     }
@@ -74,7 +72,7 @@ class _LoginState extends State<Login> {
     if (defaultEvent != null) {
       _handleEventSelected(defaultEvent);
     } else {
-      // If default event not found, show selection modal
+      AppToast.showError("L'évènement 'La Roue Qui Marche 2025' n'a pas été trouvé.");
       _showEventSelectionModal();
     }
   }
@@ -84,11 +82,10 @@ class _LoginState extends State<Login> {
     _isOfficialEvent = event['name'].toString().toLowerCase().contains('la roue qui marche 2025');
     await EventData.saveEvent(event);
     _loadSavedEvent();
-    setState(() => _isEventActive = true);
+    setState(() => _isLoading = false);
   }
 
   void _showErrorModal(String message) {
-    setState(() => _isEventActive = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showModalBottomText(
         context,
@@ -130,7 +127,7 @@ class _LoginState extends State<Login> {
       return;
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoadingScreen()));
+    setState(() => _isLoading = true);
 
     try {
       int.parse(_controller.text);
@@ -144,7 +141,6 @@ class _LoginState extends State<Login> {
           user['username'] == null ||
           user['bib_id'] == null ||
           user['event_id'] == null) {
-        Navigator.pop(context);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           showModalBottomText(
             context,
@@ -153,16 +149,20 @@ class _LoginState extends State<Login> {
             showConfirmButton: true,
           );
         });
+        setState(() => _isLoading = false);
         return;
       }
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => ConfirmScreen(userData: user)),
-      );
+      // Only navigate if loading hasn't been canceled by timeout
+      if (_isLoading) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ConfirmScreen(userData: user)),
+        );
+      }
     } catch (e) {
       AppToast.showError("Numéro de dossard invalide");
-      Navigator.pop(context);
+      setState(() => _isLoading = false);
     }
   }
 
@@ -183,8 +183,6 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isEventActive) return const LoadingScreen();
-
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
       child: Scaffold(
@@ -330,6 +328,14 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
+            // Add loading screen overlay when loading
+            if (_isLoading)
+              LoadingScreen(
+                  timeout: const Duration(seconds: 10),
+                  onTimeout: () {
+                    setState(() => _isLoading = false);
+                  },
+                  timeoutMessage: "Une erreur est survenue. Veuillez réessayer."),
           ],
         ),
       ),

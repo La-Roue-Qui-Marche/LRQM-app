@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:math';
 
 /// A simplified Kalman filter for GPS tracking that works directly with lat/long coordinates
@@ -16,13 +18,13 @@ class SimpleLocationKalmanFilter {
   static const double _velocityProcessNoise = 1e-7; // Velocity noise (degrees²/s³)
 
   // Maximum allowed uncertainty in meters
-  static const double _maxUncertainty = 50.0;
+  static const double _maxUncertainty = 100.0;
 
   // Conversion factor from degrees to meters (approximate at equator)
   static const double _degreesToMeters = 111000.0;
 
   // Minimum speed to consider movement (in degrees/second)
-  static const double _minSpeed = 0.00001; // Approx 1 meter/second at equator
+  static const double _minSpeed = 0.0000045; // Approx 0.5 meter/second at equator
 
   SimpleLocationKalmanFilter({
     double initialLat = 0.0,
@@ -111,7 +113,7 @@ class SimpleLocationKalmanFilter {
   }
 
   void _capUncertainty() {
-    final maxUncertaintyDegrees = _maxUncertainty / _degreesToMeters;
+    const maxUncertaintyDegrees = _maxUncertainty / _degreesToMeters;
     final maxUncertaintyDegrees2 = pow(maxUncertaintyDegrees, 2).toDouble();
 
     for (int i = 0; i < 2; i++) {

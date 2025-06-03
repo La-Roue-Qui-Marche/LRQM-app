@@ -100,6 +100,11 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
     return "$hours:$minutes:$secs";
   }
 
+  // Add a helper method to format numbers with thousand separators
+  String _formatDistance(int meters) {
+    return meters.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}\'');
+  }
+
   @override
   Widget build(BuildContext context) {
     return MediaQuery(
@@ -241,7 +246,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              '$meters m',
+              '${_formatDistance(meters)} m',
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -270,7 +275,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildDetailItem('Distance', '$distance m'),
+            _buildDetailItem('Distance', '${_formatDistance(distance)} m'),
             _verticalDivider(),
             _buildDetailItem('Participants', '$contributors'),
             _verticalDivider(),

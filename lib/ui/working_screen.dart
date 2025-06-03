@@ -35,6 +35,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   EventStatus _eventStatus = EventStatus.notStarted;
   bool _isMeasureOngoing = false;
   bool _isLoading = true;
+  bool _isForceLoading = false;
   int _currentPage = 0;
   bool _showMainCards = true;
   Timer? _eventCheckTimer;
@@ -68,9 +69,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     _geolocation = GeolocationController(
       config: GeolocationConfig(
         locationDistanceFilter: Config.locationDistanceFilter,
-        accuracyThreshold: Config.accuracyThreshold,
-        distanceThreshold: Config.distanceThreshold,
-        speedThreshold: Config.speedThreshold,
         apiInterval: Config.apiInterval,
         outsideCounterMax: Config.outsideCounterMax,
       ),
@@ -125,8 +123,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   Future<void> _forceStopAndShowSummary() async {
     _eventCheckTimer?.cancel();
 
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => const LoadingScreen(text: 'On se repose un peu...')));
+    setState(() => _isForceLoading = true);
 
     int distance = 0, duration = 0;
     bool stopSuccess = false;
@@ -155,7 +152,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     final contribution = (distance * contributors / goal) * 100;
 
     if (!mounted) return;
-    Navigator.pop(context);
+
+    setState(() => _isForceLoading = false);
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -291,8 +290,14 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return LoadingScreen();
+    if (_isLoading || _isForceLoading) {
+      return LoadingScreen(
+          timeout: _isForceLoading ? null : const Duration(seconds: 10),
+          onTimeout: () {
+            setState(() => _isLoading = false);
+            AppToast.showError("Chargement trop long. Veuillez réessayer.");
+          },
+          timeoutMessage: "Chargement trop long. Veuillez réessayer.");
     }
 
     return MediaQuery(
