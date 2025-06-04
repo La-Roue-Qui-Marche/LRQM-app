@@ -351,23 +351,21 @@ class GeolocationController with WidgetsBindingObserver {
     } catch (e) {
       LogHelper.staticLogError("[GEO] Error during stopMeasure: $e");
     }
-    await _cleanupResources();
-    LogHelper.staticLogInfo("[GEO] Force stop completed.");
-  }
-
-  Future<void> _cleanupResources() async {
     _positionStreamStarted = false;
     try {
       await _positionStream?.cancel();
       _apiTimer?.cancel();
       _streamTimer?.cancel();
+
       if (!_streamController.isClosed) {
         await _streamController.close();
       }
+
       await bg.BackgroundLocation.stopLocationService();
     } catch (e) {
       LogHelper.staticLogError("[GEO] Error during cleanup: $e");
     }
+    LogHelper.staticLogInfo("[GEO] Force stop completed.");
   }
 
   Future<bool> isLocationInZone(double lat, double lng) async {
