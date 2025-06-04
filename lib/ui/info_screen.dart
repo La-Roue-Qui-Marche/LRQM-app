@@ -143,6 +143,55 @@ class InfoScreen extends StatelessWidget {
                               ),
                               textAlign: TextAlign.left,
                             ),
+                            // --- Signature by Nicolas ---
+                            const SizedBox(height: 24),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: AssetImage('assets/pictures/minion.png'),
+                                  radius: 30, // Same as contributors
+                                  backgroundColor: Colors.grey[300],
+                                ),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'Nicolas',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Chef de projet de l\'application',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black54,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                "— Merci de faire partie de l'aventure !",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black54,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            // --- End signature ---
                           ],
                         ),
                       ),
@@ -165,6 +214,9 @@ class InfoScreen extends StatelessWidget {
                           children: [
                             _buildContributorsSection(context),
                             const SizedBox(height: 24),
+                            // --- Chef de projet section ---
+                            // (REMOVE THIS SECTION)
+                            // --- End Chef de projet section ---
                             Center(
                               child: Text(
                                 "Un commentaire? Un bug? Une suggestion?\nlarqm.app.feedback@gmail.com",

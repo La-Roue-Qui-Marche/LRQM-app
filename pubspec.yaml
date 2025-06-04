@@ -99,6 +99,7 @@ flutter:
     - assets/pictures/DrawScan-AI.png
     - assets/pictures/DrawPos-AI.png
     - assets/pictures/Cup-AI.png
+    - assets/pictures/minion.png
 
     - assets/icons/calendar.svg
     - assets/icons/user.svg
