@@ -302,13 +302,13 @@ class GeolocationController with WidgetsBindingObserver {
   Future<bool> stopListening() async {
     if (!_positionStreamStarted) return false;
     LogHelper.staticLogInfo("[GEO] Stopping geolocation...");
-
     try {
       await _sendFinalDistance();
     } catch (e) {
       LogHelper.staticLogError("[GEO] Error during sending final distance: $e");
       return false;
     }
+
     try {
       final result = await MeasureController.stopMeasure();
       if (result.value != true) {
@@ -320,8 +320,23 @@ class GeolocationController with WidgetsBindingObserver {
       LogHelper.staticLogError("[GEO] Error during stopMeasure: $e");
       return false;
     }
-    await _cleanupResources();
-    return true;
+
+    _positionStreamStarted = false;
+    try {
+      await _positionStream?.cancel();
+      _apiTimer?.cancel();
+      _streamTimer?.cancel();
+
+      if (!_streamController.isClosed) {
+        await _streamController.close();
+      }
+
+      await bg.BackgroundLocation.stopLocationService();
+      return true;
+    } catch (e) {
+      LogHelper.staticLogError("[GEO] Error during cleanup: $e");
+      return false;
+    }
   }
 
   Future<void> forceStopListening() async {
