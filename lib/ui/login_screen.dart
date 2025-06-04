@@ -117,12 +117,7 @@ class _LoginState extends State<Login> {
 
     if (_controller.text.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showModalBottomText(
-          context,
-          "Numéro de dossard manquant",
-          "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM",
-          showConfirmButton: true,
-        );
+        AppToast.showError("Numéro de dossard manquant. Il faut entrer ton numéro compris entre 1 et 9999");
       });
       return;
     }
@@ -142,12 +137,7 @@ class _LoginState extends State<Login> {
           user['bib_id'] == null ||
           user['event_id'] == null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          showModalBottomText(
-            context,
-            "Utilisateur non trouvé",
-            "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
-            showConfirmButton: true,
-          );
+          AppToast.showError("Le numéro de dossard n'a pas été trouvé. Inscris-toi si tu n'en as pas.");
         });
         setState(() => _isLoading = false);
         return;
@@ -161,7 +151,7 @@ class _LoginState extends State<Login> {
         );
       }
     } catch (e) {
-      AppToast.showError("Numéro de dossard invalide");
+      AppToast.showError("Numéro de dossard invalide. Il faut entrer un numéro entre 1 et 9999.");
       setState(() => _isLoading = false);
     }
   }
