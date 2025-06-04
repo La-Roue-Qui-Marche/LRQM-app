@@ -92,7 +92,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     _geoSubscription?.cancel();
     _zoneSubscription?.cancel();
     _zoneCheckTimer?.cancel();
-    // Dispose all ValueNotifiers
     _currentContributionNotifier.dispose();
     _bibNumberNotifier.dispose();
     _userNameNotifier.dispose();
@@ -102,6 +101,8 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     _sessionTimeNotifier.dispose();
     _isLoadingNotifier.dispose();
     _isExpandedNotifier.dispose();
+    _showExpandedContentNotifier.dispose();
+    _isInZoneNotifier.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -143,7 +144,9 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     } catch (e) {
       developer.log("Error loading user data: $e");
     } finally {
-      _isLoadingNotifier.value = false;
+      if (mounted) {
+        _isLoadingNotifier.value = false;
+      }
     }
   }
 
@@ -152,6 +155,7 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
     if (widget.geolocation != null) {
       _geoSubscription = widget.geolocation!.stream.listen((event) {
+        if (!mounted) return;
         final int newDistance = (event["distance"] as num?)?.toInt() ?? 0;
         final int newTime = (event["time"] as num?)?.toInt() ?? 0;
 
@@ -160,6 +164,24 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
         _currentContributionNotifier.value = newDistance;
       });
     }
+  }
+
+  void _startZoneCheckTimer() {
+    _zoneCheckTimer?.cancel();
+    _zoneCheckTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      if (!mounted) {
+        _zoneCheckTimer?.cancel();
+        return;
+      }
+      if (widget.geolocation != null) {
+        final isInZone = await widget.geolocation!.isInZone();
+        if (mounted) {
+          _isInZoneNotifier.value = isInZone;
+        }
+      } else {
+        LogHelper.staticLogWarn("[PersonalInfoCard] geolocation is null");
+      }
+    });
   }
 
   @override
@@ -222,18 +244,6 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
     // Reset values
     _dragStartY = 0;
     _dragDistance = 0;
-  }
-
-  void _startZoneCheckTimer() {
-    _zoneCheckTimer?.cancel();
-    _zoneCheckTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      if (widget.geolocation != null) {
-        final isInZone = await widget.geolocation!.isInZone();
-        _isInZoneNotifier.value = isInZone;
-      } else {
-        LogHelper.staticLogWarn("[PersonalInfoCard] geolocation is null");
-      }
-    });
   }
 
   @override
