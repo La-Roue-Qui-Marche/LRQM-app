@@ -70,7 +70,7 @@ App parameters are in [`lib/Utils/config.dart`](lib/Utils/config.dart).
 ## License & Assets
 
 - Licensed under [LICENSE](LICENSE)
-- Fonts used: **Poppins** (see [assets/fonts/](assets/fonts/))
+- Fonts used: **SFPRO** (see [assets/fonts/](assets/fonts/))
 
 ---
 
