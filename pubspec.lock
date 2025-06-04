@@ -89,14 +89,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.8.0"
-  coordinate_converter:
-    dependency: "direct main"
-    description:
-      name: coordinate_converter
-      sha256: ae14ad326551acbd6c384d717f508537340ed566a6e2412b7a908e8d3e7a1750
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.3"
   cross_file:
     dependency: transitive
     description:

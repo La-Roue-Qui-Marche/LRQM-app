@@ -167,7 +167,7 @@ class InfoScreen extends StatelessWidget {
                                     ),
                                     SizedBox(height: 2),
                                     Text(
-                                      'Responsable de l\'application',
+                                      'Capitaine de l’app',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.black54,

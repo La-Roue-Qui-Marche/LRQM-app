@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:lrqm/utils/config.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CardInfo extends StatefulWidget {
   final Widget? logo;
   final String title;
   final String? data;
   final String? additionalDetails;
-  final List<ActionItem>? actionItems;
 
   const CardInfo({
     super.key,
@@ -15,7 +14,6 @@ class CardInfo extends StatefulWidget {
     required this.title,
     this.data,
     this.additionalDetails,
-    this.actionItems,
   });
 
   @override
@@ -166,33 +164,6 @@ class _CardInfoState extends State<CardInfo> with SingleTickerProviderStateMixin
                   ],
                 ),
               ),
-              if (widget.actionItems != null && widget.actionItems!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: widget.actionItems!.map((actionItem) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 16.0),
-                      child: Column(
-                        children: [
-                          IconButton(
-                            icon: actionItem.icon,
-                            onPressed: actionItem.onPressed,
-                            color: Colors.black87,
-                          ),
-                          Text(
-                            actionItem.label,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
             ],
           ),
         ),
