@@ -456,12 +456,13 @@ class _CardProgressEventState extends State<CardProgressEvent> {
                       builder: (context, participants, _) {
                         if (participants != null) {
                           return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (int.tryParse(participants) != null)
                                 Container(
                                   width: 10,
                                   height: 10,
-                                  margin: const EdgeInsets.only(right: 8),
+                                  margin: const EdgeInsets.only(right: 8, top: 8), // Align with first text line
                                   decoration: BoxDecoration(
                                     color: int.parse(participants) > 1
                                         ? Colors.green
@@ -471,22 +472,15 @@ class _CardProgressEventState extends State<CardProgressEvent> {
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                              Text(
-                                participants,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Expanded(
+                              Expanded(
                                 child: Text(
-                                  'participant(s) ou groupe(s) actif(s) sur le parcours',
+                                  '$participants participant(s) ou groupe(s) actif(s) sur le parcours',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.black87,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                  overflow: TextOverflow.clip,
+                                  maxLines: 2,
                                 ),
                               ),
                             ],
