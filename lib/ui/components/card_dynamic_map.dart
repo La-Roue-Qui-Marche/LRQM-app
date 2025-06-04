@@ -90,10 +90,10 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   }
 
   Future<void> _fetchUserPosition() async {
-    if (!await PermissionHelper.isProperLocationPermissionGranted()) {
+    if (!await PermissionHelper.isLocationWhenInUseGranted()) {
       if (!_permisionRequested) {
         _permisionRequested = true;
-        final granted = await PermissionHelper.requestProperLocationPermission();
+        final granted = await PermissionHelper.requestLocationWhenInUsePermission();
         if (mounted) {
           setState(() {
             _permissionGranted = granted;
