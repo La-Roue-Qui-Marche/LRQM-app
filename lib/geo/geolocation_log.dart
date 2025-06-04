@@ -1,6 +1,6 @@
 String formatPositionComparison({
   required int elapsedTime,
-  required Map<String, double> smoothedPosition,
+  required Map<String, double> filteredPosition,
   required double lat,
   required double lng,
   required double rawSpeed,
@@ -10,28 +10,19 @@ String formatPositionComparison({
   required DateTime timestamp,
   required double uncertainty,
   required double confidence,
-  bool? filtered,
-  bool? transition,
 }) {
-  final latDelta = (smoothedPosition['latitude']! - lat).abs();
-  final lngDelta = (smoothedPosition['longitude']! - lng).abs();
-  final speedDelta = (smoothedPosition['speed']! - rawSpeed).abs();
+  final latDelta = (filteredPosition['latitude']! - lat).abs();
+  final lngDelta = (filteredPosition['longitude']! - lng).abs();
+  final speedDelta = (filteredPosition['speed']! - rawSpeed).abs();
 
-  String stateIndicator = "";
-  if (filtered == true) {
-    stateIndicator = " [FILTERED]";
-  } else if (transition == true) {
-    stateIndicator = " [TRANSITION]";
-  }
-
-  String logOutput = '''[GEO] Position update:$stateIndicator
+  String logOutput = '''[GEO] Position update:
     Time: $elapsedTime s
     GPS Accuracy: ${rawAccuracy.toStringAsFixed(1)}m
-    Speed: ${smoothedPosition['speed']!.toStringAsFixed(1)} m/s (raw: ${rawSpeed.toStringAsFixed(1)}, Δ: ${speedDelta.toStringAsFixed(2)})
-    Distance: $dist m (raw: $rawDist)${(filtered == true || transition == true) ? " [NOT ACCUMULATED]" : ""}
+    Speed: ${filteredPosition['speed']!.toStringAsFixed(1)} m/s (raw: ${rawSpeed.toStringAsFixed(1)}, Δ: ${speedDelta.toStringAsFixed(2)})
+    Distance: $dist m (raw: $rawDist) m}
     Timestamp: ${timestamp.toIso8601String()}
-    lat: ${smoothedPosition['latitude']!.toStringAsFixed(6)} (raw: ${lat.toStringAsFixed(6)}, Δ: ${latDelta.toStringAsFixed(6)})
-    lon: ${smoothedPosition['longitude']!.toStringAsFixed(6)} (raw: ${lng.toStringAsFixed(6)}, Δ: ${lngDelta.toStringAsFixed(6)})
+    lat: ${filteredPosition['latitude']!.toStringAsFixed(6)} (raw: ${lat.toStringAsFixed(6)}, Δ: ${latDelta.toStringAsFixed(6)})
+    lon: ${filteredPosition['longitude']!.toStringAsFixed(6)} (raw: ${lng.toStringAsFixed(6)}, Δ: ${lngDelta.toStringAsFixed(6)})
     uncertainty: ${uncertainty.toStringAsFixed(2)}
     confidence: ${confidence.toStringAsFixed(2)}''';
 
