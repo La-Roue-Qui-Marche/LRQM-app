@@ -2,157 +2,211 @@
 
 import 'dart:math';
 
-/// A simplified Kalman filter for GPS tracking that works directly with lat/long coordinates
-class SimpleLocationKalmanFilter {
-  // State vector [lat, lng, v_lat, v_lng]
+class SimpleLocationKalmanFilter2D {
+  // State vector: [lat, lng, v_lat, v_lng]
   late List<double> _state;
 
-  // State covariance matrix (4x4)
+  // Covariance matrix (4x4)
   late List<List<double>> _P;
 
-  // Last update timestamp in seconds
-  double _lastUpdateTime = 0;
+  // Process noise matrix (4x4)
+  static const double positionProcessNoise = 1e-6;
+  static const double velocityProcessNoise = 1e-3;
 
-  // Process noise parameters
-  static const double _positionProcessNoise = 1e-8; // Position noise (degrees²/s)
-  static const double _velocityProcessNoise = 1e-7; // Velocity noise (degrees²/s³)
+  // Measurement noise (R) in meters (then converted to degrees² during update)
+  static const double measurementNoiseMeters = 5.0;
 
-  // Maximum allowed uncertainty in meters
-  static const double _maxUncertainty = 100.0;
+  // Max uncertainty in meters (capped for stability)
+  static const double maxUncertaintyMeters = 100.0;
 
-  // Conversion factor from degrees to meters (approximate at equator)
-  static const double _degreesToMeters = 111000.0;
+  static const double degreesToMeters = 111000.0;
 
-  // Minimum speed to consider movement (in degrees/second)
-  static const double _minSpeed = 0.0000045; // Approx 0.5 meter/second at equator
+  // Timestamp of last update (in seconds)
+  double _lastTimestamp = 0;
 
-  SimpleLocationKalmanFilter({
-    double initialLat = 0.0,
-    double initialLng = 0.0,
-  }) {
+  SimpleLocationKalmanFilter2D({double initialLat = 0.0, double initialLng = 0.0}) {
     reset(initialLat, initialLng);
   }
 
   void reset(double lat, double lng) {
-    // Initialize state vector [lat, lng, v_lat, v_lng]
     _state = [lat, lng, 0.0, 0.0];
 
-    // Initialize covariance matrix
+    final posUncertainty = pow(10.0 / degreesToMeters, 2).toDouble();
+    final velUncertainty = pow(1.0 / degreesToMeters, 2).toDouble();
+
     _P = List.generate(4, (_) => List.filled(4, 0.0));
+    _P[0][0] = posUncertainty;
+    _P[1][1] = posUncertainty;
+    _P[2][2] = velUncertainty;
+    _P[3][3] = velUncertainty;
 
-    // Convert 10 meters to degrees for initial position uncertainty
-    final posUncertainty = pow(10.0 / _degreesToMeters, 2).toDouble();
-    // Convert 1 m/s to degrees/s for initial velocity uncertainty
-    final velUncertainty = pow(1.0 / _degreesToMeters, 2).toDouble();
-
-    // Set initial uncertainties
-    for (int i = 0; i < 2; i++) {
-      _P[i][i] = posUncertainty;
-      _P[i + 2][i + 2] = velUncertainty;
-    }
-
-    _lastUpdateTime = 0;
+    _lastTimestamp = 0;
   }
 
   Map<String, double> update(double lat, double lng, double accuracy, double timestamp) {
-    // First update or reset condition
-    if (_lastUpdateTime == 0) {
+    if (_lastTimestamp == 0) {
       reset(lat, lng);
-      _lastUpdateTime = timestamp;
-      return {
-        'latitude': lat,
-        'longitude': lng,
-        'speed': 0.0,
-        'uncertainty': accuracy,
-        'confidence': _calculateConfidence(accuracy)
-      };
+      _lastTimestamp = timestamp;
+      return _getFilteredState();
     }
 
-    final dt = timestamp - _lastUpdateTime;
+    final dt = timestamp - _lastTimestamp;
     if (dt <= 0) return _getFilteredState();
 
+    // Transition matrix F
+    final F = [
+      [1.0, 0.0, dt, 0.0],
+      [0.0, 1.0, 0.0, dt],
+      [0.0, 0.0, 1.0, 0.0],
+      [0.0, 0.0, 0.0, 1.0],
+    ];
+
+    // Process noise Q
+    final q_pos = positionProcessNoise * dt;
+    final q_vel = velocityProcessNoise * dt * dt;
+    final Q = [
+      [q_pos, 0.0, 0.0, 0.0],
+      [0.0, q_pos, 0.0, 0.0],
+      [0.0, 0.0, q_vel, 0.0],
+      [0.0, 0.0, 0.0, q_vel],
+    ];
+
     // Predict step
-    final predictedState = List<double>.from(_state);
-    predictedState[0] += _state[2] * dt;
-    predictedState[1] += _state[3] * dt;
+    _state = _matrixVectorMultiply(F, _state);
+    _P = _matrixAdd(_matrixMultiply(F, _matrixMultiply(_P, _transpose(F))), Q);
 
-    // Update process noise based on time delta
-    for (int i = 0; i < 2; i++) {
-      _P[i][i] += _positionProcessNoise * dt;
-      _P[i + 2][i + 2] += _velocityProcessNoise * dt * dt;
+    // Measurement matrix H (2x4)
+    final H = [
+      [1.0, 0.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0, 0.0],
+    ];
+
+    // Measurement noise R (2x2) in degrees²
+    final r = pow((accuracy < 1000 ? accuracy : measurementNoiseMeters) / degreesToMeters, 2).toDouble();
+    final R = [
+      [r, 0.0],
+      [0.0, r],
+    ];
+
+    // Measurement vector z
+    final z = [lat, lng];
+
+    // Innovation y = z - Hx
+    final y = _vectorSubtract(z, _matrixVectorMultiply(H, _state));
+
+    // Innovation covariance S = HPH' + R
+    final HT = _transpose(H);
+    final S = _matrixAdd(_matrixMultiply(H, _matrixMultiply(_P, HT)), R);
+
+    // Kalman Gain K = P H' S⁻¹
+    final K = _matrixMultiply(_P, _matrixMultiply(HT, _inverse2x2(S)));
+
+    // Update state x = x + K * y
+    final Ky = _matrixVectorMultiply(K, y);
+    for (int i = 0; i < _state.length; i++) {
+      _state[i] += Ky[i];
     }
 
-    // Calculate measurement noise based on GPS accuracy
-    final R = pow(accuracy / _degreesToMeters, 2); // Convert accuracy to degrees²
+    // Update covariance P = (I - KH)P
+    final I = _identityMatrix(4);
+    final KH = _matrixMultiply(K, H);
+    final I_KH = _matrixSubtract(I, KH);
+    _P = _matrixMultiply(I_KH, _P);
 
-    // Measured velocity (degrees/second)
-    final v_lat = (lat - _state[0]) / dt;
-    final v_lng = (lng - _state[1]) / dt;
+    _lastTimestamp = timestamp;
 
-    // Update step - position
-    final k_pos = _P[0][0] / (_P[0][0] + R);
-    final k_vel = _P[2][2] / (_P[2][2] + R / (dt * dt));
-
-    // Update state
-    _state[0] = predictedState[0] + k_pos * (lat - predictedState[0]);
-    _state[1] = predictedState[1] + k_pos * (lng - predictedState[1]);
-    _state[2] = _state[2] + k_vel * (v_lat - _state[2]);
-    _state[3] = _state[3] + k_vel * (v_lng - _state[3]);
-
-    // Update covariance with separate noise for position and velocity
-    for (int i = 0; i < 2; i++) {
-      _P[i][i] = (1 - k_pos) * _P[i][i];
-      _P[i + 2][i + 2] = (1 - k_vel) * _P[i + 2][i + 2];
-    }
-
-    // Cap uncertainty growth
-    _capUncertainty();
-
-    _lastUpdateTime = timestamp;
     return _getFilteredState();
-  }
-
-  void _capUncertainty() {
-    const maxUncertaintyDegrees = _maxUncertainty / _degreesToMeters;
-    final maxUncertaintyDegrees2 = pow(maxUncertaintyDegrees, 2).toDouble();
-
-    for (int i = 0; i < 2; i++) {
-      if (_P[i][i] > maxUncertaintyDegrees2) {
-        _P[i][i] = maxUncertaintyDegrees2;
-      }
-    }
-  }
-
-  double _calculateConfidence(double uncertainty) {
-    // Convert uncertainty to meters for consistent scale
-    final uncertaintyMeters = uncertainty < 1000 ? uncertainty : sqrt(_P[0][0] + _P[1][1]) * _degreesToMeters;
-    // Scale confidence from 0 to 1 based on uncertainty
-    // 0m = 1.0 confidence, 50m = 0.0 confidence
-    return max(0.0, min(1.0, 1.0 - uncertaintyMeters / _maxUncertainty));
   }
 
   Map<String, double> _getFilteredState() {
-    final uncertainty = sqrt(_P[0][0] + _P[1][1]) * _degreesToMeters;
+    final uncertainty = sqrt(_P[0][0] + _P[1][1]) * degreesToMeters;
+    final vLat = _state[2] * degreesToMeters;
+    final vLng = _state[3] * degreesToMeters;
+    final speed = sqrt(vLat * vLat + vLng * vLng);
+
     return {
       'latitude': _state[0],
       'longitude': _state[1],
-      'speed': _getSpeed(),
-      'uncertainty': min(uncertainty, _maxUncertainty),
-      'confidence': _calculateConfidence(uncertainty)
+      'speed': speed,
+      'uncertainty': min(uncertainty, maxUncertaintyMeters),
+      'confidence': max(0.0, min(1.0, 1.0 - uncertainty / maxUncertaintyMeters)),
     };
   }
 
-  // Convert velocity components to speed in meters/second
-  double _getSpeed() {
-    final vLat = _state[2] * _degreesToMeters; // Convert to m/s
-    final vLng = _state[3] * _degreesToMeters;
-    final speed = sqrt(vLat * vLat + vLng * vLng);
+  Map<String, double> getPosition() => _getFilteredState();
 
-    // Filter out very small speeds (likely noise)
-    return speed > _minSpeed * _degreesToMeters ? speed : 0.0;
+  // ========== Matrix Helpers ==========
+
+  List<List<double>> _matrixMultiply(List<List<double>> A, List<List<double>> B) {
+    final result = List.generate(A.length, (_) => List.filled(B[0].length, 0.0));
+    for (int i = 0; i < A.length; i++) {
+      for (int j = 0; j < B[0].length; j++) {
+        for (int k = 0; k < A[0].length; k++) {
+          result[i][j] += A[i][k] * B[k][j];
+        }
+      }
+    }
+    return result;
   }
 
-  Map<String, double> getPosition() {
-    return _getFilteredState();
+  List<double> _matrixVectorMultiply(List<List<double>> A, List<double> x) {
+    final result = List.filled(A.length, 0.0);
+    for (int i = 0; i < A.length; i++) {
+      for (int j = 0; j < x.length; j++) {
+        result[i] += A[i][j] * x[j];
+      }
+    }
+    return result;
+  }
+
+  List<List<double>> _matrixAdd(List<List<double>> A, List<List<double>> B) {
+    final result = List.generate(A.length, (i) => List.filled(A[0].length, 0.0));
+    for (int i = 0; i < A.length; i++) {
+      for (int j = 0; j < A[0].length; j++) {
+        result[i][j] = A[i][j] + B[i][j];
+      }
+    }
+    return result;
+  }
+
+  List<List<double>> _matrixSubtract(List<List<double>> A, List<List<double>> B) {
+    final result = List.generate(A.length, (i) => List.filled(A[0].length, 0.0));
+    for (int i = 0; i < A.length; i++) {
+      for (int j = 0; j < A[0].length; j++) {
+        result[i][j] = A[i][j] - B[i][j];
+      }
+    }
+    return result;
+  }
+
+  List<List<double>> _transpose(List<List<double>> A) {
+    final result = List.generate(A[0].length, (_) => List.filled(A.length, 0.0));
+    for (int i = 0; i < A.length; i++) {
+      for (int j = 0; j < A[0].length; j++) {
+        result[j][i] = A[i][j];
+      }
+    }
+    return result;
+  }
+
+  List<List<double>> _identityMatrix(int size) {
+    final result = List.generate(size, (i) => List.filled(size, 0.0));
+    for (int i = 0; i < size; i++) result[i][i] = 1.0;
+    return result;
+  }
+
+  List<double> _vectorSubtract(List<double> a, List<double> b) {
+    return List.generate(a.length, (i) => a[i] - b[i]);
+  }
+
+  List<List<double>> _inverse2x2(List<List<double>> m) {
+    final a = m[0][0], b = m[0][1], c = m[1][0], d = m[1][1];
+    final det = a * d - b * c;
+    if (det.abs() < 1e-12) throw Exception('Matrix not invertible');
+    final invDet = 1.0 / det;
+    return [
+      [d * invDet, -b * invDet],
+      [-c * invDet, a * invDet],
+    ];
   }
 }

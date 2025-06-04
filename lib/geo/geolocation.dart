@@ -44,7 +44,7 @@ class GeolocationController with WidgetsBindingObserver {
   }
 
   late geo.LocationSettings _settings;
-  late SimpleLocationKalmanFilter _kalmanFilter;
+  late SimpleLocationKalmanFilter2D _kalmanFilter;
   geo.Position? _oldPos;
   StreamSubscription<geo.Position>? _positionStream;
   Timer? _apiTimer;
@@ -133,7 +133,7 @@ class GeolocationController with WidgetsBindingObserver {
     _accumulatedActiveDuration = Duration.zero;
     _lastActiveTimestamp = DateTime.now();
     final initialPos = await geo.Geolocator.getCurrentPosition();
-    _kalmanFilter = SimpleLocationKalmanFilter(initialLat: initialPos.latitude, initialLng: initialPos.longitude);
+    _kalmanFilter = SimpleLocationKalmanFilter2D(initialLat: initialPos.latitude, initialLng: initialPos.longitude);
     _oldPos = initialPos;
     _resetPosition = false;
     _startPositionStream();
@@ -376,6 +376,10 @@ class GeolocationController with WidgetsBindingObserver {
   }
 
   Future<bool> isInZone() async {
+    if (!await PermissionHelper.isProperLocationPermissionGranted()) {
+      LogHelper.staticLogError("[GEO] Location permission not granted.");
+      return false;
+    }
     final pos = await geo.Geolocator.getCurrentPosition();
     return await isLocationInZone(pos.latitude, pos.longitude);
   }
