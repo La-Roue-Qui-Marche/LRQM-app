@@ -250,7 +250,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           child: CardDynamicMap(
             geolocation: _geolocation,
             followUser: _isMeasureOngoing,
-            fullScreen: true,
           ),
         ),
 
