@@ -80,10 +80,9 @@ class ContributionGraphState extends State<ContributionGraph> {
     // Only calculate if we have valid data
     if (distanceDelta >= 0 && timeDelta > 0) {
       // Calculate speed in m/s
-      final calculatedSpeed = distanceDelta / timeDelta;
+      final calculatedSpeed = (distanceDelta / timeDelta) * 3.6; // Convert m/s to km/h
 
-      debugPrint("Distance delta: $distanceDelta m in $timeDelta seconds");
-      debugPrint("Calculated speed: $calculatedSpeed m/s");
+      debugPrint("Calculated speed: $calculatedSpeed km/h");
 
       // Plot the calculated speed
       _addContributionValue(calculatedSpeed);
@@ -143,7 +142,7 @@ class ContributionGraphState extends State<ContributionGraph> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Contribution moyenne (m/s)",
+              "Contribution moyenne (km/h)",
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black54,
