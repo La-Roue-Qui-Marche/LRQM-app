@@ -206,46 +206,109 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   Widget _buildInfoCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(0.0),
-      ),
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Center(
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.55,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: FadeInImage(
-                  placeholder: MemoryImage(kTransparentImage),
-                  image: const AssetImage('assets/pictures/DrawPos-AI.png'),
-                  fit: BoxFit.contain,
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(0.0),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Center(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.55,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: FadeInImage(
+                      placeholder: MemoryImage(kTransparentImage),
+                      image: const AssetImage('assets/pictures/DrawPos-AI.png'),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          CardInfo(
-            title: "Prépares-toi !",
-            data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
-            actionItems: [
-              ActionItem(
-                icon: SvgPicture.asset('assets/icons/diamond-turn-right.svg',
-                    color: Colors.black87, width: 28, height: 28),
-                label: 'Maps',
-                onPressed: _openInGoogleMaps,
-              ),
-              ActionItem(
-                icon: SvgPicture.asset('assets/icons/copy.svg', color: Colors.black87, width: 28, height: 28),
-                label: 'Copier',
-                onPressed: _copyCoordinates,
+              const CardInfo(
+                title: "Prépares-toi !",
+                data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.only(right: 24.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _RoundIconButton(
+                icon: SvgPicture.asset(
+                  'assets/icons/diamond-turn-right.svg',
+                  color: Colors.black87,
+                  width: 28,
+                  height: 28,
+                ),
+                label: 'Itinéraire',
+                onTap: _openInGoogleMaps,
+              ),
+              const SizedBox(width: 16),
+              _RoundIconButton(
+                icon: SvgPicture.asset(
+                  'assets/icons/copy.svg',
+                  color: Colors.black87,
+                  width: 28,
+                  height: 28,
+                ),
+                label: 'Copier',
+                onTap: _copyCoordinates,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Round button widget for actions under the card
+class _RoundIconButton extends StatelessWidget {
+  final Widget icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _RoundIconButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Material(
+          color: Colors.white,
+          shape: const CircleBorder(),
+          elevation: 0,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: icon,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }
