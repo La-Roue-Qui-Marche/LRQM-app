@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'dart:math';
+import 'package:lrqm/utils/log_helper.dart';
 
 class SimpleLocationKalmanFilter2D {
   // State vector: [lat, lng, v_lat, v_lng]
@@ -44,6 +45,10 @@ class SimpleLocationKalmanFilter2D {
   }
 
   Map<String, double> update(double lat, double lng, double accuracy, double timestamp) {
+    if (accuracy > maxUncertaintyMeters) {
+      LogHelper.staticLogWarn("[KALMAN] Received high accuracy value: $accuracy m");
+    }
+
     if (_lastTimestamp == 0) {
       reset(lat, lng);
       _lastTimestamp = timestamp;
@@ -51,7 +56,10 @@ class SimpleLocationKalmanFilter2D {
     }
 
     final dt = timestamp - _lastTimestamp;
-    if (dt <= 0) return _getFilteredState();
+    if (dt <= 0) {
+      LogHelper.staticLogWarn("[KALMAN] Non-positive time delta: dt=$dt (timestamp=$timestamp, last=$_lastTimestamp)");
+      return _getFilteredState();
+    }
 
     // Transition matrix F
     final F = [
@@ -124,12 +132,21 @@ class SimpleLocationKalmanFilter2D {
     final vLng = _state[3] * degreesToMeters;
     final speed = sqrt(vLat * vLat + vLng * vLng);
 
+    if (uncertainty > 50.0) {
+      LogHelper.staticLogWarn("[KALMAN] High uncertainty in filtered result: ${uncertainty.toStringAsFixed(2)} m");
+    }
+
+    final confidence = max(0.0, min(1.0, 1.0 - uncertainty / maxUncertaintyMeters));
+    if (confidence < 0.5) {
+      LogHelper.staticLogWarn("[KALMAN] Poor confidence in filtered result: ${confidence.toStringAsFixed(2)}");
+    }
+
     return {
       'latitude': _state[0],
       'longitude': _state[1],
       'speed': speed,
       'uncertainty': min(uncertainty, maxUncertaintyMeters),
-      'confidence': max(0.0, min(1.0, 1.0 - uncertainty / maxUncertaintyMeters)),
+      'confidence': confidence,
     };
   }
 
@@ -191,7 +208,9 @@ class SimpleLocationKalmanFilter2D {
 
   List<List<double>> _identityMatrix(int size) {
     final result = List.generate(size, (i) => List.filled(size, 0.0));
-    for (int i = 0; i < size; i++) result[i][i] = 1.0;
+    for (int i = 0; i < size; i++) {
+      result[i][i] = 1.0;
+    }
     return result;
   }
 

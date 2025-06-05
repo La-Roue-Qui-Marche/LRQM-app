@@ -37,10 +37,29 @@ class GeolocationConfig {
 
 class GeolocationController with WidgetsBindingObserver {
   final GeolocationConfig config;
-  GeolocationController({required this.config}) {
+  static GeolocationController? _instance;
+
+  // Static method to reset the singleton instance
+  static void resetInstance() {
+    if (_instance != null) {
+      LogHelper.staticLogInfo("[GEO] Resetting GeolocationController instance");
+      _instance!.cleanup();
+      _instance = null;
+    }
+  }
+
+  // Factory constructor for singleton pattern
+  factory GeolocationController({required GeolocationConfig config}) {
+    _instance ??= GeolocationController._internal(config);
+    return _instance!;
+  }
+
+  // Private constructor
+  GeolocationController._internal(this.config) {
     _settings = _getSettings();
     WidgetsBinding.instance.addObserver(this);
     _initZone();
+    LogHelper.staticLogInfo("[GEO] GeolocationController initialized");
   }
 
   late geo.LocationSettings _settings;

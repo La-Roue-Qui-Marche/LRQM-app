@@ -54,7 +54,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   @override
   void dispose() {
     _eventCheckTimer?.cancel();
-    _geolocation.stopListening();
     super.dispose();
   }
 
@@ -66,6 +65,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   }
 
   void _initializeGeolocation() {
+    GeolocationController.resetInstance();
     _geolocation = GeolocationController(
       config: GeolocationConfig(
         locationDistanceFilter: Config.locationDistanceFilter,
@@ -253,7 +253,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
           ),
         ),
 
-        // PersonalInfoCard as a draggable bottom sheet
         CardPersonalInfo(
           key: const ValueKey('personalInfoCard'),
           isSessionActive: _isMeasureOngoing,
