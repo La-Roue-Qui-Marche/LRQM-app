@@ -10,20 +10,17 @@ class SimpleLocationKalmanFilter2D {
   // Covariance matrix (4x4)
   late List<List<double>> _P;
 
-  // Process noise matrix (4x4)
-  static const double positionProcessNoise = 0.0005;
-  static const double velocityProcessNoise = 1e-2;
+  static const double positionProcessNoise = 0.001;
+  static const double velocityProcessNoise = 0.001;
+
   static const double maxAcceptableJumpMeters = 20.0;
+  static const double minDeltaT = 0.1;
 
-  // Measurement noise (R) in meters (then converted to degrees² during update)
-  static const double measurementNoiseMeters = 5.0;
+  static const double minMovingSpeedMetersPerSecond = 0.5;
 
-  // Max uncertainty in meters (capped for stability)
   static const double maxUncertaintyMeters = 100.0;
-
   static const double degreesToMeters = 111000.0;
 
-  // Timestamp of last update (in seconds)
   double _lastTimestamp = 0;
 
   SimpleLocationKalmanFilter2D({double initialLat = 0.0, double initialLng = 0.0}) {
@@ -62,8 +59,11 @@ class SimpleLocationKalmanFilter2D {
       LogHelper.staticLogWarn("[KALMAN] Non-positive time delta: dt=$dt (timestamp=$timestamp, last=$_lastTimestamp)");
       return _getFilteredState();
     }
+    if (dt < minDeltaT) {
+      LogHelper.staticLogInfo("[KALMAN] Ignored update: dt trop court ($dt s)");
+      return _getFilteredState();
+    }
 
-    // Transition matrix F
     final F = [
       [1.0, 0.0, dt, 0.0],
       [0.0, 1.0, 0.0, dt],
@@ -71,7 +71,6 @@ class SimpleLocationKalmanFilter2D {
       [0.0, 0.0, 0.0, 1.0],
     ];
 
-    // Process noise Q
     final q_pos = positionProcessNoise * dt;
     final q_vel = velocityProcessNoise * dt * dt;
     final Q = [
@@ -81,17 +80,14 @@ class SimpleLocationKalmanFilter2D {
       [0.0, 0.0, 0.0, q_vel],
     ];
 
-    // Predict step
     _state = _matrixVectorMultiply(F, _state);
     _P = _matrixAdd(_matrixMultiply(F, _matrixMultiply(_P, _transpose(F))), Q);
 
-    // Measurement matrix H (2x4)
     final H = [
       [1.0, 0.0, 0.0, 0.0],
       [0.0, 1.0, 0.0, 0.0],
     ];
 
-    // === OPTION B: Use actual accuracy for measurement noise ===
     final acc = accuracy.clamp(1.0, maxUncertaintyMeters);
     final r = pow(acc / degreesToMeters, 2).toDouble();
     final R = [
@@ -99,36 +95,34 @@ class SimpleLocationKalmanFilter2D {
       [0.0, r],
     ];
 
-    // Measurement vector z
     final z = [lat, lng];
-
-    // Innovation y = z - Hx
     List<double> y = _vectorSubtract(z, _matrixVectorMultiply(H, _state));
     y = _limitInnovationJump(y);
 
-    // Innovation covariance S = HPH' + R
     final HT = _transpose(H);
     final S = _matrixAdd(_matrixMultiply(H, _matrixMultiply(_P, HT)), R);
-
-    // Kalman Gain K = P H' S⁻¹
     final K = _matrixMultiply(_P, _matrixMultiply(HT, _inverse2x2(S)));
 
-    // Update state x = x + K * y
     final Ky = _matrixVectorMultiply(K, y);
     for (int i = 0; i < _state.length; i++) {
       _state[i] += Ky[i];
     }
 
-    // Update covariance P = (I - KH)P
-    final I = _identityMatrix(4);
-    final KH = _matrixMultiply(K, H);
-    final I_KH = _matrixSubtract(I, KH);
-    _P = _matrixMultiply(I_KH, _P);
+    _P = _matrixMultiply(_matrixSubtract(_identityMatrix(4), _matrixMultiply(K, H)), _P);
 
-    // Return filtered result
     final filtered = _getFilteredState();
 
-    // Save data
+    if (filtered['confidence'] != null && filtered['confidence']! < 0.4) {
+      LogHelper.staticLogWarn(
+          "[KALMAN] Low confidence: ${filtered['confidence']!.toStringAsFixed(2)} — result may be unreliable.");
+    }
+
+    if (filtered['speed'] != null && filtered['speed']! < minMovingSpeedMetersPerSecond) {
+      LogHelper.staticLogInfo(
+          "[KALMAN] User is nearly static (speed=${filtered['speed']!.toStringAsFixed(2)} m/s), skipping update");
+      return _getFilteredState();
+    }
+
     LogHelper.staticAppendKalmanCsv(
       timestamp: timestamp,
       origLat: lat,
@@ -148,8 +142,6 @@ class SimpleLocationKalmanFilter2D {
   /// Limite les sauts GPS irréalistes en lissant l’innovation si elle dépasse un seuil.
   /// Si la différence entre la prédiction et la mesure est trop grande, on la réduit proportionnellement.
   List<double> _limitInnovationJump(List<double> y) {
-    const double maxAcceptableJumpMeters = 15.0;
-
     final innovationMeters = sqrt(
       pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
     );
