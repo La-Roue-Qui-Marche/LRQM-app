@@ -187,12 +187,14 @@ class GeolocationController with WidgetsBindingObserver {
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await bg.BackgroundGeolocation.ready(bg.Config(
-        desiredAccuracy: bg.Config.DESIRED_ACCURACY_HIGH,
+        desiredAccuracy: bg.Config.DESIRED_ACCURACY_NAVIGATION,
+        activityType: bg.Config.ACTIVITY_TYPE_FITNESS,
         distanceFilter: config.locationDistanceFilter.toDouble(),
-        stopOnTerminate: false,
-        startOnBoot: true,
+        stationaryRadius: 25,
+        stopOnTerminate: true,
+        startOnBoot: false,
         debug: false,
-        logLevel: bg.Config.LOG_LEVEL_OFF,
+        logLevel: bg.Config.LOG_LEVEL_DEBUG,
       ));
       bg.BackgroundGeolocation.onLocation((bg.Location location) {
         final coords = location.coords;
