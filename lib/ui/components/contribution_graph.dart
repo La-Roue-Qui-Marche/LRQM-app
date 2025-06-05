@@ -122,7 +122,7 @@ class ContributionGraphState extends State<ContributionGraph> {
 
   // Add this method to calculate the interval for Y-axis
   double _calculateYAxisInterval() {
-    if (_graphData.length < minGraphPoints) return 1.0;
+    if (_graphData.length < minGraphPoints) return 5.0;
 
     double maxY = _graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b);
     maxY = maxY > 3 ? maxY + 1 : 3;
@@ -164,7 +164,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                         gridData: FlGridData(
                           show: true,
                           drawVerticalLine: false,
-                          horizontalInterval: 1,
+                          horizontalInterval: 5,
                           getDrawingHorizontalLine: (value) => FlLine(
                             color: Colors.grey.withOpacity(0.1),
                             strokeWidth: 1,
@@ -177,7 +177,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                           rightTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              reservedSize: 12,
+                              reservedSize: 16,
                               interval: _calculateYAxisInterval(),
                               getTitlesWidget: (value, meta) {
                                 if (value % 1 != 0) return const Text('');
@@ -198,7 +198,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                             spots: _graphData.length >= minGraphPoints
                                 ? _graphData
                                 : List.generate(10, (index) {
-                                    return FlSpot(index.toDouble(), 1.0 + (index % 3) * 0.5);
+                                    return FlSpot(index.toDouble(), 8.0 + (index % 3) * 1);
                                   }),
                             isCurved: true,
                             preventCurveOverShooting: true,
@@ -224,7 +224,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                             ? (_graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b) > 3
                                 ? _graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b) + 1
                                 : 3)
-                            : 3,
+                            : 15,
                       ),
                     ),
                   ),
