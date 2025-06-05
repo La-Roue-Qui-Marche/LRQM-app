@@ -11,8 +11,9 @@ class SimpleLocationKalmanFilter2D {
   late List<List<double>> _P;
 
   // Process noise matrix (4x4)
-  static const double positionProcessNoise = 1e-6;
-  static const double velocityProcessNoise = 1e-3;
+  static const double positionProcessNoise = 0.0005;
+  static const double velocityProcessNoise = 1e-2;
+  static const double maxAcceptableJumpMeters = 20.0;
 
   // Measurement noise (R) in meters (then converted to degrees² during update)
   static const double measurementNoiseMeters = 5.0;
@@ -90,8 +91,9 @@ class SimpleLocationKalmanFilter2D {
       [0.0, 1.0, 0.0, 0.0],
     ];
 
-    // Measurement noise R (2x2) in degrees²
-    final r = pow((accuracy < 1000 ? accuracy : measurementNoiseMeters) / degreesToMeters, 2).toDouble();
+    // === OPTION B: Use actual accuracy for measurement noise ===
+    final acc = accuracy.clamp(1.0, maxUncertaintyMeters);
+    final r = pow(acc / degreesToMeters, 2).toDouble();
     final R = [
       [r, 0.0],
       [0.0, r],
@@ -101,7 +103,8 @@ class SimpleLocationKalmanFilter2D {
     final z = [lat, lng];
 
     // Innovation y = z - Hx
-    final y = _vectorSubtract(z, _matrixVectorMultiply(H, _state));
+    List<double> y = _vectorSubtract(z, _matrixVectorMultiply(H, _state));
+    y = _limitInnovationJump(y);
 
     // Innovation covariance S = HPH' + R
     final HT = _transpose(H);
@@ -122,8 +125,10 @@ class SimpleLocationKalmanFilter2D {
     final I_KH = _matrixSubtract(I, KH);
     _P = _matrixMultiply(I_KH, _P);
 
-    // Save raw and filtered data for analysis
+    // Return filtered result
     final filtered = _getFilteredState();
+
+    // Save data
     LogHelper.staticAppendKalmanCsv(
       timestamp: timestamp,
       origLat: lat,
@@ -137,8 +142,35 @@ class SimpleLocationKalmanFilter2D {
     );
 
     _lastTimestamp = timestamp;
-
     return filtered;
+  }
+
+  /// Limite les sauts GPS irréalistes en lissant l’innovation si elle dépasse un seuil.
+  /// Si la différence entre la prédiction et la mesure est trop grande, on la réduit proportionnellement.
+  List<double> _limitInnovationJump(List<double> y) {
+    const double maxAcceptableJumpMeters = 15.0;
+
+    final innovationMeters = sqrt(
+      pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
+    );
+
+    if (innovationMeters > maxAcceptableJumpMeters) {
+      LogHelper.staticLogWarn("[KALMAN] Large GPS jump detected: ${innovationMeters.toStringAsFixed(2)} m");
+
+      // Lissage proportionnel
+      final scale = maxAcceptableJumpMeters / innovationMeters;
+      for (int i = 0; i < y.length; i++) {
+        y[i] *= scale;
+      }
+
+      final smoothedMeters = sqrt(
+        pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
+      );
+      LogHelper.staticLogInfo(
+          "[KALMAN] Smoothed jump to ${smoothedMeters.toStringAsFixed(2)} m (scale=${scale.toStringAsFixed(2)})");
+    }
+
+    return y;
   }
 
   Map<String, double> _getFilteredState() {
