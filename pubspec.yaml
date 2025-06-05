@@ -120,6 +120,8 @@ flutter:
     - assets/icons/square-3.svg
     - assets/icons/square-4.svg
 
+    - assets/sims/kalman_input_simulation.csv
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

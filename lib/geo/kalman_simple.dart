@@ -22,6 +22,13 @@ class SimpleLocationKalmanFilter2D {
   static const double degreesToMeters = 111000.0;
 
   double _lastTimestamp = 0;
+  double _lastFilteredLat = 0.0;
+  double _lastFilteredLng = 0.0;
+  double _lastRawLat = 0.0;
+  double _lastRawLng = 0.0;
+
+  double totalFilteredDistance = 0.0;
+  double totalRawDistance = 0.0;
 
   SimpleLocationKalmanFilter2D({double initialLat = 0.0, double initialLng = 0.0}) {
     reset(initialLat, initialLng);
@@ -41,6 +48,12 @@ class SimpleLocationKalmanFilter2D {
     _P[3][3] = velUncertainty;
 
     _lastTimestamp = 0;
+    _lastFilteredLat = lat;
+    _lastFilteredLng = lng;
+    _lastRawLat = lat;
+    _lastRawLng = lng;
+    totalFilteredDistance = 0.0;
+    totalRawDistance = 0.0;
   }
 
   Map<String, double> update(double lat, double lng, double accuracy, double timestamp) {
@@ -64,10 +77,12 @@ class SimpleLocationKalmanFilter2D {
       return _getFilteredState();
     }
 
-    final innovationMeters =
-        sqrt(pow((lat - _state[0]) * degreesToMeters, 2) + pow((lng - _state[1]) * degreesToMeters, 2));
-    final speedEstimate = innovationMeters / dt;
+    final rawDist = sqrt(pow((lat - _lastRawLat) * degreesToMeters, 2) + pow((lng - _lastRawLng) * degreesToMeters, 2));
+    totalRawDistance += rawDist;
+    _lastRawLat = lat;
+    _lastRawLng = lng;
 
+    final speedEstimate = rawDist / dt;
     if (speedEstimate < minMovingSpeedMetersPerSecond) {
       LogHelper.staticLogInfo(
           "[KALMAN] Low-speed point detected (speed=$speedEstimate m/s) — degrading accuracy to reduce impact");
@@ -122,6 +137,18 @@ class SimpleLocationKalmanFilter2D {
 
     final filtered = _getFilteredState();
 
+    final lastLat = _lastFilteredLat;
+    final lastLng = _lastFilteredLng;
+    final newLat = filtered['latitude'] ?? lastLat;
+    final newLng = filtered['longitude'] ?? lastLng;
+
+    final filteredIncrement =
+        sqrt(pow((newLat - lastLat) * degreesToMeters, 2) + pow((newLng - lastLng) * degreesToMeters, 2));
+    totalFilteredDistance += filteredIncrement;
+
+    _lastFilteredLat = newLat;
+    _lastFilteredLng = newLng;
+
     if (filtered['confidence'] != null && filtered['confidence']! < 0.4) {
       LogHelper.staticLogWarn(
           "[KALMAN] Low confidence: ${filtered['confidence']!.toStringAsFixed(2)} — result may be unreliable.");
@@ -132,8 +159,8 @@ class SimpleLocationKalmanFilter2D {
       origLat: lat,
       origLng: lng,
       gpsAcc: accuracy,
-      filteredLat: filtered['latitude'] ?? 0.0,
-      filteredLng: filtered['longitude'] ?? 0.0,
+      filteredLat: newLat,
+      filteredLng: newLng,
       speed: filtered['speed'] ?? 0.0,
       uncertainty: filtered['uncertainty'] ?? 0.0,
       confidence: filtered['confidence'] ?? 0.0,
@@ -142,6 +169,9 @@ class SimpleLocationKalmanFilter2D {
     _lastTimestamp = timestamp;
     return filtered;
   }
+
+  double getTotalFilteredDistance() => totalFilteredDistance;
+  double getTotalRawDistance() => totalRawDistance;
 
   /// Limite les sauts GPS irréalistes en lissant l’innovation si elle dépasse un seuil.
   /// Si la différence entre la prédiction et la mesure est trop grande, on la réduit proportionnellement.
@@ -174,10 +204,6 @@ class SimpleLocationKalmanFilter2D {
     final vLat = _state[2] * degreesToMeters;
     final vLng = _state[3] * degreesToMeters;
     final speed = sqrt(vLat * vLat + vLng * vLng);
-
-    if (uncertainty > 50.0) {
-      LogHelper.staticLogWarn("[KALMAN] High uncertainty in filtered result: ${uncertainty.toStringAsFixed(2)} m");
-    }
 
     final confidence = max(0.0, min(1.0, 1.0 - uncertainty / maxUncertaintyMeters));
     if (confidence < 0.5) {
