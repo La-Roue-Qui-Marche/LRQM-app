@@ -170,7 +170,9 @@ class GeolocationController with WidgetsBindingObserver {
     LogHelper.staticLogInfo("[GEO] Geolocation started.");
   }
 
-  void _startPositionStream() {
+  void _startPositionStream() async {
+    // Cancel any existing stream before starting a new one to avoid duplicates
+    await _positionStream?.cancel();
     _positionStream =
         geo.Geolocator.getPositionStream(locationSettings: _settings).listen(_handleForegroundUpdate, onError: (error) {
       LogHelper.staticLogError("[GEO] Position stream error: $error");
@@ -422,11 +424,15 @@ class GeolocationController with WidgetsBindingObserver {
     if (defaultTargetPlatform != TargetPlatform.iOS) return;
     LogHelper.staticLogInfo("[FG] Switching to foreground...");
     try {
+      // Ensure background location updates are stopped before starting foreground stream
       await bg.BackgroundLocation.stopLocationService();
     } catch (e) {
       LogHelper.staticLogError("[FG] Failed to stop background: $e");
     }
 
+    // Cancel any existing foreground stream before starting a new one
+    await _positionStream?.cancel();
+    _positionStream = null;
     _resetPosition = true;
     if (!await PermissionHelper.isProperLocationPermissionGranted()) {
       LogHelper.staticLogError("[FG] Permission lost!");
@@ -434,6 +440,8 @@ class GeolocationController with WidgetsBindingObserver {
       return;
     }
 
+    // Wait a short moment to ensure background service is fully stopped before starting foreground
+    await Future.delayed(const Duration(milliseconds: 200));
     _startPositionStream();
   }
 
