@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:lrqm/ui/components/app_toast.dart';
+import 'package:lrqm/ui/components/kalman_playback.dart';
 import 'package:lrqm/utils/log_helper.dart';
 
 class LogScreen extends StatefulWidget {
@@ -158,10 +159,43 @@ class _LogScreenState extends State<LogScreen> {
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Logs'),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0,
+          titleSpacing: 0,
+          title: Row(
+            children: [
+              const SizedBox(width: 8),
+              const Text('Logs'),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: Colors.black54,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  minimumSize: Size(0, 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const KalmanPlaybackScreen(),
+                      fullscreenDialog: true,
+                    ),
+                  );
+                },
+                child: const Text(
+                  "SIM",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
           actions: [
             IconButton(icon: const Icon(Icons.delete), tooltip: "Clear logs", onPressed: _clearLogs),
             IconButton(
