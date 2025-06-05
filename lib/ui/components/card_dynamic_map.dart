@@ -395,12 +395,8 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               }
             },
             onMapEvent: (MapEvent event) {
-              if (_followUserMode) {
-                // If user zooms or pans, recenter immediately
-                if (event is MapEventMove || event is MapEventRotate || event is MapEventFlingAnimation) {
-                  _userSetZoom = event.camera.zoom;
-                  _centerOnUser();
-                }
+              if (event is MapEventMove && _followUserMode) {
+                _userSetZoom = event.camera.zoom;
               }
             },
           ),
