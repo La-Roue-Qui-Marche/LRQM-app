@@ -16,7 +16,7 @@ class SimpleLocationKalmanFilter2D {
   static const double maxAcceptableJumpMeters = 20.0;
   static const double minDeltaT = 0.1;
 
-  static const double minMovingSpeedMetersPerSecond = 0.5;
+  static const double minMovingSpeedMetersPerSecond = 0.3;
 
   static const double maxUncertaintyMeters = 100.0;
   static const double degreesToMeters = 111000.0;
@@ -69,8 +69,9 @@ class SimpleLocationKalmanFilter2D {
     final speedEstimate = innovationMeters / dt;
 
     if (speedEstimate < minMovingSpeedMetersPerSecond) {
-      LogHelper.staticLogInfo("[KALMAN] User is nearly static (speed=$speedEstimate m/s), skipping update");
-      return _getFilteredState();
+      LogHelper.staticLogInfo(
+          "[KALMAN] Low-speed point detected (speed=$speedEstimate m/s) — degrading accuracy to reduce impact");
+      accuracy = max(accuracy, 30.0);
     }
 
     final F = [
