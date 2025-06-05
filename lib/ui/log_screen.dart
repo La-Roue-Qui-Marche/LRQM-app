@@ -51,10 +51,28 @@ class _LogScreenState extends State<LogScreen> {
 
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
     final directory = await Directory.systemTemp.createTemp('logs');
-    final file = File('${directory.path}/logs_$timestamp.txt');
-    await file.writeAsString(logs.join('\n'));
+    final logFile = File('${directory.path}/logs_$timestamp.txt');
+    await logFile.writeAsString(logs.join('\n'));
 
-    Share.shareFiles([file.path], text: "Application Logs");
+    // Get Kalman CSV file
+    String? kalmanPath;
+    File? kalmanFile;
+    try {
+      kalmanPath = await LogHelper.staticGetKalmanCsvPath();
+      kalmanFile = File(kalmanPath);
+    } catch (_) {
+      kalmanFile = null;
+    }
+
+    final filesToShare = <String>[logFile.path];
+    if (kalmanFile != null && await kalmanFile.exists() && await kalmanFile.length() > 0) {
+      filesToShare.add(kalmanFile.path);
+    }
+
+    Share.shareFiles(
+      filesToShare,
+      text: "Application Logs${filesToShare.length > 1 ? ' + Kalman CSV' : ''}",
+    );
   }
 
   Color _getLogColor(String log) {

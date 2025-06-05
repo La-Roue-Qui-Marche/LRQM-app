@@ -30,6 +30,7 @@ class SimpleLocationKalmanFilter2D {
   }
 
   void reset(double lat, double lng) {
+    LogHelper.staticClearKalmanCsv();
     _state = [lat, lng, 0.0, 0.0];
 
     final posUncertainty = pow(10.0 / degreesToMeters, 2).toDouble();
@@ -121,9 +122,23 @@ class SimpleLocationKalmanFilter2D {
     final I_KH = _matrixSubtract(I, KH);
     _P = _matrixMultiply(I_KH, _P);
 
+    // Save raw and filtered data for analysis
+    final filtered = _getFilteredState();
+    LogHelper.staticAppendKalmanCsv(
+      timestamp: timestamp,
+      origLat: lat,
+      origLng: lng,
+      gpsAcc: accuracy,
+      filteredLat: filtered['latitude'] ?? 0.0,
+      filteredLng: filtered['longitude'] ?? 0.0,
+      speed: filtered['speed'] ?? 0.0,
+      uncertainty: filtered['uncertainty'] ?? 0.0,
+      confidence: filtered['confidence'] ?? 0.0,
+    );
+
     _lastTimestamp = timestamp;
 
-    return _getFilteredState();
+    return filtered;
   }
 
   Map<String, double> _getFilteredState() {
