@@ -14,6 +14,7 @@ class SimpleLocationKalmanFilter2D {
   static const double velocityProcessNoise = 0.001;
 
   static const double maxAcceptableJumpMeters = 20.0;
+  static const double maxDeltaT = 0.3;
   static const double minDeltaT = 0.1;
 
   static const double minMovingSpeedMetersPerSecond = 0.5;
@@ -61,6 +62,15 @@ class SimpleLocationKalmanFilter2D {
     }
     if (dt < minDeltaT) {
       LogHelper.staticLogInfo("[KALMAN] Ignored update: dt trop court ($dt s)");
+      return _getFilteredState();
+    }
+
+    final innovationMeters =
+        sqrt(pow((lat - _state[0]) * degreesToMeters, 2) + pow((lng - _state[1]) * degreesToMeters, 2));
+    final speedEstimate = innovationMeters / dt;
+
+    if (speedEstimate < minMovingSpeedMetersPerSecond) {
+      LogHelper.staticLogInfo("[KALMAN] User is nearly static (speed=$speedEstimate m/s), skipping update");
       return _getFilteredState();
     }
 
@@ -115,12 +125,6 @@ class SimpleLocationKalmanFilter2D {
     if (filtered['confidence'] != null && filtered['confidence']! < 0.4) {
       LogHelper.staticLogWarn(
           "[KALMAN] Low confidence: ${filtered['confidence']!.toStringAsFixed(2)} — result may be unreliable.");
-    }
-
-    if (filtered['speed'] != null && filtered['speed']! < minMovingSpeedMetersPerSecond) {
-      LogHelper.staticLogInfo(
-          "[KALMAN] User is nearly static (speed=${filtered['speed']!.toStringAsFixed(2)} m/s), skipping update");
-      return _getFilteredState();
     }
 
     LogHelper.staticAppendKalmanCsv(
