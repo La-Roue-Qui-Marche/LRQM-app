@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart' as geo;
-import 'package:background_location/background_location.dart' as bg;
+import 'package:background_location/background_location.dart' as bgl;
+import 'package:flutter_background_geolocation/flutter_background_geolocation.dart' as bg;
 import 'package:maps_toolkit/maps_toolkit.dart' as mp;
 
 import 'package:lrqm/api/measure_controller.dart';
@@ -74,7 +75,6 @@ class GeolocationController with WidgetsBindingObserver {
   bool _positionStreamStarted = false;
   int _distance = 0;
   int _outsideCounter = 0;
-  bool _resetPosition = false;
   bool _isSending = false;
   bool _isCountingInZone = true;
 
@@ -139,7 +139,6 @@ class GeolocationController with WidgetsBindingObserver {
 
   Future<void> startListening() async {
     LogHelper.staticLogInfo("[GEO] Starting geolocation...");
-
     await MeasureData.clearMeasurePoints();
     if (_positionStreamStarted || !(await PermissionHelper.isProperLocationPermissionGranted())) {
       LogHelper.staticLogError("Permission not granted or already started.");
@@ -151,14 +150,78 @@ class GeolocationController with WidgetsBindingObserver {
     _outsideCounter = 0;
     _accumulatedActiveDuration = Duration.zero;
     _lastActiveTimestamp = DateTime.now();
-    final initialPos = await geo.Geolocator.getCurrentPosition();
-    _kalmanFilter = SimpleLocationKalmanFilter2D(initialLat: initialPos.latitude, initialLng: initialPos.longitude);
-    _oldPos = initialPos;
-    _resetPosition = false;
-    _startPositionStream();
+
+    // Get initial position and initialize Kalman filter for both platforms
+    double lat, lng, acc;
+    DateTime ts;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final state = await bg.BackgroundGeolocation.state;
+      if (!state.enabled) {
+        await bg.BackgroundGeolocation.start();
+      }
+      final location = await bg.BackgroundGeolocation.getCurrentPosition(samples: 1);
+      lat = location.coords.latitude;
+      lng = location.coords.longitude;
+      acc = location.coords.accuracy;
+      ts = DateTime.tryParse(location.timestamp) ?? DateTime.now();
+    } else {
+      final initialPos = await geo.Geolocator.getCurrentPosition();
+      lat = initialPos.latitude;
+      lng = initialPos.longitude;
+      acc = initialPos.accuracy;
+      ts = initialPos.timestamp;
+    }
+    _kalmanFilter = SimpleLocationKalmanFilter2D(initialLat: lat, initialLng: lng);
+    _oldPos = geo.Position(
+      latitude: lat,
+      longitude: lng,
+      accuracy: acc,
+      altitudeAccuracy: 0,
+      headingAccuracy: 0,
+      timestamp: ts,
+      altitude: 0,
+      heading: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await bg.BackgroundGeolocation.ready(bg.Config(
+        desiredAccuracy: bg.Config.DESIRED_ACCURACY_HIGH,
+        distanceFilter: config.locationDistanceFilter.toDouble(),
+        stopOnTerminate: false,
+        startOnBoot: true,
+        debug: false,
+        logLevel: bg.Config.LOG_LEVEL_OFF,
+      ));
+      bg.BackgroundGeolocation.onLocation((bg.Location location) {
+        final coords = location.coords;
+        _processPositionUpdate(
+          coords.latitude,
+          coords.longitude,
+          coords.accuracy,
+          DateTime.tryParse(location.timestamp) ?? DateTime.now(),
+        );
+      });
+      await bg.BackgroundGeolocation.start();
+    } else {
+      await _positionStream?.cancel();
+      _positionStream = geo.Geolocator.getPositionStream(locationSettings: _settings).listen((geo.Position position) {
+        _processPositionUpdate(
+          position.latitude,
+          position.longitude,
+          position.accuracy,
+          position.timestamp,
+        );
+      }, onError: (error) {
+        LogHelper.staticLogError("[GEO] Position stream error: $error");
+      });
+    }
+
     _apiTimer = Timer.periodic(config.apiInterval, (_) {
       _sendCurrentDistance();
     });
+
     _streamTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_streamController.isClosed) {
         _streamController.sink.add({
@@ -167,66 +230,45 @@ class GeolocationController with WidgetsBindingObserver {
         });
       }
     });
+
     LogHelper.staticLogInfo("[GEO] Geolocation started.");
   }
 
-  void _startPositionStream() async {
-    // Cancel any existing stream before starting a new one to avoid duplicates
-    await _positionStream?.cancel();
-    _positionStream =
-        geo.Geolocator.getPositionStream(locationSettings: _settings).listen(_handleForegroundUpdate, onError: (error) {
-      LogHelper.staticLogError("[GEO] Position stream error: $error");
-    });
-  }
-
-  void _handleForegroundUpdate(geo.Position position) {
-    _processPositionUpdate(
-      position.latitude,
-      position.longitude,
-      position.accuracy,
-      position.timestamp,
-    );
-  }
-
-  void _handleBackgroundUpdate(bg.Location location) {
-    _processPositionUpdate(
-      location.latitude ?? 0,
-      location.longitude ?? 0,
-      location.accuracy ?? 0,
-      DateTime.now(),
-    );
-  }
-
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
-    if (_resetPosition || _oldPos == null) {
+    if (_oldPos == null) {
       LogHelper.staticLogInfo("[GEO] First update or reset position. Acc=${acc.toStringAsFixed(1)}m");
       _saveOldPos(lat, lng, acc, timestamp);
-      _resetPosition = false;
       return;
     }
 
     // Update Kalman filter with the new measurement
     final filteredPosition = _kalmanFilter.update(lat, lng, acc, timestamp.millisecondsSinceEpoch / 1000.0);
 
-    // Calculate distance using filtered position
-    final dist = geo.Geolocator.distanceBetween(
-            _oldPos!.latitude, _oldPos!.longitude, filteredPosition['latitude']!, filteredPosition['longitude']!)
-        .round();
+    // Use computePositionDeltas helper for distance/speed calculations
+    final deltas = computePositionDeltas(
+      prevLat: _oldPos!.latitude,
+      prevLng: _oldPos!.longitude,
+      prevTimestamp: _oldPos!.timestamp,
+      currLat: lat,
+      currLng: lng,
+      currTimestamp: timestamp,
+      filteredPosition: {
+        'latitude': filteredPosition['latitude']!,
+        'longitude': filteredPosition['longitude']!,
+      },
+    );
+
+    final dist = deltas['dist'];
+    final rawDist = deltas['rawDist'];
+    final rawSpeed = deltas['rawSpeed'];
 
     final inZone = await isLocationInZone(filteredPosition['latitude']!, filteredPosition['longitude']!);
-    _handleZoneLogic(inZone, dist); // Calculate raw distance and speed from unfiltered positions
-    final rawDist = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng).round();
-    final timeDiffSec = timestamp.difference(_oldPos!.timestamp).inMilliseconds / 1000;
-    double rawSpeed = 0.0;
-    if (timeDiffSec > 0.5) {
-      rawSpeed = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng) / timeDiffSec;
-    }
+    _handleZoneLogic(inZone, dist);
 
     // Log position comparison with accuracy using the imported method
     LogHelper.staticLogInfo(formatPositionComparison(
       elapsedTime: elapsedTimeInSeconds,
       filteredPosition: {
-        // Changed from smoothedPosition
         'latitude': filteredPosition['latitude']!,
         'longitude': filteredPosition['longitude']!,
         'speed': filteredPosition['speed']!,
@@ -253,7 +295,6 @@ class GeolocationController with WidgetsBindingObserver {
       duration: elapsedTimeInSeconds,
     );
 
-    // Update last known position
     _saveOldPos(
         filteredPosition['latitude']!, filteredPosition['longitude']!, filteredPosition['uncertainty']!, timestamp);
   }
@@ -314,12 +355,14 @@ class GeolocationController with WidgetsBindingObserver {
 
     LogHelper.staticLogInfo("[GEO] Stopping geolocation Listening...");
 
-    // Clean up resources first to stop all streams/timers
-    await _positionStream?.cancel();
-    await bg.BackgroundLocation.stopLocationService();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await bg.BackgroundGeolocation.stop();
+    } else {
+      await _positionStream?.cancel();
+    }
     _positionStreamStarted = false;
-    LogHelper.staticLogInfo("[GEO] Stopped BG and FG position stream.");
 
+    LogHelper.staticLogInfo("[GEO] Stopped geolocation stream.");
     _apiTimer?.cancel();
     _streamTimer?.cancel();
     if (!_streamController.isClosed) {
@@ -327,7 +370,6 @@ class GeolocationController with WidgetsBindingObserver {
     }
     LogHelper.staticLogInfo("[GEO] Geolocation resources cleaned up.");
 
-    // Retry sending current distance until success or "Aucune mesure en cours à modifier." error
     while (true) {
       final result = await MeasureController.editMeters(_distance);
       if (result.value == true) {
@@ -342,7 +384,6 @@ class GeolocationController with WidgetsBindingObserver {
       }
     }
 
-    // Retry stopping measure until success or "Aucune mesure en cours à arrêter." error
     while (true) {
       final result = await MeasureController.stopMeasure();
       if (result.value == true) {
@@ -392,61 +433,9 @@ class GeolocationController with WidgetsBindingObserver {
     return double.parse((minDistance / 1000).toStringAsFixed(1));
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!_positionStreamStarted) return;
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      if (state == AppLifecycleState.paused) {
-        _switchToBackgroundLocation();
-      } else if (state == AppLifecycleState.resumed) {
-        _switchToForegroundLocation();
-      }
-    }
-  }
-
-  Future<void> _switchToBackgroundLocation() async {
-    if (defaultTargetPlatform != TargetPlatform.iOS) return;
-    LogHelper.staticLogInfo("[BG] Switching to background...");
-    await _positionStream?.cancel();
-
-    if (!await PermissionHelper.isProperLocationPermissionGranted()) {
-      LogHelper.staticLogError("[BG] Permission lost!");
-      _streamController.sink.add({"time": -1, "distance": -1});
-      return;
-    }
-
-    _resetPosition = true;
-    await bg.BackgroundLocation.startLocationService(distanceFilter: config.locationDistanceFilter.toDouble());
-    bg.BackgroundLocation.getLocationUpdates(_handleBackgroundUpdate);
-  }
-
-  Future<void> _switchToForegroundLocation() async {
-    if (defaultTargetPlatform != TargetPlatform.iOS) return;
-    LogHelper.staticLogInfo("[FG] Switching to foreground...");
-    try {
-      // Ensure background location updates are stopped before starting foreground stream
-      await bg.BackgroundLocation.stopLocationService();
-    } catch (e) {
-      LogHelper.staticLogError("[FG] Failed to stop background: $e");
-    }
-
-    // Cancel any existing foreground stream before starting a new one
-    await _positionStream?.cancel();
-    _positionStream = null;
-    _resetPosition = true;
-    if (!await PermissionHelper.isProperLocationPermissionGranted()) {
-      LogHelper.staticLogError("[FG] Permission lost!");
-      _streamController.sink.add({"time": -1, "distance": -1});
-      return;
-    }
-
-    // Wait a short moment to ensure background service is fully stopped before starting foreground
-    await Future.delayed(const Duration(milliseconds: 200));
-    _startPositionStream();
-  }
-
   void cleanup() {
     WidgetsBinding.instance.removeObserver(this);
+    LogHelper.staticLogInfo("[GEO] GeolocationController cleaned up.");
     stopListening();
   }
 }

@@ -1,3 +1,5 @@
+import 'package:geolocator/geolocator.dart' as geo;
+
 String formatPositionComparison({
   required int elapsedTime,
   required Map<String, double> filteredPosition,
@@ -27,4 +29,31 @@ String formatPositionComparison({
     confidence: ${confidence.toStringAsFixed(2)}''';
 
   return logOutput;
+}
+
+Map<String, dynamic> computePositionDeltas({
+  required double prevLat,
+  required double prevLng,
+  required DateTime prevTimestamp,
+  required double currLat,
+  required double currLng,
+  required DateTime currTimestamp,
+  required Map<String, double> filteredPosition,
+}) {
+  final dist =
+      geo.Geolocator.distanceBetween(prevLat, prevLng, filteredPosition['latitude']!, filteredPosition['longitude']!)
+          .round();
+
+  final rawDist = geo.Geolocator.distanceBetween(prevLat, prevLng, currLat, currLng).round();
+  final timeDiffSec = currTimestamp.difference(prevTimestamp).inMilliseconds / 1000;
+  double rawSpeed = 0.0;
+  if (timeDiffSec > 0.5) {
+    rawSpeed = geo.Geolocator.distanceBetween(prevLat, prevLng, currLat, currLng) / timeDiffSec;
+  }
+  return {
+    'dist': dist,
+    'rawDist': rawDist,
+    'rawSpeed': rawSpeed,
+    'timeDiffSec': timeDiffSec,
+  };
 }
