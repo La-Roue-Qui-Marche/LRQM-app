@@ -126,23 +126,13 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     setState(() => _isForceLoading = true);
 
     int distance = 0, duration = 0;
-    bool stopSuccess = false;
 
-    while (!stopSuccess) {
-      try {
-        distance = _geolocation.currentDistance;
-        duration = _geolocation.elapsedTimeInSeconds;
-        stopSuccess = await _geolocation.stopListening();
-      } catch (e) {
-        AppToast.showError("Erreur lors de l'arrêt de la mesure : $e, ");
-      }
-
-      if (!stopSuccess) {
-        if (mounted) {
-          AppToast.showError("Impossible d'arrêter la mesure, on réessaie...");
-          await Future.delayed(const Duration(seconds: 10));
-        }
-      }
+    try {
+      distance = _geolocation.currentDistance;
+      duration = _geolocation.elapsedTimeInSeconds;
+      await _geolocation.stopListening();
+    } catch (e) {
+      AppToast.showError("Erreur lors de l'arrêt de la mesure : $e, ");
     }
 
     AppToast.showSuccess("Mesure arrêtée et enregistrée !");
@@ -213,7 +203,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
         await Future.delayed(const Duration(seconds: 2));
         if (await MeasureData.isMeasureOngoing()) {
-          await _geolocation.forceStopListening();
+          await _geolocation.stopListening();
         }
 
         final cleared = await UtilsData.deleteAllData();
