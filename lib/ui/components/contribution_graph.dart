@@ -80,9 +80,9 @@ class ContributionGraphState extends State<ContributionGraph> {
     // Only calculate if we have valid data
     if (distanceDelta >= 0 && timeDelta > 0) {
       // Calculate speed in m/s
-      final calculatedSpeed = (distanceDelta / timeDelta) * 3.6; // Convert m/s to km/h
+      final calculatedSpeed = (distanceDelta / timeDelta);
 
-      debugPrint("Calculated speed: $calculatedSpeed km/h");
+      debugPrint("Calculated speed: $calculatedSpeed m/s");
 
       // Plot the calculated speed
       _addContributionValue(calculatedSpeed);
@@ -122,7 +122,7 @@ class ContributionGraphState extends State<ContributionGraph> {
 
   // Add this method to calculate the interval for Y-axis
   double _calculateYAxisInterval() {
-    if (_graphData.length < minGraphPoints) return 5.0;
+    if (_graphData.length < minGraphPoints) return 1.0;
 
     double maxY = _graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b);
     maxY = maxY > 3 ? maxY + 1 : 3;
@@ -142,7 +142,7 @@ class ContributionGraphState extends State<ContributionGraph> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Contribution moyenne (km/h)",
+              "Contribution moyenne (m/s)",
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black54,
@@ -198,7 +198,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                             spots: _graphData.length >= minGraphPoints
                                 ? _graphData
                                 : List.generate(10, (index) {
-                                    return FlSpot(index.toDouble(), 8.0 + (index % 3) * 1);
+                                    return FlSpot(index.toDouble(), 1.0 + (index % 3) * 0.5);
                                   }),
                             isCurved: true,
                             preventCurveOverShooting: true,
@@ -224,7 +224,7 @@ class ContributionGraphState extends State<ContributionGraph> {
                             ? (_graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b) > 3
                                 ? _graphData.map((e) => e.y).reduce((a, b) => a > b ? a : b) + 1
                                 : 3)
-                            : 15,
+                            : 3,
                       ),
                     ),
                   ),

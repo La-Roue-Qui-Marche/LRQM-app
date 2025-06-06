@@ -131,11 +131,9 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   void _centerOnUser() {
     if (_currentLatLng == null || !_isMapReady) return;
     try {
-      double targetZoom;
+      double targetZoom = 15.2;
       if (_userSetZoom != null) {
         targetZoom = _userSetZoom!;
-      } else {
-        targetZoom = 15;
       }
 
       final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), targetZoom);
@@ -395,8 +393,9 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               }
             },
             onMapEvent: (MapEvent event) {
-              if (event is MapEventMove && _followUserMode) {
+              if (event is MapEventMoveEnd && _followUserMode) {
                 _userSetZoom = event.camera.zoom;
+                _centerOnUser();
               }
             },
           ),

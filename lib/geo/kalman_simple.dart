@@ -20,8 +20,6 @@ class SimpleLocationKalmanFilter2D {
   static const double degreesToMeters = 111000.0;
 
   double _lastTimestamp = 0;
-  double _lastFilteredLat = 0.0;
-  double _lastFilteredLng = 0.0;
   double _lastRawLat = 0.0;
   double _lastRawLng = 0.0;
 
@@ -30,7 +28,7 @@ class SimpleLocationKalmanFilter2D {
   }
 
   void reset(double lat, double lng) {
-    LogHelper.staticClearKalmanCsv();
+    LogHelper.staticClearKalmanCsv(); // Clear CSV on reset
     _state = [lat, lng, 0.0, 0.0];
 
     final posUncertainty = pow(20.0 / degreesToMeters, 2).toDouble();
@@ -43,8 +41,6 @@ class SimpleLocationKalmanFilter2D {
     _P[3][3] = velUncertainty;
 
     _lastTimestamp = 0;
-    _lastFilteredLat = lat;
-    _lastFilteredLng = lng;
     _lastRawLat = lat;
     _lastRawLng = lng;
   }
@@ -126,7 +122,22 @@ class SimpleLocationKalmanFilter2D {
 
     _lastTimestamp = timestamp;
 
-    return _getFilteredState();
+    final filtered = _getFilteredState();
+
+    // Record data to CSV
+    LogHelper.staticAppendKalmanCsv(
+      timestamp: timestamp,
+      origLat: lat,
+      origLng: lng,
+      gpsAcc: accuracy,
+      filteredLat: filtered['latitude']!,
+      filteredLng: filtered['longitude']!,
+      speed: filtered['speed']!,
+      uncertainty: filtered['uncertainty']!,
+      confidence: filtered['confidence']!,
+    );
+
+    return filtered;
   }
 
   Map<String, double> _getFilteredState() {

@@ -23,6 +23,8 @@ import 'package:lrqm/ui/summary_screen.dart';
 import 'package:lrqm/ui/login_screen.dart';
 import 'package:lrqm/ui/info_screen.dart';
 
+import 'package:lrqm/utils/log_helper.dart';
+
 class WorkingScreen extends StatefulWidget {
   const WorkingScreen({super.key});
   @override
@@ -115,6 +117,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   Future<void> _checkMeasureStatus() async {
     if (!_geolocation.isCountingInZone && _isMeasureOngoing) {
+      LogHelper.staticLogWarn("[WORKING] Tu es hors de la zone autorisée, arrêt de la mesure en cours.");
       AppToast.showError("Tu es hors de la zone autorisée. Arrêt de la session en cours.");
       await _forceStopAndShowSummary();
     }

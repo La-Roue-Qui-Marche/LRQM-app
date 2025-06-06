@@ -5,13 +5,13 @@ class LowPassLocationFilter {
   double? _lastLng;
   double? _lastTimestamp;
 
-  final double minAlpha; // très lissé (ex: 0.05)
-  final double maxAlpha; // plus réactif (ex: 0.9)
+  final double minAlpha;
+  final double maxAlpha;
   final double jumpThresholdMeters; // au-delà de cette distance, on considère que c’est un "gros changement"
 
   LowPassLocationFilter({
-    this.minAlpha = 0.05,
-    this.maxAlpha = 0.3,
+    this.minAlpha = 0.1,
+    this.maxAlpha = 0.5,
     this.jumpThresholdMeters = 5.0,
   });
 

@@ -11,7 +11,7 @@ import 'package:lrqm/utils/permission_helper.dart';
 import 'package:lrqm/data/event_data.dart';
 import 'package:lrqm/data/measure_data.dart';
 import 'package:lrqm/geo/kalman_simple.dart';
-import 'package:lrqm/geo/geolocation_log.dart';
+import 'package:lrqm/geo/geolocation_data.dart';
 import 'package:lrqm/geo/low_pass_location_filter.dart';
 
 class GeolocationConfig {
@@ -231,36 +231,10 @@ class GeolocationController with WidgetsBindingObserver {
         .round();
 
     final inZone = await isLocationInZone(filteredPosition['latitude']!, filteredPosition['longitude']!);
-    _handleZoneLogic(inZone, dist); // Calculate raw distance and speed from unfiltered positions
-    final rawDist = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng).round();
-    final timeDiffSec = timestamp.difference(_oldPos!.timestamp).inMilliseconds / 1000;
-    double rawSpeed = 0.0;
-    if (timeDiffSec > 0.5) {
-      rawSpeed = geo.Geolocator.distanceBetween(_oldPos!.latitude, _oldPos!.longitude, lat, lng) / timeDiffSec;
-    }
-
-    // Log position comparison with accuracy using the imported method
-    LogHelper.staticLogInfo(formatPositionComparison(
-      elapsedTime: elapsedTimeInSeconds,
-      filteredPosition: {
-        // Changed from smoothedPosition
-        'latitude': filteredPosition['latitude']!,
-        'longitude': filteredPosition['longitude']!,
-        'speed': kalmanFilteredPosition['speed']!,
-      },
-      lat: lat,
-      lng: lng,
-      rawSpeed: rawSpeed,
-      rawAccuracy: acc,
-      dist: dist,
-      rawDist: rawDist,
-      timestamp: timestamp,
-      uncertainty: kalmanFilteredPosition['uncertainty']!,
-      confidence: kalmanFilteredPosition['confidence']!,
-    ));
+    _handleZoneLogic(inZone, dist);
 
     // Save measurement data
-    await MeasureData.addMeasurePoint(
+    await saveMeasurementData(
       distance: _distance.toDouble(),
       speed: kalmanFilteredPosition['speed']!,
       acc: kalmanFilteredPosition['uncertainty']!,
@@ -385,7 +359,7 @@ class GeolocationController with WidgetsBindingObserver {
   }
 
   Future<bool> isInZone() async {
-    if (!await PermissionHelper.isProperLocationPermissionGranted()) {
+    if (!await PermissionHelper.isLocationWhenInUseGranted()) {
       LogHelper.staticLogError("[GEO] Location permission not granted.");
       return false;
     }
