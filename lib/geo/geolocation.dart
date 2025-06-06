@@ -38,22 +38,8 @@ class GeolocationConfig {
 
 class GeolocationController with WidgetsBindingObserver {
   final GeolocationConfig config;
-  static GeolocationController? _instance;
 
-  static void resetInstance() {
-    if (_instance != null) {
-      LogHelper.staticLogInfo("[GEO] Resetting GeolocationController instance");
-      _instance!.cleanup();
-      _instance = null;
-    }
-  }
-
-  factory GeolocationController({required GeolocationConfig config}) {
-    _instance ??= GeolocationController._internal(config);
-    return _instance!;
-  }
-
-  GeolocationController._internal(this.config) {
+  GeolocationController({required this.config}) {
     _settings = _getSettings();
     WidgetsBinding.instance.addObserver(this);
     _initZone();
@@ -155,6 +141,10 @@ class GeolocationController with WidgetsBindingObserver {
     _outsideCounter = 0;
     _accumulatedActiveDuration = Duration.zero;
     _lastActiveTimestamp = DateTime.now();
+
+    // Add a small delay to let the geolocation initialize
+    await Future.delayed(const Duration(milliseconds: 500));
+
     final initialPos = await geo.Geolocator.getCurrentPosition();
     _kalmanFilter = SimpleLocationKalmanFilter2D(initialLat: initialPos.latitude, initialLng: initialPos.longitude);
     _lowPassFilter = LowPassLocationFilter();

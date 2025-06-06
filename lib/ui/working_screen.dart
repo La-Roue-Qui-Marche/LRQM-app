@@ -42,12 +42,18 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   bool _showMainCards = true;
   Timer? _eventCheckTimer;
 
-  late GeolocationController _geolocation;
+  late final GeolocationController _geolocation;
 
   @override
   void initState() {
     super.initState();
-    _initializeGeolocation();
+    _geolocation = GeolocationController(
+      config: GeolocationConfig(
+        locationDistanceFilter: Config.locationDistanceFilter,
+        apiInterval: Config.apiInterval,
+        outsideCounterMax: Config.outsideCounterMax,
+      ),
+    );
     _initializeMeasureStatus();
     _initializeEventStatus();
     _startEventStatusTimer();
@@ -64,17 +70,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     if (_isMeasureOngoing) {
       _geolocation.startListening();
     }
-  }
-
-  void _initializeGeolocation() {
-    GeolocationController.resetInstance();
-    _geolocation = GeolocationController(
-      config: GeolocationConfig(
-        locationDistanceFilter: Config.locationDistanceFilter,
-        apiInterval: Config.apiInterval,
-        outsideCounterMax: Config.outsideCounterMax,
-      ),
-    );
   }
 
   Future<void> _initializeEventStatus() async {
