@@ -27,6 +27,8 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
   List<LatLng> lowPassPoints = [];
 
   bool _isMapReady = false;
+  double totalRawDistance = 0.0; // Define totalRawDistance at the class level
+  double totalFilteredDistance = 0.0; // Define totalFilteredDistance at the class level
   double _totalLowPassDistance = 0.0;
 
   DisplayMode _displayMode = DisplayMode.rawOnly;
@@ -43,12 +45,17 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
     rawPoints = [];
     filteredPoints = [];
     lowPassPoints = [];
+    totalRawDistance = 0.0; // Reset totalRawDistance
+    totalFilteredDistance = 0.0; // Reset totalFilteredDistance
     _totalLowPassDistance = 0.0;
     setState(() {});
 
     final csvString = await rootBundle.loadString('assets/sims/kalman_input_simulation.csv');
     final lines = const LineSplitter().convert(csvString);
-    LatLng? previousPoint;
+    LatLng? previousRawPoint;
+    LatLng? previousFilteredPoint;
+    LatLng? previousLowPassPoint;
+
     for (int i = 1; i < lines.length; i++) {
       final parts = lines[i].split(',');
       if (parts.length < 4) continue;
@@ -60,15 +67,35 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
 
       if (lat == null || lng == null || acc == null || ts == null) continue;
 
-      final raw = LatLng(lat, lng);
-      rawPoints.add(raw);
+      final rawPoint = LatLng(lat, lng);
+      rawPoints.add(rawPoint);
+
+      if (previousRawPoint != null) {
+        totalRawDistance += _haversineDistance(
+          previousRawPoint.latitude,
+          previousRawPoint.longitude,
+          rawPoint.latitude,
+          rawPoint.longitude,
+        );
+      }
+      previousRawPoint = rawPoint;
 
       final result = filter.update(lat, lng, acc, ts);
       final fLat = result['latitude'];
       final fLng = result['longitude'];
       if (fLat != null && fLng != null) {
-        final kalmanPoint = LatLng(fLat, fLng);
-        filteredPoints.add(kalmanPoint);
+        final filteredPoint = LatLng(fLat, fLng);
+        filteredPoints.add(filteredPoint);
+
+        if (previousFilteredPoint != null) {
+          totalFilteredDistance += _haversineDistance(
+            previousFilteredPoint.latitude,
+            previousFilteredPoint.longitude,
+            filteredPoint.latitude,
+            filteredPoint.longitude,
+          );
+        }
+        previousFilteredPoint = filteredPoint;
 
         final smoothed = _lowPassFilter.filter(
           latitude: fLat,
@@ -80,15 +107,15 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
         final lowPassPoint = LatLng(finalLat, finalLng);
         lowPassPoints.add(lowPassPoint);
 
-        if (previousPoint != null) {
+        if (previousLowPassPoint != null) {
           _totalLowPassDistance += _haversineDistance(
-            previousPoint.latitude,
-            previousPoint.longitude,
-            finalLat,
-            finalLng,
+            previousLowPassPoint.latitude,
+            previousLowPassPoint.longitude,
+            lowPassPoint.latitude,
+            lowPassPoint.longitude,
           );
         }
-        previousPoint = lowPassPoint;
+        previousLowPassPoint = lowPassPoint;
       }
     }
 
@@ -218,11 +245,11 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("📏 Distance brute (rouge) : ${filter.getTotalRawDistance().toStringAsFixed(1)} m",
+                    Text("Distance brute: ${totalRawDistance.toStringAsFixed(1)} m",
                         style: TextStyle(color: Colors.red)),
-                    Text("🧠 Distance filtrée (vert) : ${filter.getTotalFilteredDistance().toStringAsFixed(1)} m",
+                    Text("Distance Kalman: ${totalFilteredDistance.toStringAsFixed(1)} m",
                         style: TextStyle(color: Colors.green)),
-                    Text("🪄 Distance passe-bas (bleu) : ${_totalLowPassDistance.toStringAsFixed(1)} m",
+                    Text("Distance LP : ${_totalLowPassDistance.toStringAsFixed(1)} m",
                         style: TextStyle(color: Colors.blue)),
                   ],
                 ),

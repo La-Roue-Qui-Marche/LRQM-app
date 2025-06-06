@@ -13,14 +13,8 @@ class SimpleLocationKalmanFilter2D {
   static const double positionProcessNoise = 0.001;
   static const double velocityProcessNoise = 0.001;
 
-  // Tunable thresholds
-  static const double maxInnovationToTrust = 5.0; // Plus strict — on commence à douter au-delà de 5m
-  static const double maxInnovationJumpMeters = 15.0; // Saut au-delà duquel c’est considéré comme un glitch
-  static const double maxJumpCorrectionMeters = 2.5; // Distance max autorisée pour atténuer un jump suspect
-
   static const double minDeltaT = 0.1;
-
-  static const double minMovingSpeedMetersPerSecond = 0.5;
+  static const double minMovingSpeedMetersPerSecond = 0.2;
 
   static const double maxUncertaintyMeters = 100.0;
   static const double degreesToMeters = 111000.0;
@@ -31,9 +25,6 @@ class SimpleLocationKalmanFilter2D {
   double _lastRawLat = 0.0;
   double _lastRawLng = 0.0;
 
-  double totalFilteredDistance = 0.0;
-  double totalRawDistance = 0.0;
-
   SimpleLocationKalmanFilter2D({double initialLat = 0.0, double initialLng = 0.0}) {
     reset(initialLat, initialLng);
   }
@@ -42,8 +33,8 @@ class SimpleLocationKalmanFilter2D {
     LogHelper.staticClearKalmanCsv();
     _state = [lat, lng, 0.0, 0.0];
 
-    final posUncertainty = pow(10.0 / degreesToMeters, 2).toDouble();
-    final velUncertainty = pow(1.0 / degreesToMeters, 2).toDouble();
+    final posUncertainty = pow(20.0 / degreesToMeters, 2).toDouble();
+    final velUncertainty = pow(5.0 / degreesToMeters, 2).toDouble();
 
     _P = List.generate(4, (_) => List.filled(4, 0.0));
     _P[0][0] = posUncertainty;
@@ -56,8 +47,6 @@ class SimpleLocationKalmanFilter2D {
     _lastFilteredLng = lng;
     _lastRawLat = lat;
     _lastRawLng = lng;
-    totalFilteredDistance = 0.0;
-    totalRawDistance = 0.0;
   }
 
   Map<String, double> update(double lat, double lng, double accuracy, double timestamp) {
@@ -82,14 +71,11 @@ class SimpleLocationKalmanFilter2D {
     }
 
     final rawDist = sqrt(pow((lat - _lastRawLat) * degreesToMeters, 2) + pow((lng - _lastRawLng) * degreesToMeters, 2));
-    totalRawDistance += rawDist;
     _lastRawLat = lat;
     _lastRawLng = lng;
 
     final speedEstimate = rawDist / dt;
     if (speedEstimate < minMovingSpeedMetersPerSecond) {
-      LogHelper.staticLogInfo(
-          "[KALMAN] Low-speed point detected (speed=$speedEstimate m/s) — degrading accuracy to reduce impact");
       accuracy = max(accuracy, 50.0);
     }
 
@@ -118,16 +104,14 @@ class SimpleLocationKalmanFilter2D {
     ];
 
     final acc = accuracy.clamp(1.0, maxUncertaintyMeters);
-    final r = pow(acc / degreesToMeters, 2).toDouble();
+    final r = pow(acc / (degreesToMeters * 0.5), 2).toDouble();
     final R = [
       [r, 0.0],
       [0.0, r],
     ];
 
     final z = [lat, lng];
-    List<double> y = _vectorSubtract(z, _matrixVectorMultiply(H, _state));
-    y = _limitInnovationJump(y);
-    y = _handleLargeInnovation(y);
+    final y = _vectorSubtract(z, _matrixVectorMultiply(H, _state));
 
     final HT = _transpose(H);
     final S = _matrixAdd(_matrixMultiply(H, _matrixMultiply(_P, HT)), R);
@@ -140,117 +124,20 @@ class SimpleLocationKalmanFilter2D {
 
     _P = _matrixMultiply(_matrixSubtract(_identityMatrix(4), _matrixMultiply(K, H)), _P);
 
-    final filtered = _getFilteredState();
-
-    final lastLat = _lastFilteredLat;
-    final lastLng = _lastFilteredLng;
-    final newLat = filtered['latitude'] ?? lastLat;
-    final newLng = filtered['longitude'] ?? lastLng;
-
-    final filteredIncrement =
-        sqrt(pow((newLat - lastLat) * degreesToMeters, 2) + pow((newLng - lastLng) * degreesToMeters, 2));
-    totalFilteredDistance += filteredIncrement;
-
-    _lastFilteredLat = newLat;
-    _lastFilteredLng = newLng;
-
-    if (filtered['confidence'] != null && filtered['confidence']! < 0.4) {
-      LogHelper.staticLogWarn(
-          "[KALMAN] Low confidence: ${filtered['confidence']!.toStringAsFixed(2)} — result may be unreliable.");
-    }
-
-    LogHelper.staticAppendKalmanCsv(
-      timestamp: timestamp,
-      origLat: lat,
-      origLng: lng,
-      gpsAcc: accuracy,
-      filteredLat: newLat,
-      filteredLng: newLng,
-      speed: filtered['speed'] ?? 0.0,
-      uncertainty: filtered['uncertainty'] ?? 0.0,
-      confidence: filtered['confidence'] ?? 0.0,
-    );
-
     _lastTimestamp = timestamp;
-    return filtered;
-  }
 
-  double getTotalFilteredDistance() => totalFilteredDistance;
-  double getTotalRawDistance() => totalRawDistance;
-
-  /// Limite les sauts GPS irréalistes en lissant l’innovation si elle dépasse un seuil.
-  /// Si la différence entre la prédiction et la mesure est trop grande, on la réduit proportionnellement.
-  List<double> _limitInnovationJump(List<double> y) {
-    final innovationMeters = sqrt(
-      pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
-    );
-
-    if (innovationMeters > maxInnovationJumpMeters) {
-      LogHelper.staticLogWarn("[KALMAN] Large GPS jump detected: ${innovationMeters.toStringAsFixed(2)} m");
-
-      final scale = maxJumpCorrectionMeters / innovationMeters;
-
-      for (int i = 0; i < y.length; i++) {
-        y[i] *= scale;
-      }
-
-      final smoothedMeters = sqrt(
-        pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
-      );
-
-      LogHelper.staticLogInfo(
-          "[KALMAN] Smoothed innovation to ${smoothedMeters.toStringAsFixed(2)} m (scale=${scale.toStringAsFixed(2)})");
-    }
-
-    return y;
-  }
-
-  List<double> _handleLargeInnovation(List<double> y) {
-    final innovation = sqrt(
-      pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
-    );
-
-    if (innovation > maxInnovationToTrust) {
-      LogHelper.staticLogWarn(
-          "[KALMAN] Innovation > ${maxInnovationToTrust.toStringAsFixed(1)}m (${innovation.toStringAsFixed(1)} m), soft correction and reset speed");
-
-      final scale = maxJumpCorrectionMeters / innovation;
-      for (int i = 0; i < y.length; i++) {
-        y[i] *= scale;
-      }
-
-      _state[2] = 0.0;
-      _state[3] = 0.0;
-
-      LogHelper.staticLogInfo("[KALMAN] Final innovation reduced to ${maxJumpCorrectionMeters.toStringAsFixed(1)} m");
-    }
-
-    return y;
+    return _getFilteredState();
   }
 
   Map<String, double> _getFilteredState() {
     final uncertainty = sqrt(_P[0][0] + _P[1][1]) * degreesToMeters;
-    final vLat = _state[2] * degreesToMeters;
-    final vLng = _state[3] * degreesToMeters;
-    final speed = sqrt(vLat * vLat + vLng * vLng);
-
-    final confidence = max(0.0, min(1.0, 1.0 - uncertainty / maxUncertaintyMeters));
-    if (confidence < 0.5) {
-      LogHelper.staticLogWarn("[KALMAN] Poor confidence in filtered result: ${confidence.toStringAsFixed(2)}");
-    }
-
     return {
       'latitude': _state[0],
       'longitude': _state[1],
-      'speed': speed,
       'uncertainty': min(uncertainty, maxUncertaintyMeters),
-      'confidence': confidence,
+      'confidence': max(0.0, min(1.0, 1.0 - uncertainty / maxUncertaintyMeters)),
     };
   }
-
-  Map<String, double> getPosition() => _getFilteredState();
-
-  // ========== Matrix Helpers ==========
 
   List<List<double>> _matrixMultiply(List<List<double>> A, List<List<double>> B) {
     final result = List.generate(A.length, (_) => List.filled(B[0].length, 0.0));
@@ -275,41 +162,19 @@ class SimpleLocationKalmanFilter2D {
   }
 
   List<List<double>> _matrixAdd(List<List<double>> A, List<List<double>> B) {
-    final result = List.generate(A.length, (i) => List.filled(A[0].length, 0.0));
-    for (int i = 0; i < A.length; i++) {
-      for (int j = 0; j < A[0].length; j++) {
-        result[i][j] = A[i][j] + B[i][j];
-      }
-    }
-    return result;
+    return List.generate(A.length, (i) => List.generate(A[0].length, (j) => A[i][j] + B[i][j]));
   }
 
   List<List<double>> _matrixSubtract(List<List<double>> A, List<List<double>> B) {
-    final result = List.generate(A.length, (i) => List.filled(A[0].length, 0.0));
-    for (int i = 0; i < A.length; i++) {
-      for (int j = 0; j < A[0].length; j++) {
-        result[i][j] = A[i][j] - B[i][j];
-      }
-    }
-    return result;
+    return List.generate(A.length, (i) => List.generate(A[0].length, (j) => A[i][j] - B[i][j]));
   }
 
   List<List<double>> _transpose(List<List<double>> A) {
-    final result = List.generate(A[0].length, (_) => List.filled(A.length, 0.0));
-    for (int i = 0; i < A.length; i++) {
-      for (int j = 0; j < A[0].length; j++) {
-        result[j][i] = A[i][j];
-      }
-    }
-    return result;
+    return List.generate(A[0].length, (i) => List.generate(A.length, (j) => A[j][i]));
   }
 
   List<List<double>> _identityMatrix(int size) {
-    final result = List.generate(size, (i) => List.filled(size, 0.0));
-    for (int i = 0; i < size; i++) {
-      result[i][i] = 1.0;
-    }
-    return result;
+    return List.generate(size, (i) => List.generate(size, (j) => i == j ? 1.0 : 0.0));
   }
 
   List<double> _vectorSubtract(List<double> a, List<double> b) {

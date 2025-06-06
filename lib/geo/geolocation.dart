@@ -76,6 +76,8 @@ class GeolocationController with WidgetsBindingObserver {
   bool _resetPosition = false;
   bool _isSending = false;
   bool _isCountingInZone = true;
+  int _initialFixCount = 0;
+  static const int _minFixesToAccept = 2;
 
   Duration _accumulatedActiveDuration = Duration.zero;
   DateTime? _lastActiveTimestamp;
@@ -139,6 +141,9 @@ class GeolocationController with WidgetsBindingObserver {
   Future<void> startListening() async {
     LogHelper.staticLogInfo("[GEO] Starting geolocation...");
 
+    _initialFixCount = 0;
+    _resetPosition = false;
+
     await MeasureData.clearMeasurePoints();
     if (_positionStreamStarted || !(await PermissionHelper.isProperLocationPermissionGranted())) {
       LogHelper.staticLogError("Permission not granted or already started.");
@@ -199,9 +204,14 @@ class GeolocationController with WidgetsBindingObserver {
 
   void _processPositionUpdate(double lat, double lng, double acc, DateTime timestamp) async {
     if (_resetPosition || _oldPos == null) {
-      LogHelper.staticLogInfo("[GEO] First update or reset position. Acc=${acc.toStringAsFixed(1)}m");
+      _initialFixCount++;
+      LogHelper.staticLogInfo("[GEO] Ignoring fix $_initialFixCount/$_minFixesToAccept after reset");
+      if (_initialFixCount < _minFixesToAccept) return;
+
+      LogHelper.staticLogInfo("[GEO] Stable fix acquired after reset.");
       _saveOldPos(lat, lng, acc, timestamp);
       _resetPosition = false;
+      _initialFixCount = 0;
       return;
     }
 
@@ -236,7 +246,7 @@ class GeolocationController with WidgetsBindingObserver {
         // Changed from smoothedPosition
         'latitude': filteredPosition['latitude']!,
         'longitude': filteredPosition['longitude']!,
-        'speed': filteredPosition['speed']!,
+        'speed': kalmanFilteredPosition['speed']!,
       },
       lat: lat,
       lng: lng,
@@ -245,15 +255,15 @@ class GeolocationController with WidgetsBindingObserver {
       dist: dist,
       rawDist: rawDist,
       timestamp: timestamp,
-      uncertainty: filteredPosition['uncertainty']!,
-      confidence: filteredPosition['confidence']!,
+      uncertainty: kalmanFilteredPosition['uncertainty']!,
+      confidence: kalmanFilteredPosition['confidence']!,
     ));
 
     // Save measurement data
     await MeasureData.addMeasurePoint(
       distance: _distance.toDouble(),
-      speed: filteredPosition['speed']!,
-      acc: filteredPosition['uncertainty']!,
+      speed: kalmanFilteredPosition['speed']!,
+      acc: kalmanFilteredPosition['uncertainty']!,
       timestamp: timestamp,
       lat: filteredPosition['latitude']!,
       lng: filteredPosition['longitude']!,
@@ -261,8 +271,8 @@ class GeolocationController with WidgetsBindingObserver {
     );
 
     // Update last known position
-    _saveOldPos(
-        filteredPosition['latitude']!, filteredPosition['longitude']!, filteredPosition['uncertainty']!, timestamp);
+    _saveOldPos(filteredPosition['latitude']!, filteredPosition['longitude']!, kalmanFilteredPosition['uncertainty']!,
+        timestamp);
   }
 
   void _handleZoneLogic(bool inZone, int dist) {
