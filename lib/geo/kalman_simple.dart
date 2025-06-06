@@ -13,7 +13,11 @@ class SimpleLocationKalmanFilter2D {
   static const double positionProcessNoise = 0.001;
   static const double velocityProcessNoise = 0.001;
 
-  static const double maxAcceptableJumpMeters = 10.0;
+  // Tunable thresholds
+  static const double maxInnovationToTrust = 5.0; // Plus strict — on commence à douter au-delà de 5m
+  static const double maxInnovationJumpMeters = 15.0; // Saut au-delà duquel c’est considéré comme un glitch
+  static const double maxJumpCorrectionMeters = 2.5; // Distance max autorisée pour atténuer un jump suspect
+
   static const double minDeltaT = 0.1;
 
   static const double minMovingSpeedMetersPerSecond = 0.5;
@@ -86,7 +90,7 @@ class SimpleLocationKalmanFilter2D {
     if (speedEstimate < minMovingSpeedMetersPerSecond) {
       LogHelper.staticLogInfo(
           "[KALMAN] Low-speed point detected (speed=$speedEstimate m/s) — degrading accuracy to reduce impact");
-      accuracy = max(accuracy, 30.0);
+      accuracy = max(accuracy, 50.0);
     }
 
     final F = [
@@ -123,6 +127,7 @@ class SimpleLocationKalmanFilter2D {
     final z = [lat, lng];
     List<double> y = _vectorSubtract(z, _matrixVectorMultiply(H, _state));
     y = _limitInnovationJump(y);
+    y = _handleLargeInnovation(y);
 
     final HT = _transpose(H);
     final S = _matrixAdd(_matrixMultiply(H, _matrixMultiply(_P, HT)), R);
@@ -180,11 +185,11 @@ class SimpleLocationKalmanFilter2D {
       pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
     );
 
-    if (innovationMeters > maxAcceptableJumpMeters) {
+    if (innovationMeters > maxInnovationJumpMeters) {
       LogHelper.staticLogWarn("[KALMAN] Large GPS jump detected: ${innovationMeters.toStringAsFixed(2)} m");
 
-      // Lissage proportionnel
-      final scale = maxAcceptableJumpMeters / innovationMeters;
+      final scale = maxJumpCorrectionMeters / innovationMeters;
+
       for (int i = 0; i < y.length; i++) {
         y[i] *= scale;
       }
@@ -192,8 +197,32 @@ class SimpleLocationKalmanFilter2D {
       final smoothedMeters = sqrt(
         pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
       );
+
       LogHelper.staticLogInfo(
-          "[KALMAN] Smoothed jump to ${smoothedMeters.toStringAsFixed(2)} m (scale=${scale.toStringAsFixed(2)})");
+          "[KALMAN] Smoothed innovation to ${smoothedMeters.toStringAsFixed(2)} m (scale=${scale.toStringAsFixed(2)})");
+    }
+
+    return y;
+  }
+
+  List<double> _handleLargeInnovation(List<double> y) {
+    final innovation = sqrt(
+      pow(y[0] * degreesToMeters, 2) + pow(y[1] * degreesToMeters, 2),
+    );
+
+    if (innovation > maxInnovationToTrust) {
+      LogHelper.staticLogWarn(
+          "[KALMAN] Innovation > ${maxInnovationToTrust.toStringAsFixed(1)}m (${innovation.toStringAsFixed(1)} m), soft correction and reset speed");
+
+      final scale = maxJumpCorrectionMeters / innovation;
+      for (int i = 0; i < y.length; i++) {
+        y[i] *= scale;
+      }
+
+      _state[2] = 0.0;
+      _state[3] = 0.0;
+
+      LogHelper.staticLogInfo("[KALMAN] Final innovation reduced to ${maxJumpCorrectionMeters.toStringAsFixed(1)} m");
     }
 
     return y;

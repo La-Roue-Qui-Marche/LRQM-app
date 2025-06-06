@@ -5,6 +5,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lrqm/geo/kalman_simple.dart';
+import 'package:lrqm/geo/low_pass_location_filter.dart';
+
+enum DisplayMode { rawOnly, kalmanOnly, kalmanAndLowPass }
 
 class KalmanPlaybackScreen extends StatefulWidget {
   const KalmanPlaybackScreen({super.key});
@@ -15,12 +18,18 @@ class KalmanPlaybackScreen extends StatefulWidget {
 
 class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
   SimpleLocationKalmanFilter2D filter = SimpleLocationKalmanFilter2D();
+  LowPassLocationFilter _lowPassFilter = LowPassLocationFilter();
+
   final MapController _mapController = MapController();
 
   List<LatLng> rawPoints = [];
   List<LatLng> filteredPoints = [];
+  List<LatLng> lowPassPoints = [];
 
   bool _isMapReady = false;
+  double _totalLowPassDistance = 0.0;
+
+  DisplayMode _displayMode = DisplayMode.rawOnly;
 
   @override
   void initState() {
@@ -29,14 +38,17 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
   }
 
   Future<void> _loadCsvAndApplyFilter() async {
-    // Reset state for replay
     filter = SimpleLocationKalmanFilter2D();
+    _lowPassFilter = LowPassLocationFilter();
     rawPoints = [];
     filteredPoints = [];
-    setState(() {}); // Clear map immediately
+    lowPassPoints = [];
+    _totalLowPassDistance = 0.0;
+    setState(() {});
 
     final csvString = await rootBundle.loadString('assets/sims/kalman_input_simulation.csv');
     final lines = const LineSplitter().convert(csvString);
+    LatLng? previousPoint;
     for (int i = 1; i < lines.length; i++) {
       final parts = lines[i].split(',');
       if (parts.length < 4) continue;
@@ -55,7 +67,28 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
       final fLat = result['latitude'];
       final fLng = result['longitude'];
       if (fLat != null && fLng != null) {
-        filteredPoints.add(LatLng(fLat, fLng));
+        final kalmanPoint = LatLng(fLat, fLng);
+        filteredPoints.add(kalmanPoint);
+
+        final smoothed = _lowPassFilter.filter(
+          latitude: fLat,
+          longitude: fLng,
+          timestamp: ts,
+        );
+        final finalLat = smoothed['latitude']!;
+        final finalLng = smoothed['longitude']!;
+        final lowPassPoint = LatLng(finalLat, finalLng);
+        lowPassPoints.add(lowPassPoint);
+
+        if (previousPoint != null) {
+          _totalLowPassDistance += _haversineDistance(
+            previousPoint.latitude,
+            previousPoint.longitude,
+            finalLat,
+            finalLng,
+          );
+        }
+        previousPoint = lowPassPoint;
       }
     }
 
@@ -105,12 +138,33 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
     return log(mapPx / worldPx / fraction) / ln2;
   }
 
+  double _haversineDistance(double lat1, double lng1, double lat2, double lng2) {
+    const R = 6371000;
+    final dLat = _degToRad(lat2 - lat1);
+    final dLng = _degToRad(lng2 - lng1);
+    final a =
+        (sin(dLat / 2) * sin(dLat / 2)) + cos(_degToRad(lat1)) * cos(_degToRad(lat2)) * (sin(dLng / 2) * sin(dLng / 2));
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c;
+  }
+
+  double _degToRad(double deg) => deg * (pi / 180);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kalman Playback'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.layers),
+            tooltip: "Switch display mode",
+            onPressed: () {
+              setState(() {
+                _displayMode = DisplayMode.values[(_displayMode.index + 1) % DisplayMode.values.length];
+              });
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.replay),
             tooltip: "Replay",
@@ -136,11 +190,11 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
             ),
             children: [
               TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
-              if (rawPoints.isNotEmpty)
-                PolylineLayer(polylines: [
-                  Polyline(points: rawPoints, strokeWidth: 2, color: Colors.red),
-                  Polyline(points: filteredPoints, strokeWidth: 2, color: Colors.green),
-                ]),
+              PolylineLayer(polylines: [
+                Polyline(points: rawPoints, strokeWidth: 2, color: Colors.red),
+                Polyline(points: filteredPoints, strokeWidth: 2, color: Colors.green),
+                Polyline(points: lowPassPoints, strokeWidth: 2, color: Colors.blue),
+              ]),
             ],
           ),
           if (rawPoints.isNotEmpty && filteredPoints.isNotEmpty)
@@ -162,11 +216,14 @@ class _KalmanPlaybackScreenState extends State<KalmanPlaybackScreen> {
                   ],
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("📏 Distance brute : ${filter.getTotalRawDistance().toStringAsFixed(1)} m"),
-                    Text("🧠 Distance filtrée : ${filter.getTotalFilteredDistance().toStringAsFixed(1)} m"),
+                    Text("📏 Distance brute (rouge) : ${filter.getTotalRawDistance().toStringAsFixed(1)} m",
+                        style: TextStyle(color: Colors.red)),
+                    Text("🧠 Distance filtrée (vert) : ${filter.getTotalFilteredDistance().toStringAsFixed(1)} m",
+                        style: TextStyle(color: Colors.green)),
+                    Text("🪄 Distance passe-bas (bleu) : ${_totalLowPassDistance.toStringAsFixed(1)} m",
+                        style: TextStyle(color: Colors.blue)),
                   ],
                 ),
               ),

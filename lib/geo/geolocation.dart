@@ -12,6 +12,7 @@ import 'package:lrqm/data/event_data.dart';
 import 'package:lrqm/data/measure_data.dart';
 import 'package:lrqm/geo/kalman_simple.dart';
 import 'package:lrqm/geo/geolocation_log.dart';
+import 'package:lrqm/geo/low_pass_location_filter.dart';
 
 class GeolocationConfig {
   final int locationDistanceFilter;
@@ -39,7 +40,6 @@ class GeolocationController with WidgetsBindingObserver {
   final GeolocationConfig config;
   static GeolocationController? _instance;
 
-  // Static method to reset the singleton instance
   static void resetInstance() {
     if (_instance != null) {
       LogHelper.staticLogInfo("[GEO] Resetting GeolocationController instance");
@@ -48,13 +48,11 @@ class GeolocationController with WidgetsBindingObserver {
     }
   }
 
-  // Factory constructor for singleton pattern
   factory GeolocationController({required GeolocationConfig config}) {
     _instance ??= GeolocationController._internal(config);
     return _instance!;
   }
 
-  // Private constructor
   GeolocationController._internal(this.config) {
     _settings = _getSettings();
     WidgetsBinding.instance.addObserver(this);
@@ -64,6 +62,7 @@ class GeolocationController with WidgetsBindingObserver {
 
   late geo.LocationSettings _settings;
   late SimpleLocationKalmanFilter2D _kalmanFilter;
+  late LowPassLocationFilter _lowPassFilter;
   geo.Position? _oldPos;
   StreamSubscription<geo.Position>? _positionStream;
   Timer? _apiTimer;
@@ -153,6 +152,7 @@ class GeolocationController with WidgetsBindingObserver {
     _lastActiveTimestamp = DateTime.now();
     final initialPos = await geo.Geolocator.getCurrentPosition();
     _kalmanFilter = SimpleLocationKalmanFilter2D(initialLat: initialPos.latitude, initialLng: initialPos.longitude);
+    _lowPassFilter = LowPassLocationFilter();
     _oldPos = initialPos;
     _resetPosition = false;
     _startPositionStream();
@@ -206,7 +206,14 @@ class GeolocationController with WidgetsBindingObserver {
     }
 
     // Update Kalman filter with the new measurement
-    final filteredPosition = _kalmanFilter.update(lat, lng, acc, timestamp.millisecondsSinceEpoch / 1000.0);
+    final kalmanFilteredPosition = _kalmanFilter.update(lat, lng, acc, timestamp.millisecondsSinceEpoch / 1000.0);
+
+    // Apply low-pass filter after Kalman
+    final filteredPosition = _lowPassFilter.filter(
+      latitude: kalmanFilteredPosition['latitude']!,
+      longitude: kalmanFilteredPosition['longitude']!,
+      timestamp: timestamp.millisecondsSinceEpoch / 1000.0,
+    );
 
     // Calculate distance using filtered position
     final dist = geo.Geolocator.distanceBetween(
