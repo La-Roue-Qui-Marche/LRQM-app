@@ -131,9 +131,14 @@ class SimpleLocationKalmanFilter2D {
 
   Map<String, double> _getFilteredState() {
     final uncertainty = sqrt(_P[0][0] + _P[1][1]) * degreesToMeters;
+    final vLat = _state[2] * degreesToMeters; // Convert velocity from deg/s to m/s
+    final vLng = _state[3] * degreesToMeters;
+    final speed = sqrt(vLat * vLat + vLng * vLng);
+
     return {
       'latitude': _state[0],
       'longitude': _state[1],
+      'speed': speed,
       'uncertainty': min(uncertainty, maxUncertaintyMeters),
       'confidence': max(0.0, min(1.0, 1.0 - uncertainty / maxUncertaintyMeters)),
     };
