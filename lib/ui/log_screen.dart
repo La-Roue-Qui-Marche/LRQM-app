@@ -168,32 +168,32 @@ class _LogScreenState extends State<LogScreen> {
               const SizedBox(width: 8),
               const Text('Logs'),
               const SizedBox(width: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[200],
-                  foregroundColor: Colors.black54,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  minimumSize: Size(0, 0),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  elevation: 0,
-                ),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const KalmanPlaybackScreen(),
-                      fullscreenDialog: true,
-                    ),
-                  );
-                },
-                child: const Text(
-                  "SIM",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
+              // ElevatedButton(
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: Colors.grey[200],
+              //     foregroundColor: Colors.black54,
+              //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              //     minimumSize: Size(0, 0),
+              //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              //     elevation: 0,
+              //   ),
+              //   onPressed: () {
+              //     Navigator.of(context).push(
+              //       MaterialPageRoute(
+              //         builder: (_) => const KalmanPlaybackScreen(),
+              //         fullscreenDialog: true,
+              //       ),
+              //     );
+              //   },
+              //   child: const Text(
+              //     "SIM",
+              //     style: TextStyle(
+              //       fontSize: 12,
+              //       fontWeight: FontWeight.bold,
+              //       letterSpacing: 1.2,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
           actions: [
