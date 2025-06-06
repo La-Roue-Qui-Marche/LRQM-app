@@ -14,7 +14,6 @@ import 'package:lrqm/utils/permission_helper.dart';
 import 'package:lrqm/utils/config.dart';
 import 'package:lrqm/geo/geolocation.dart';
 import 'package:lrqm/ui/components/button_action.dart';
-import 'package:lrqm/ui/components/card_dynamic_map.dart';
 import 'package:lrqm/ui/components/card_info.dart';
 import 'package:lrqm/ui/components/modal_bottom_text.dart';
 import 'package:lrqm/ui/components/app_top_bar.dart';
@@ -85,17 +84,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   Future<void> _navigateToSetupTeamScreen() async {
     setState(() => _isLoading = true);
 
-    // Use a Timer to allow cancellation
-    bool timedOut = false;
-    Timer? timeoutTimer;
-    timeoutTimer = Timer(const Duration(seconds: 10), () {
-      if (_isLoading) {
-        setState(() => _isLoading = false);
-        timedOut = true;
-        AppToast.showError("Temps de chargement dépassé. Veuillez réessayer.");
-      }
-    });
-
     try {
       final granted = await PermissionHelper.isProperLocationPermissionGranted();
       if (!granted) {
@@ -112,40 +100,25 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
           onConfirm: () => PermissionHelper.openLocationSettings(),
         );
         setState(() => _isLoading = false);
-        timeoutTimer.cancel();
         return;
       }
 
-      final isInZone = await widget.geolocation.isInZone();
-      if (timedOut) {
-        timeoutTimer.cancel();
-        return;
-      }
-
-      if (isInZone) {
-        timeoutTimer.cancel();
+      if (await widget.geolocation.isInZone()) {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const SetupTeamScreen()));
-      } else if (!isInZone) {
+      } else {
         final distance = await widget.geolocation.distanceToZone();
-        if (timedOut) {
-          timeoutTimer.cancel();
-          return;
-        }
         showModalBottomText(
           context,
-          "Hors de la zone",
-          "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'événement.\nUtilise la carte pour trouver la localisation de l'événement et te rendre au point de départ.",
+          "Position incorrecte",
+          "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'événement. Consulte la carte pour te rendre au point de départ.",
           showConfirmButton: true,
         );
       }
     } catch (e) {
-      if (!timedOut) {
-        AppToast.showError("Une erreur est survenue. Vérifie les paramètres et réessaie.");
-      }
+      AppToast.showError("Une erreur est survenue. Vérifie les paramètres et réessaie.");
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    if (!timedOut) setState(() => _isLoading = false);
-    timeoutTimer.cancel();
   }
 
   void _copyCoordinates() {
@@ -184,37 +157,6 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
     }
   }
 
-  void _showMapModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-      ),
-      builder: (_) => ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.60,
-          width: double.infinity,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.60,
-                    child: CardDynamicMap(geolocation: widget.geolocation),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return MediaQuery(
@@ -250,7 +192,13 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                 ),
               ),
             ),
-            if (_isLoading) const LoadingScreen(),
+            if (_isLoading)
+              LoadingScreen(
+                  timeout: const Duration(seconds: 10),
+                  onTimeout: () {
+                    setState(() => _isLoading = false);
+                  },
+                  timeoutMessage: "Temps de chargement dépassé. Veuillez réessayer."),
           ],
         ),
       ),
@@ -258,51 +206,109 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
   }
 
   Widget _buildInfoCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(0.0),
-      ),
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Center(
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.55,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: FadeInImage(
-                  placeholder: MemoryImage(kTransparentImage),
-                  image: const AssetImage('assets/pictures/DrawPos-AI.png'),
-                  fit: BoxFit.contain,
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(0.0),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Center(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.55,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: FadeInImage(
+                      placeholder: MemoryImage(kTransparentImage),
+                      image: const AssetImage('assets/pictures/DrawPos-AI.png'),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          CardInfo(
-            title: "Prépares-toi !",
-            data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
-            actionItems: [
-              ActionItem(
-                icon: SvgPicture.asset('assets/icons/map.svg', color: Colors.black87, width: 28, height: 28),
-                label: 'Carte',
-                onPressed: _showMapModal,
-              ),
-              ActionItem(
-                icon: SvgPicture.asset('assets/icons/diamond-turn-right.svg',
-                    color: Colors.black87, width: 28, height: 28),
-                label: 'Maps',
-                onPressed: _openInGoogleMaps,
-              ),
-              ActionItem(
-                icon: SvgPicture.asset('assets/icons/copy.svg', color: Colors.black87, width: 28, height: 28),
-                label: 'Copier',
-                onPressed: _copyCoordinates,
+              const CardInfo(
+                title: "Prépares-toi !",
+                data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.only(right: 24.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _RoundIconButton(
+                icon: SvgPicture.asset(
+                  'assets/icons/diamond-turn-right.svg',
+                  color: Colors.black87,
+                  width: 28,
+                  height: 28,
+                ),
+                label: 'Itinéraire',
+                onTap: _openInGoogleMaps,
+              ),
+              const SizedBox(width: 16),
+              _RoundIconButton(
+                icon: SvgPicture.asset(
+                  'assets/icons/copy.svg',
+                  color: Colors.black87,
+                  width: 28,
+                  height: 28,
+                ),
+                label: 'Copier',
+                onTap: _copyCoordinates,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Round button widget for actions under the card
+class _RoundIconButton extends StatelessWidget {
+  final Widget icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _RoundIconButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Material(
+          color: Colors.white,
+          shape: const CircleBorder(),
+          elevation: 0,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: icon,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -111,7 +111,6 @@ class _SetupTeamScreenState extends State<SetupTeamScreen> {
           const CardInfo(
             title: "L'équipe !",
             data: "Pour combien de personnes comptes-tu les mètres ?",
-            actionItems: [],
           ),
           const SizedBox(height: 12),
           ...List.generate(4, (i) => _buildTapCard(i + 1)),

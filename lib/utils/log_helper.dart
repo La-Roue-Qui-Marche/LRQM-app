@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as dev;
+import 'dart:io';
 
 /// LogHelper as a singleton class for managing application logs
 class LogHelper {
@@ -92,4 +93,54 @@ class LogHelper {
   static void staticClearLogs() => _logger.clearLogs();
   static List<String> staticGetLogs() => _logger.getLogs();
   static void staticDispose() => _logger.dispose();
+
+  // --- Kalman CSV Logging ---
+  static Future<File> _getKalmanCsvFile() async {
+    // Use systemTemp instead of path_provider
+    final dir = Directory.systemTemp;
+    final file = File('${dir.path}/kalman_data.csv');
+    if (!await file.exists()) {
+      await file.writeAsString(
+        'timestamp,orig_lat,orig_lng,gps_acc,filtered_lat,filtered_lng,speed,uncertainty,confidence\n',
+        mode: FileMode.write,
+      );
+    }
+    return file;
+  }
+
+  /// Append a line of Kalman data to the CSV file
+  static Future<void> staticAppendKalmanCsv({
+    required double timestamp,
+    required double origLat,
+    required double origLng,
+    required double gpsAcc,
+    required double filteredLat,
+    required double filteredLng,
+    required double speed,
+    required double uncertainty,
+    required double confidence,
+  }) async {
+    try {
+      final file = await _getKalmanCsvFile();
+      final line = '$timestamp,$origLat,$origLng,$gpsAcc,$filteredLat,$filteredLng,$speed,$uncertainty,$confidence\n';
+      await file.writeAsString(line, mode: FileMode.append);
+    } catch (e) {
+      dev.log("Error writing Kalman CSV: $e", name: 'LogHelper');
+    }
+  }
+
+  /// Get the Kalman CSV file path
+  static Future<String> staticGetKalmanCsvPath() async {
+    final file = await _getKalmanCsvFile();
+    return file.path;
+  }
+
+  /// Clear the Kalman CSV file
+  static Future<void> staticClearKalmanCsv() async {
+    final file = await _getKalmanCsvFile();
+    await file.writeAsString(
+      'timestamp,orig_lat,orig_lng,gps_acc,filtered_lat,filtered_lng,speed,uncertainty,confidence\n',
+      mode: FileMode.write,
+    );
+  }
 }

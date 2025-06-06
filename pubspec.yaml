@@ -17,7 +17,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # build is incremented automatically by the CI/CD pipeline
-version: 2.5.4
+version: 2.5.5
 
 environment:
   sdk: ">=3.4.3 <4.0.0"
@@ -98,6 +98,7 @@ flutter:
     - assets/pictures/DrawScan-AI.png
     - assets/pictures/DrawPos-AI.png
     - assets/pictures/Cup-AI.png
+    - assets/pictures/minion.png
 
     - assets/icons/calendar.svg
     - assets/icons/user.svg
@@ -119,6 +120,8 @@ flutter:
     - assets/icons/square-3.svg
     - assets/icons/square-4.svg
 
+    - assets/sims/kalman_input_simulation.csv
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
@@ -131,16 +134,6 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/Roboto-Regular.ttf
-        - asset: assets/fonts/Roboto-Bold.ttf
-          weight: 700
-    - family: Poppins
-      fonts:
-        - asset: assets/fonts/Poppins-Regular.ttf
-        - asset: assets/fonts/Poppins-Bold.ttf
-          weight: 700
     - family: SfPro
       fonts:
         - asset: assets/fonts/SFPRODISPLAYREGULAR.OTF

@@ -9,17 +9,16 @@ import 'package:latlong2/latlong.dart';
 import 'package:lrqm/utils/config.dart';
 import 'package:lrqm/geo/geolocation.dart';
 import 'package:lrqm/data/event_data.dart';
+import 'package:lrqm/utils/permission_helper.dart';
 
 class CardDynamicMap extends StatefulWidget {
   final GeolocationController geolocation;
   final bool followUser;
-  final bool fullScreen; // New parameter for full screen mode
 
   const CardDynamicMap({
     super.key,
     required this.geolocation,
     this.followUser = false,
-    this.fullScreen = false, // Default to false for backward compatibility
   });
 
   @override
@@ -36,13 +35,16 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   bool _showLegend = false;
   bool _followUserMode = false;
   bool _initialFitDone = false;
-  bool _enableZoomAnimation = true;
+  bool _permisionRequested = false;
+  bool _permissionGranted = false;
+  final bool _enableZoomAnimation = true;
 
   List<LatLng> _zonePoints = [];
   LatLng? _meetingPoint;
   _MapBaseType _mapBaseType = _MapBaseType.voyager;
 
   AnimationController? _moveAnimController;
+  double? _userSetZoom;
 
   @override
   void initState() {
@@ -88,6 +90,19 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
   }
 
   Future<void> _fetchUserPosition() async {
+    if (!await PermissionHelper.isLocationWhenInUseGranted()) {
+      if (!_permisionRequested) {
+        _permisionRequested = true;
+        final granted = await PermissionHelper.requestLocationWhenInUsePermission();
+        if (mounted) {
+          setState(() {
+            _permissionGranted = granted;
+          });
+        }
+      }
+      return;
+    }
+
     final pos = await widget.geolocation.currentPosition;
     if (!mounted) return;
 
@@ -98,6 +113,15 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
         if (_followUserMode) {
           _centerOnUser();
         }
+        if (_isFetchingPosition && !_followUserMode) {
+          _fitMapBounds();
+        }
+      }
+
+      if (!_permissionGranted) {
+        setState(() {
+          _permissionGranted = true;
+        });
       }
 
       _isFetchingPosition = false;
@@ -106,11 +130,14 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
 
   void _centerOnUser() {
     if (_currentLatLng == null || !_isMapReady) return;
-    const double followZoomLevel = 17.5;
     try {
-      // Offset the user marker 100px below the center of the map
-      final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), followZoomLevel);
-      _animatedMove(offsetLatLng, followZoomLevel);
+      double targetZoom = 15.2;
+      if (_userSetZoom != null) {
+        targetZoom = _userSetZoom!;
+      }
+
+      final offsetLatLng = _latLngFromOffset(_currentLatLng!, Offset(0, 50), targetZoom);
+      _animatedMove(offsetLatLng, targetZoom);
     } catch (_) {}
   }
 
@@ -242,20 +269,61 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
 
           return Column(
             children: [
-              if (_isFetchingPosition)
+              if (!_permissionGranted && !_isFetchingPosition)
                 Expanded(
                   child: Container(
                     color: Colors.white,
                     width: double.infinity,
                     child: Center(
-                      child: Image.asset(
-                        'assets/pictures/LogoSimpleAnimated.gif',
-                        width: 32.0,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 50.0, left: 32.0, right: 32.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.location_off, color: Colors.redAccent, size: 48),
+                            const SizedBox(height: 24),
+                            Text(
+                              "Vous devez autoriser l'accès à la localisation pour afficher la carte.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Veuillez accorder la permission de localisation dans les paramètres de votre appareil.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 )
-              else if (widget.fullScreen)
+              else if (_isFetchingPosition)
+                Expanded(
+                  child: Container(
+                    color: Colors.white,
+                    width: double.infinity,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 150.0),
+                        child: Image.asset(
+                          'assets/pictures/LogoSimpleAnimated.gif',
+                          width: 32.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                // Always full screen map
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final mediaQuery = MediaQuery.of(context);
@@ -283,11 +351,6 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                       ),
                     );
                   },
-                )
-              else
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
-                  child: _buildMapStack(userLat, userLon, urlTemplate, subdomains, icon, tooltip, styles),
                 ),
             ],
           );
@@ -313,9 +376,10 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
           options: MapOptions(
             initialCenter: LatLng(userLat, userLon),
             initialZoom: 6.0,
-            // Block map rotation by removing InteractiveFlag.rotate
             interactionOptions: InteractionOptions(
-              flags: _followUserMode ? (InteractiveFlag.none) : (InteractiveFlag.all & ~InteractiveFlag.rotate),
+              flags: _followUserMode
+                  ? InteractiveFlag.pinchZoom | InteractiveFlag.scrollWheelZoom
+                  : (InteractiveFlag.all & ~InteractiveFlag.rotate),
             ),
             onMapReady: () {
               _isMapReady = true;
@@ -326,6 +390,12 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                     _initialFitDone = true;
                   }
                 });
+              }
+            },
+            onMapEvent: (MapEvent event) {
+              if (event is MapEventMoveEnd && _followUserMode) {
+                _userSetZoom = event.camera.zoom;
+                _centerOnUser();
               }
             },
           ),
@@ -427,14 +497,15 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
               ),
               const SizedBox(height: 14),
               _modernMapButton(
-                icon: Icons.navigation,
-                iconColor: _followUserMode ? styles.userColor : Colors.black87,
+                icon: _followUserMode ? Icons.navigation : Icons.navigation_outlined,
+                iconColor: _followUserMode ? styles.userColor : styles.userColor,
                 onTap: () {
                   setState(() {
                     _followUserMode = !_followUserMode;
                     if (_followUserMode) {
                       _centerOnUser();
                     } else {
+                      _userSetZoom = null;
                       _fitMapBounds();
                     }
                   });
@@ -544,40 +615,15 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
                     ],
                   ),
                   const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-
-        // --- Map credits centered top ---
-        if (!_showLegend)
-          Positioned(
-            top: 10,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.55),
-                  borderRadius: BorderRadius.circular(6),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 2,
-                      offset: Offset(0, 1),
+                  Text(
+                    _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w400,
                     ),
-                  ],
-                ),
-                child: Text(
-                  _mapBaseType == _MapBaseType.satellite ? "© Swisstopo" : "© OpenStreetMap x © CARTO",
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.black38,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.1,
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -591,6 +637,7 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
     VoidCallback? onTap,
     String? tooltip,
     Color iconColor = Colors.black87,
+    BoxDecoration? decoration,
   }) {
     return Material(
       color: Colors.transparent,
@@ -601,14 +648,15 @@ class _CardDynamicMapState extends State<CardDynamicMap> with AutomaticKeepAlive
         child: Container(
           width: 54,
           height: 54,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(1),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.grey.withOpacity(0.18),
-              width: 1.2,
-            ),
-          ),
+          decoration: decoration ??
+              BoxDecoration(
+                color: Colors.white.withOpacity(1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.18),
+                  width: 1.2,
+                ),
+              ),
           padding: const EdgeInsets.all(0),
           alignment: Alignment.center,
           child: Icon(

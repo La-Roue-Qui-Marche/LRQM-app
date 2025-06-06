@@ -10,6 +10,7 @@ import 'package:lrqm/utils/config.dart';
 import 'package:lrqm/ui/components/button_action.dart';
 import 'package:lrqm/ui/components/button_discard.dart';
 import 'package:lrqm/ui/working_screen.dart';
+import 'package:lrqm/ui/login_screen.dart';
 
 class ConfirmScreen extends StatelessWidget {
   final Map<String, dynamic> userData;
@@ -236,7 +237,11 @@ class ConfirmScreen extends StatelessWidget {
                         ButtonDiscard(
                           icon: Icons.close,
                           text: 'Non',
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Login()),
+                            (route) => false,
+                          ),
                         ),
                       ],
                     ),

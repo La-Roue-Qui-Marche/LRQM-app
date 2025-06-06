@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:lrqm/ui/working_screen.dart';
 import 'package:lrqm/ui/login_screen.dart';
 import 'package:lrqm/data/user_data.dart';
+import 'package:lrqm/ui/components/app_toast.dart';
 
 void main() async {
   /// Ensure that the WidgetsBinding is initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  /// Initialize AppToast observer for lifecycle handling
+  AppToast();
 
   /// Set preferred orientations to portrait only
   await SystemChrome.setPreferredOrientations([

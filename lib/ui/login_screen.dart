@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -26,10 +25,12 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final TextEditingController _controller = TextEditingController();
 
-  bool _isEventActive = false;
+  bool _isLoading = false; // Add this state variable
   String? _eventName;
   List<dynamic> _events = [];
   dynamic _selectedEvent;
+  int _logoTapCount = 0;
+  bool _isOfficialEvent = false;
 
   @override
   void initState() {
@@ -44,41 +45,47 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> _checkEventStatus() async {
-    setState(() => _isEventActive = false);
+    setState(() => _isLoading = true);
 
     final eventsResult = await EventController.getAllEvents();
     if (eventsResult.hasError) {
-      log("Error fetching events: ${eventsResult.error}");
-      AppToast.showError("Erreur lors de la récupération des évènements.");
+      AppToast.showError("Erreur lors de la récupération des évènements. ${eventsResult.error}");
       _showErrorModal("Erreur lors de la récupération de l'évènement.");
       return;
     }
 
     _events = eventsResult.value ?? [];
     if (_events.isEmpty) {
-      AppToast.showError("Erreur lors de la récupération des évènements.");
+      AppToast.showError("Aucun évènement trouvé.");
       _showErrorModal("Aucun évènement trouvé.");
       return;
     }
 
     setState(() => _events = _events);
 
-    if (_events.length == 1) {
-      _handleEventSelected(_events.first);
+    // Try to find "la roue qui marche 2025"
+    final defaultEvent = _events.firstWhere(
+      (e) => e['name'].toString().toLowerCase().contains('la roue qui marche 2025'),
+      orElse: () => null,
+    );
+
+    if (defaultEvent != null) {
+      _handleEventSelected(defaultEvent);
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _showEventSelectionModal());
+      AppToast.showError("L'évènement 'La Roue Qui Marche 2025' n'a pas été trouvé.");
+      _showEventSelectionModal();
     }
   }
 
   Future<void> _handleEventSelected(dynamic event) async {
     _selectedEvent = event;
+    _isOfficialEvent = event['name'].toString().toLowerCase().contains('la roue qui marche 2025');
     await EventData.saveEvent(event);
     _loadSavedEvent();
-    setState(() => _isEventActive = true);
+    setState(() => _isLoading = false);
   }
 
   void _showErrorModal(String message) {
-    setState(() => _isEventActive = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showModalBottomText(
         context,
@@ -110,17 +117,12 @@ class _LoginState extends State<Login> {
 
     if (_controller.text.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showModalBottomText(
-          context,
-          "Numéro de dossard manquant",
-          "Il faut entrer ton numéro de dossard entre 1 et 9999. Si tu n'es pas inscrit, tu peux le faire sur le site de la RQM",
-          showConfirmButton: true,
-        );
+        AppToast.showError("Numéro de dossard manquant. Il faut entrer ton numéro compris entre 1 et 9999");
       });
       return;
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoadingScreen()));
+    setState(() => _isLoading = true);
 
     try {
       int.parse(_controller.text);
@@ -134,25 +136,23 @@ class _LoginState extends State<Login> {
           user['username'] == null ||
           user['bib_id'] == null ||
           user['event_id'] == null) {
-        Navigator.pop(context);
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          showModalBottomText(
-            context,
-            "Utilisateur non trouvé",
-            "Aucun numéro de dossard ne correspond pas à l'évènement sélectionné.",
-            showConfirmButton: true,
-          );
+          AppToast.showError("Le numéro de dossard n'a pas été trouvé. Inscris-toi si tu n'en as pas.");
         });
+        setState(() => _isLoading = false);
         return;
       }
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => ConfirmScreen(userData: user)),
-      );
+      // Only navigate if loading hasn't been canceled by timeout
+      if (_isLoading) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ConfirmScreen(userData: user)),
+        );
+      }
     } catch (e) {
-      AppToast.showError("Numéro de dossard invalide");
-      Navigator.pop(context);
+      AppToast.showError("Numéro de dossard invalide. Il faut entrer un numéro entre 1 et 9999.");
+      setState(() => _isLoading = false);
     }
   }
 
@@ -163,10 +163,16 @@ class _LoginState extends State<Login> {
     }
   }
 
+  void _handleLogoTap() {
+    _logoTapCount++;
+    if (_logoTapCount >= 5) {
+      _logoTapCount = 0;
+      _showEventSelectionModal();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!_isEventActive) return const LoadingScreen();
-
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
       child: Scaffold(
@@ -202,12 +208,35 @@ class _LoginState extends State<Login> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 10),
-                        const Center(
-                          child: Image(
-                            image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
-                            height: 100,
+                        Center(
+                          child: GestureDetector(
+                            onTap: _handleLogoTap,
+                            child: const Image(
+                              image: AssetImage('assets/pictures/LogoTextAnimated.gif'),
+                              height: 100,
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        if (_eventName != null && !_isOfficialEvent) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: const Text(
+                              "⚠️ Ceci n'est pas l'évènement officiel de La Roue Qui Marche 2025",
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 24),
                         if (_eventName != null)
                           const Padding(
@@ -289,6 +318,14 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
+            // Add loading screen overlay when loading
+            if (_isLoading)
+              LoadingScreen(
+                  timeout: const Duration(seconds: 10),
+                  onTimeout: () {
+                    setState(() => _isLoading = false);
+                  },
+                  timeoutMessage: "Une erreur est survenue. Veuillez réessayer."),
           ],
         ),
       ),

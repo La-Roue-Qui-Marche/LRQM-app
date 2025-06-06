@@ -263,54 +263,30 @@ class _CardPathMapState extends State<CardPathMap> {
                   ),
                 ),
               ),
-              // BETA badge at top left
+              // Copyright at bottom right
               Positioned(
-                top: 16,
-                left: 16,
+                bottom: 8,
+                right: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white.withOpacity(1),
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
                   child: const Text(
-                    'BETA',
+                    '© OpenStreetMap × © CARTO',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-              // Copyright at top center, subtle and hidden from OS scaling
-              Positioned(
-                top: 10,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.55),
-                      borderRadius: BorderRadius.circular(6),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 2,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: const Text(
-                      '© OpenStreetMap × © CARTO',
-                      style: TextStyle(
-                        color: Colors.black38,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.1,
-                      ),
+                      color: Colors.black54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.1,
                     ),
                   ),
                 ),
@@ -318,17 +294,32 @@ class _CardPathMapState extends State<CardPathMap> {
               Positioned(
                 top: 16,
                 right: 16,
-                child: Column(
-                  children: [
-                    FloatingActionButton(
-                      heroTag: "replay",
-                      mini: true,
-                      backgroundColor: Colors.white,
-                      onPressed: _startPathAnimation,
-                      tooltip: 'Rejouer le tracé',
-                      child: const Icon(Icons.replay, color: Colors.black87),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(40),
+                    onTap: _startPathAnimation,
+                    child: Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.grey.withOpacity(0.18),
+                          width: 1.2,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(0),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.replay,
+                        color: Colors.black87,
+                        size: 28,
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],
