@@ -13,10 +13,10 @@ class SimpleLocationKalmanFilter2D {
   static const double positionProcessNoise = 0.001;
   static const double velocityProcessNoise = 0.001;
 
-  static const double maxAcceptableJumpMeters = 20.0;
+  static const double maxAcceptableJumpMeters = 10.0;
   static const double minDeltaT = 0.1;
 
-  static const double minMovingSpeedMetersPerSecond = 0.3;
+  static const double minMovingSpeedMetersPerSecond = 0.5;
 
   static const double maxUncertaintyMeters = 100.0;
   static const double degreesToMeters = 111000.0;
