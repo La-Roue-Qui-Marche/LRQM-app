@@ -69,7 +69,13 @@ App parameters are in [`lib/Utils/config.dart`](lib/Utils/config.dart).
 
 ## License & Assets
 
-- Licensed under [LICENSE](LICENSE)
+This project is licensed under the [GNU GPL v3.0](LICENSE) – see the LICENSE file for details.
+
+- This project also uses the following map data and tile providers:
+  - © Swisstopo  
+  - © OpenStreetMap  
+  - Tiles by © CARTO
+
 - Fonts used: **SFPRO** (see [assets/fonts/](assets/fonts/))
 
 ---
