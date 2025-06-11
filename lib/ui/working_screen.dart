@@ -75,9 +75,9 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   Future<void> _initializeEventStatus() async {
     _eventStatus = await EventData.getEventStatus();
     if (_eventStatus == EventStatus.notStarted) {
-      AppToast.showInfo("L'événement n'a pas encore commencé.");
+      AppToast.showInfo("L'évènement n'a pas encore commencé.");
     } else if (_eventStatus == EventStatus.over) {
-      AppToast.showInfo("L'événement est terminé.");
+      AppToast.showInfo("L'évènement est terminé.");
     }
 
     setState(() {
@@ -97,12 +97,12 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     if (currentStatus == _eventStatus) return;
 
     if (currentStatus == EventStatus.over && _isMeasureOngoing) {
-      AppToast.showInfo("L'événement est terminé. Arrêt de la session en cours.");
+      AppToast.showInfo("L'évènement est terminé. Arrêt de la session en cours.");
       await _forceStopAndShowSummary();
     }
 
     if (currentStatus == EventStatus.inProgress && _eventStatus == EventStatus.notStarted) {
-      AppToast.showInfo("L'événement a commencé! \n Tu peux maintenant enregistrer ta distance.");
+      AppToast.showInfo("L'évènement a commencé ! \n Tu peux maintenant enregistrer ta distance.");
     }
 
     setState(() {
@@ -132,8 +132,6 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     } catch (e) {
       AppToast.showError("Erreur lors de l'arrêt de la mesure : $e, ");
     }
-
-    AppToast.showSuccess("Mesure arrêtée et enregistrée !");
 
     final contributors = await ContributorsData.getContributors() ?? 1;
     final goal = await EventData.getMetersGoal() ?? 1;
@@ -185,7 +183,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
     showModalBottomText(
       context,
       'Confirmation',
-      'Es-tu sûr de vouloir te déconnecter ?\n\nCela supprimera toutes les données locales et arrêtera toute mesure en cours.',
+      'Es-tu sûr.e de vouloir te déconnecter ?\n\nCela supprimera toutes les données locales et arrêtera toute mesure en cours.',
       showConfirmButton: true,
       onConfirm: () async {
         setState(() => _showMainCards = false);

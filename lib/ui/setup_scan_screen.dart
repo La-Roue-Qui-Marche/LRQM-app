@@ -139,7 +139,7 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
         appBar: _isCameraOpen || _isLoading
             ? null
             : const AppTopBar(
-                title: "Scanner",
+                title: "Démarrer",
                 showBackButton: true,
                 showInfoButton: false,
                 showLogoutButton: false,
@@ -188,8 +188,8 @@ class _SetupScanScreenState extends State<SetupScanScreen> {
               ),
             ),
             const CardInfo(
-              title: "Le petit oiseau va sortir !",
-              data: "Prend en photo le QR code pour démarrer ta session",
+              title: "Dernière étape !",
+              data: "Prends en photo le QR code disponible au début du parcours pour démarrer ton enregistrement.",
             ),
           ],
         ),
