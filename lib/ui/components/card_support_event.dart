@@ -37,7 +37,7 @@ class CardSupportEvent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Suis-nous sur les réseaux sociaux pour découvrir les coulisses de l’événement, les prochaines étapes, et comment tu peux y contribuer.',
+              'Suis-nous sur les réseaux sociaux pour découvrir les coulisses de l’évènement, les prochaines étapes, et comment tu peux y contribuer.',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black87,

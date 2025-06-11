@@ -110,7 +110,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
         showModalBottomText(
           context,
           "Position incorrecte",
-          "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'événement. Consulte la carte pour te rendre au point de départ.",
+          "Tu es à ${distance.toStringAsFixed(1)} km de la zone de l'évènement. Consulte la carte pour te rendre au point de départ.",
           showConfirmButton: true,
         );
       }
@@ -230,7 +230,7 @@ class _SetupPosScreenState extends State<SetupPosScreen> {
                 ),
               ),
               const CardInfo(
-                title: "Prépares-toi !",
+                title: "Prépare-toi !",
                 data: "Rends-toi au point de départ de l'évènement. Appuie sur suivant quand tu es prêt.",
               ),
             ],

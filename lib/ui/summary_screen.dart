@@ -277,7 +277,7 @@ class _SummaryScreenState extends State<SummaryScreen> with TickerProviderStateM
           children: [
             _buildDetailItem('Distance', '${_formatDistance(distance)} m'),
             _verticalDivider(),
-            _buildDetailItem('Participants', '$contributors'),
+            _buildDetailItem('Participant.e(s)', '$contributors'),
             _verticalDivider(),
             _buildDetailItem('Temps', _formatTime(time)),
           ],

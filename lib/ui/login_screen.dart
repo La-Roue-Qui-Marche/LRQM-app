@@ -290,7 +290,7 @@ class _LoginState extends State<Login> {
                           child: GestureDetector(
                             onTap: () => _launchUrl("https://larouequimarche.ch/levenement/inscription/"),
                             child: const Text(
-                              "Tu n'es pas encore inscrit ?",
+                              "Tu n'es pas encore inscrit.e ?",
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.black87,
