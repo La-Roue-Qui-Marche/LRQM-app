@@ -56,23 +56,23 @@ jobs:
         run: |
           # Set environment variables for the build process
           echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
-          echo "VERSION_NAME=${{ env.VERSION }}+${{ github.run_number }}" >> $GITHUB_ENV
+          echo "VERSION_NAME=${{ env.VERSION }}" >> $GITHUB_ENV
           
           # Also set in local.properties as before (as a backup method)
           echo "flutter.versionCode=${{ github.run_number }}" >> android/local.properties
-          echo "flutter.versionName=${{ env.VERSION }}+${{ github.run_number }}" >> android/local.properties
+          echo "flutter.versionName=${{ env.VERSION }}" >> android/local.properties
 
       - name: 📱 Build Android APK
         run: flutter build apk --release
         env:
           BUILD_NUMBER: ${{ github.run_number }}
-          VERSION_NAME: ${{ env.VERSION }}+${{ github.run_number }}
+          VERSION_NAME: ${{ env.VERSION }}
 
       - name: 📱 Build Android App Bundle
         run: flutter build appbundle --release
         env:
           BUILD_NUMBER: ${{ github.run_number }}
-          VERSION_NAME: ${{ env.VERSION }}+${{ github.run_number }}
+          VERSION_NAME: ${{ env.VERSION }}
 
       - name: 🚀 Upload Artifact
         uses: actions/upload-artifact@v4
