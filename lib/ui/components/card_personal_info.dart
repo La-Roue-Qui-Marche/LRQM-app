@@ -629,15 +629,15 @@ class _CardPersonalInfoState extends State<CardPersonalInfo> with SingleTickerPr
 
   String _getDistanceMessage(int distance) {
     if (distance == 0) {
-      return "Vas-y, je suis prêt ! Commence à avancer pour faire progresser les mètres!";
+      return "Vas-y, je suis prêt.e ! Commence à avancer pour faire progresser les mètres!";
     } else if (distance <= 100) {
-      return "C'est ${(distance / 0.2).toStringAsFixed(0)} saucisses aux choux mis bout à bout. Quel papet!";
+      return "C'est ${(distance / 0.2).toStringAsFixed(0)} saucisses aux choux mises bout à bout. Quel papet!";
     } else if (distance <= 4000) {
-      return "C'est ${(distance / 400).toStringAsFixed(1)} tour(s) de la piste de la Pontaise. Trop fort!";
+      return "Ca correspond à ${(distance / 400).toStringAsFixed(1)} tour(s) de la piste de la Pontaise. Trop fort.e!";
     } else if (distance <= 38400) {
       return "C'est ${(distance / 12800).toStringAsFixed(1)} fois la distance Bottens-Lausanne. Tu es un champion!";
     } else {
-      return "C'est ${(distance / 42195).toStringAsFixed(1)} marathon. Forme et détermination au top!";
+      return "Ca correspond à ${(distance / 42195).toStringAsFixed(1)} marathon(s). Forme et détermination au top!";
     }
   }
 }

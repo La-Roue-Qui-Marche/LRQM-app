@@ -69,7 +69,7 @@ class ConfirmScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(Config.primaryColor))),
                   SizedBox(height: 8),
                   Text(
-                    'Le code de confirmation commence par la lettre "$prefix-" suivie de 4 chiffres. Tu l\'as reçu par email lors de ton inscription.',
+                    'Le code de confirmation commence par la lettre "$prefix-" suivie de 4 chiffres. Tu l\'as reçu avec ton numéro de dossard.',
                     style: TextStyle(fontSize: 16, color: Colors.black87),
                     textAlign: TextAlign.left,
                   ),

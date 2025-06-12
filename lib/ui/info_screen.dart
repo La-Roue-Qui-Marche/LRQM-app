@@ -62,7 +62,7 @@ class InfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Le Roue Qui Marche est une association, mais c'est avant tout un événement. Un événement caritatif ayant comme objectif principal de rassembler naturellement et sportivement les personnes qui sont en situation de handicap, avec celles qui ne le sont pas. Le but est de parcourir 2'000'000 mètres (course à pied, marche, fauteuil roulant) en 24 heures ainsi que d'organiser une manifestation autour de l'événement. Tout un chacun peut rejoindre le parcours pour effectuer la distance qu'il peut et/ou qu'il veut.",
+                              "Le Roue Qui Marche est une association, mais c'est avant tout un évènement. Un évènement caritatif ayant comme objectif principal de rassembler naturellement et sportivement les personnes qui sont en situation de handicap, avec celles qui ne le sont pas. Le but est de parcourir 2'000'000 mètres (course à pied, marche, fauteuil roulant) en 24 heures, ainsi que d'organiser une manifestation autour de l'évènement. Tout un chacun peut rejoindre le parcours pour effectuer la distance qu'il peut et/ou qu'il veut.",
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.black87,
@@ -116,7 +116,7 @@ class InfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "L'idée a germé en essayant de trouver un moyen pour comptabiliser une distance collective sans que la performance soit le centre de l'attention, en valorisant les mètres (et non les kilomètres), car chaque mètre parcouru est important. Il fallait aussi laisser la liberté de la distance; permettre à chacun de faire un bout de chemin avec un minimum de contrainte associée à un parcours. Et enfin, la notion de collectif devait ressortir. Une application mobile semblait une évidence.",
+                              "L'idée a germé en essayant de trouver un moyen pour comptabiliser une distance collective sans que la performance soit le centre de l'attention, en valorisant les mètres (et non les kilomètres), car chaque mètre parcouru est important. Il fallait aussi laisser la liberté de la distance; permettre à chacun de faire un bout de chemin avec un minimum de contraintes associées à un parcours. Enfin, la notion de collectif devait ressortir. Une application mobile semblait une évidence.",
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.black87,
@@ -125,7 +125,7 @@ class InfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              "Dans une volonté de rassembler et de créer autour de l'événement, cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière informatique et systèemes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024 par Thibault. La Roue Qui Marche le remercie pour son travail et le félicite pour l'obtention de son diplôme d'ingénieur.",
+                              "Dans une volonté de rassembler et de créer autour de l'évènement, cette application a initialement fait l'objet d'un travail de diplôme de bachelor au sein de la filière informatique et systèmes de communication de la HEIG-VD. Ce travail a été effectué durant l'année 2024 par Thibault. La Roue Qui Marche le remercie pour son travail et le félicite pour l'obtention de son diplôme d'ingénieur.",
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.black87,
@@ -136,7 +136,7 @@ class InfoScreen extends StatelessWidget {
                             Center(child: Image.asset('assets/pictures/HEIG_VD.jpg', height: 60)),
                             const SizedBox(height: 16),
                             Text(
-                              "L'application a ensuite été reprise par des bénévoles dont l'informatique est le métier, sont sensibles à l'objectif de la Roue Qui Marche et au but de la manifestation. Ces 4 personnes ne sont pas purement des développeurs d'applications mobiles mais ont décidé d'unir leur talent pour proposer une solution adaptée à cet événement.",
+                              "L'application a ensuite été reprise par des bénévoles dont le développement logiciel est le métier et qui partagent les valeurs de la Roue Qui Marche. Ces 4 personnes ne sont pas des développeurs d'applications mobiles mais elles ont décidé d'unir leur talent pour proposer une solution adaptée à cet évènement.",
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.black87,
@@ -214,9 +214,6 @@ class InfoScreen extends StatelessWidget {
                           children: [
                             _buildContributorsSection(context),
                             const SizedBox(height: 24),
-                            // --- Chef de projet section ---
-                            // (REMOVE THIS SECTION)
-                            // --- End Chef de projet section ---
                             Center(
                               child: Text(
                                 "Un commentaire? Un bug? Une suggestion?\nlarqm.app.feedback@gmail.com",
@@ -276,7 +273,7 @@ class InfoScreen extends StatelessWidget {
                                     },
                                   ),
                                   Text(
-                                    'La Roue Qui Marche - 2025',
+                                    '© 2025 La Roue Qui Marche',
                                     style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.black38,

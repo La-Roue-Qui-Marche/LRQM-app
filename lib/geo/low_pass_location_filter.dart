@@ -3,7 +3,6 @@ import 'dart:math';
 class LowPassLocationFilter {
   double? _lastLat;
   double? _lastLng;
-  double? _lastTimestamp;
 
   final double minAlpha;
   final double maxAlpha;
@@ -23,7 +22,6 @@ class LowPassLocationFilter {
     if (_lastLat == null || _lastLng == null) {
       _lastLat = latitude;
       _lastLng = longitude;
-      _lastTimestamp = timestamp;
       return {
         'latitude': latitude,
         'longitude': longitude,
@@ -43,7 +41,6 @@ class LowPassLocationFilter {
 
     _lastLat = filteredLat;
     _lastLng = filteredLng;
-    _lastTimestamp = timestamp;
 
     return {
       'latitude': filteredLat,
