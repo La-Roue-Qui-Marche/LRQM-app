@@ -517,6 +517,9 @@ class _CardProgressEventState extends State<CardProgressEvent> {
       labels = ['jours', ...labels];
     }
 
+    // Ensure all numbers are at least 2 digits
+    parts = parts.map((part) => part.padLeft(2, '0')).toList();
+
     List<Widget> widgets = [];
     for (int i = 0; i < 4; i++) {
       widgets.add(
