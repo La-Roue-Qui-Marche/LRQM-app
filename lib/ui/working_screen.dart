@@ -31,7 +31,7 @@ class WorkingScreen extends StatefulWidget {
   State<WorkingScreen> createState() => _WorkingScreenState();
 }
 
-class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProviderStateMixin {
+class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _scrollController = ScrollController();
 
   EventStatus _eventStatus = EventStatus.notStarted;
@@ -47,6 +47,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _geolocation = GeolocationController(
       config: GeolocationConfig(
         locationDistanceFilter: Config.locationDistanceFilter,
@@ -61,8 +62,21 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _eventCheckTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      // App is in background or inactive
+      _eventCheckTimer?.cancel();
+      _startEventStatusTimer();
+    } else if (state == AppLifecycleState.resumed) {
+      _eventCheckTimer?.cancel();
+      _startEventStatusTimer();
+    }
   }
 
   Future<void> _initializeMeasureStatus() async {
@@ -130,7 +144,7 @@ class _WorkingScreenState extends State<WorkingScreen> with SingleTickerProvider
       duration = _geolocation.elapsedTimeInSeconds;
       await _geolocation.stopListening();
     } catch (e) {
-      AppToast.showError("Erreur lors de l'arrêt de la mesure : $e, ");
+      AppToast.showError("Erreur lors de l'arrêt de la mesure : $e");
     }
 
     final contributors = await ContributorsData.getContributors() ?? 1;
